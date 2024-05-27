@@ -1,0 +1,44 @@
+version: '3'
+services:
+
+  # Frontend web application.
+  web:
+    image: langgenius/dify-web:0.6.8
+    restart: always
+    environment:
+
+      CONSOLE_API_URL: 'http://192.168.1.5:5001'
+      APP_API_URL: 'http://192.168.1.5:5001'
+      # The DSN for Sentry error reporting. If not set, Sentry error reporting will be disabled.
+      SENTRY_DSN: ''
+      NEXT_PUBLIC_DEPLOY_ENV: 'DEVELOPMENT'
+      NEXT_PUBLIC_EDITION: 'SELF_HOSTED'
+      NEXT_PUBLIC_API_PREFIX: 'http://192.168.1.5:5001/console/api'
+      NEXT_PUBLIC_PUBLIC_API_PREFIX: 'http://192.168.1.5:5001/api'
+    # uncomment to expose dify-web port to host
+    ports:
+      - "3000:3000"
+    networks:
+      llm:
+        ipv4_address: 172.23.0.20
+
+
+  # The nginx reverse proxy.
+  # used for reverse proxying the API service and Web service.
+#  nginx:
+#    image: nginx:latest
+#    restart: always
+#    volumes:
+#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+#      - ./nginx/proxy.conf:/etc/nginx/proxy.conf
+#      - ./nginx/conf.d:/etc/nginx/conf.d
+#      #- ./nginx/ssl:/etc/ssl
+#    depends_on:
+#      - web
+#    ports:
+#      - "80:80"
+      #- "443:443"
+networks:
+  llm:
+    driver: bridge
+    external: true

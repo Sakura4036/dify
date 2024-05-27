@@ -24,6 +24,12 @@ class SearXNGSearchTool(BuiltinTool):
     Tool for performing a search using SearXNG engine.
     """
 
+    """
+    "categories":["general","social media","files","apps","it","software wikis","images","science",
+    "scientific publications","music","videos","web","news","repos",
+    "other","packages","weather","map","dictionaries","lyrics","cargo","movies","translate",
+    "radio","q&a","wikimedia"]
+    """
     SEARCH_TYPE = {
         "page": "general",
         "news": "news",
@@ -31,6 +37,7 @@ class SearXNGSearchTool(BuiltinTool):
         # "video": "videos",
         # "file": "files"
     }
+
     LINK_FILED = {
         "page": "url",
         "news": "url",
