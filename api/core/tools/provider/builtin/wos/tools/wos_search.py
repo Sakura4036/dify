@@ -1,27 +1,13 @@
 import json
-import os
-import sys
+import logging
 from typing import Any, Union
 
 import requests
-from serpapi import GoogleSearch
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
 from core.tools.tool.builtin_tool import BuiltinTool
 
-
-class HiddenPrints:
-    """Context manager to hide prints."""
-
-    def __enter__(self) -> None:
-        """Open file to pipe stdout to."""
-        self._original_stdout = sys.stdout
-        sys.stdout = open(os.devnull, "w")
-
-    def __exit__(self, *_: Any) -> None:
-        """Close file that stdout was piped to."""
-        sys.stdout.close()
-        sys.stdout = self._original_stdout
+logger = logging.getLogger(__name__)
 
 
 class WosSearchAPI:
@@ -58,11 +44,11 @@ class WosSearchAPI:
 
         for p in range(1, page + 1):
             request_str = f'https://api.clarivate.com/apis/wos-starter/v1/documents?q={query}&limit={limit}&page={p}&db=WOS&sortField={sort_field}'
-            print('request_str:', request_str)
+            logger.debug(f'request_str: {request_str} ')
             try:
                 initial_request = requests.get(request_str, headers={'X-ApiKey': self.wos_api_key})
                 initial_json = initial_request.json()
-                print('initial_json:', initial_json)
+                logger.debug(f'initial_json: {initial_json}')
             except Exception as e:
                 if not response:
                     return str(e)
@@ -74,7 +60,7 @@ class WosSearchAPI:
         return response
 
     @staticmethod
-    def _process_response(response: dict) -> str:
+    def _process_response(response: dict) -> list[dict]:
         result = []
 
         for wos_document in response['hits']:
@@ -93,12 +79,9 @@ class WosSearchAPI:
             }
             result.append(document)
 
-        if not result:
-            return 'No results found.'
+        return result
 
-        return ' eos '.join([json.dumps(doc) for doc in result])
-
-    def run(self, query: str, query_type, limit: int = 100, page: int = 1, sort_field: str = 'RS+D') -> str:
+    def run(self, query: str, query_type, limit: int = 100, page: int = 1, sort_field: str = 'RS+D') -> list:
         """Run query through Web of Science Search API and parse result."""
         query = self.get_query(query, query_type)
         request = self.get_request(query, limit=limit, page=page, sort_field=sort_field)
@@ -122,13 +105,14 @@ class WOSSearchTool(BuiltinTool):
 
         api_key = self.runtime.credentials['wos_api_key']
 
-        print("api_key: ", api_key)
-        print("query: ", query)
-        print("query_type: ", query_type)
-        print("limit: ", limit)
-        print("page: ", page)
-        print("sort_field: ", sort_field)
+        logger.debug(f"query: {query}")
+        logger.debug(f"query_type: {query_type}")
 
         result = WosSearchAPI(api_key).run(query, query_type, limit, page, sort_field)
 
-        return self.create_text_message(text=result)
+        if not result:
+            result = 'No results found'
+        else:
+            result = ' eos '.join([json.dumps(doc) for doc in result])
+        # save search result to variable, use self.get_variable('wos_search_result_{user_id}') to get the result
+        return self.create_text_message(text=result, save_as=f'wos_search_result_{user_id}')
