@@ -51,7 +51,8 @@ class WosSearchAPI:
                 logger.debug(f'initial_json: {initial_json}')
             except Exception as e:
                 if not response:
-                    return str(e)
+                    logger.error(f'Error in request: {e}')
+                    raise e
                 else:
                     return response
 
@@ -62,22 +63,22 @@ class WosSearchAPI:
     @staticmethod
     def _process_response(response: dict) -> list[dict]:
         result = []
-
-        for wos_document in response['hits']:
-            document = {
-                'uid': wos_document.get('uid'),
-                'title': wos_document['title'],
-                'doi': wos_document['identifiers'].get('doi'),
-                'issn': wos_document['identifiers'].get('issn'),
-                'pmid': wos_document['identifiers'].get('pmid'),
-                'published_year': wos_document['source'].get('publishYear'),
-                'published_month': wos_document['source'].get('publishMonth'),
-                'types': wos_document.get('types'),
-                'link': wos_document['links'].get('record'),
-                'keywords': wos_document['keywords'].get('authorKeywords'),
-                'authors': [author['displayName'] for author in wos_document['names']['authors']],
-            }
-            result.append(document)
+        if response and 'hits' in response:
+            for wos_document in response['hits']:
+                document = {
+                    'uid': wos_document.get('uid'),
+                    'title': wos_document['title'],
+                    'doi': wos_document['identifiers'].get('doi'),
+                    'issn': wos_document['identifiers'].get('issn'),
+                    'pmid': wos_document['identifiers'].get('pmid'),
+                    'published_year': wos_document['source'].get('publishYear'),
+                    'published_month': wos_document['source'].get('publishMonth'),
+                    'types': wos_document.get('types'),
+                    'link': wos_document['links'].get('record'),
+                    'keywords': wos_document['keywords'].get('authorKeywords'),
+                    'authors': [author['displayName'] for author in wos_document['names']['authors']],
+                }
+                result.append(document)
 
         return result
 
@@ -113,6 +114,6 @@ class WOSSearchTool(BuiltinTool):
         if not result:
             result = 'No results found'
         else:
-            result = ' eos '.join([json.dumps(doc) for doc in result])
+            result = ' <eos> '.join([json.dumps(doc) for doc in result])
         # save search result to variable, use self.get_variable('wos_search_result_{user_id}') to get the result
         return self.create_text_message(text=result, save_as=f'wos_search_result_{user_id}')

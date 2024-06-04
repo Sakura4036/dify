@@ -54,8 +54,7 @@ parameters:
           en_US: Image
           zh_Hans: 图片
           pt_BR: Image
-
-    form: form
+    form: llm
   - name: num_results
     type: number
     required: true
@@ -66,9 +65,9 @@ parameters:
       en_US: The number of query results.
       zh_Hans: 返回查询结果的数量。
     form: form
-    default: 5
+    default: 10
     min: 1
-    max: 20
+    max: 30
   - name: result_type
     type: select
     required: true

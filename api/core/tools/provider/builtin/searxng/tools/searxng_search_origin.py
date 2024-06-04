@@ -125,7 +125,7 @@ class SearXNGSearchTool(BuiltinTool):
         if not query:
             return self.create_text_message('Please input query')
                 
-        num_results = min(tool_parameters.get('num_results', 5), 20)
+        num_results = min(tool_parameters.get('num_results', 10), 30)
         search_type = tool_parameters.get('search_type', 'page') or 'page'
         result_type = tool_parameters.get('result_type', 'text') or 'text'
 
