@@ -1,5 +1,5 @@
 identity:
-  author: hjw
+  author: JiaWen Huang
   name: wos
   label:
     en_US: Web of Science
@@ -9,7 +9,7 @@ identity:
     en_US: Web of Science
     zh_Hans: Web of Science
     pt_BR: Web of Science
-  icon: icon.svg
+  icon: icon.png
 credentials_for_provider:
   wos_api_key:
     type: secret-input

@@ -1,0 +1,12 @@
+identity:
+  author: JiaWen Huang
+  name: uniprot
+  label:
+    en_US: UniProt
+    zh_Hans: UniProt
+  description:
+    en_US: UniProt is a free database of protein sequences and annotations from various sources andspecies.
+    zh_Hans: UniProt 是一个免费数据库，包含来自不同来源和物种的蛋白质序列和注释。
+  icon: icon.svg
+  tags:
+    - search

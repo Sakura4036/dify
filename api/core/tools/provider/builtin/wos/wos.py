@@ -5,7 +5,7 @@ from core.tools.provider.builtin.wos.tools.wos_search import WOSSearchTool
 from core.tools.provider.builtin_tool_provider import BuiltinToolProviderController
 
 
-class GoogleProvider(BuiltinToolProviderController):
+class WOSProvider(BuiltinToolProviderController):
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
         try:
             WOSSearchTool().fork_tool_runtime(
