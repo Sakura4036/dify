@@ -15,6 +15,35 @@ class UniProtSearchTool(BuiltinTool):
     """
     base_url: str = "https://rest.uniprot.org/uniprotkb/search?query={}&size={}&format=json&compressed=false"
 
+    def _query(self, query: str, size: int = 500) -> dict | list[dict]:
+        """
+        Performs an uniprot search. Query strings must satisfy the query syntax:https://www.uniprot.org/help/query-fields.
+
+        Args:
+            query: a plaintext search query
+            size: the number of results to return
+        """
+        url = self.base_url.format(query, size)
+        logger.debug(f'Querying UniProt with URL: {url}')
+        with requests.get(url, stream=False) as response:
+            if response.status_code != 200:
+                return {'error': f'Error querying UniProt: {response.text}'}
+            response = response.json()
+
+            # response is a dictionary for one protein when the query is an accession number, like "P33993"
+            if response.get('results', None) is None:
+                if response.get('references', None) is not None:
+                    references = response.get('references', [])
+                    return references
+                else:
+                    return {'error': 'No results found'}
+            else:
+                result = response['results']
+                if isinstance(result, list):
+                    return [protein.get('references', []) for protein in result]
+                else:
+                    return result.get('references', [])
+
     def query(self, query: str, size: int = 500) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
         Performs an uniprot search. Query strings must satisfy the query syntax:https://www.uniprot.org/help/query-fields.
@@ -34,7 +63,7 @@ class UniProtSearchTool(BuiltinTool):
             if response.get('results', None) is None:
                 if response.get('references', None) is not None:
                     references = response.get('references', [])
-                    return self.create_text_message(json.dumps(references, indent=4))
+                    return self.create_text_message(json.dumps(references))
                 else:
                     return self.create_text_message('No results found')
             else:
@@ -43,11 +72,11 @@ class UniProtSearchTool(BuiltinTool):
                 if isinstance(result, list):
                     for protein in result:
                         references = protein.get('references', [])
-                        return_messages.append(self.create_text_message(json.dumps(references, indent=4)))
+                        return_messages.append(self.create_text_message(json.dumps(references)))
                     return return_messages
                 else:
                     references = result.get('references', [])
-                    return self.create_text_message(json.dumps(references, indent=4))
+                    return self.create_text_message(json.dumps(references))
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """

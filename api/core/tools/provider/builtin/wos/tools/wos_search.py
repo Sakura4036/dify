@@ -114,6 +114,6 @@ class WOSSearchTool(BuiltinTool):
         if not result:
             result = 'No results found'
         else:
-            result = json.dumps(result, indent=4)
+            result = json.dumps(result)
         # save search result to variable, use self.get_variable('wos_search_result_{user_id}') to get the result
         return self.create_text_message(text=result, save_as=f'wos_search_result_{user_id}')

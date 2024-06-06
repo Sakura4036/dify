@@ -1,0 +1,68 @@
+identity:
+  name: semantic paper search
+  author: JiaWen Huang
+  label:
+    en_US: Semantic Paper Search
+    zh_Hans: Semantic文献搜索
+description:
+  human:
+    en_US:   A tool for searching literature information by keywords from the Semantic Scholar repository.
+    zh_Hans: 一个从Semantic Scholar资源库中通过关键字搜索文献信息的工具。
+  llm:  A tool for searching literature information by keywords from the Semantic Scholar repository.
+parameters:
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: query
+      zh_Hans: 搜索
+    human_description:
+      en_US: A plain-text search query string.
+      zh_Hans: 纯文本搜索查询字符串。
+    llm_description: A plain-text search query string.
+    form: llm
+  - name: fields_of_study
+    type: string
+    required: True
+    label:
+      en_US: Fields of Study
+      zh_Hans: 研究领域
+    human_description:
+      en_US: Fields of study to filter the search results, separated by commas.
+      zh_Hans: 用于过滤搜索结果的研究领域，使用逗号分隔。
+    llm_description: Fields of study to filter the search results, separated by commas.
+    form: llm
+  - name: year
+    type: string
+    required: false
+    label:
+      en_US: Date range
+      zh_Hans: 日期范围（年）
+    human_description:
+      en_US: The date range of the search results, separated by hyphens, e.g. 2015- means after 2015..
+      zh_Hans: 搜索结果的日期范围，使用连字符号分割， 例如： 2015- 表示2015年以后。
+    llm_description: The date range of the search results, separated by hyphens
+    form: llm
+  - name: fields
+    type: string
+    required: True
+    label:
+      en_US: Fields
+      zh_Hans: 返回字段
+    human_description:
+      en_US: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,authors,year,citationCount,influentialCitationCount"
+    llm_description: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+    form: llm
+  - name: num_results
+    type: number
+    required: false
+    default: 50
+    label:
+      en_US: Number of results
+      zh_Hans: 结果数量
+    human_description:
+      en_US: The number of search results to return.
+      zh_Hans: 要返回的搜索结果数量。
+    llm_description: The number of search results to return.
+    form: llm

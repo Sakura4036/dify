@@ -18,7 +18,7 @@ parameters:
       zh_Hans: 查询字符串
     human_description:
       en_US: The UniProt ID or UniProtKB query string used for searching.
-      zh_Hans: 用用于搜索的 UniProt ID 或UniProtKB查询字符串。。
+      zh_Hans: 用于搜索的 UniProt ID 或UniProtKB查询字符串。。
     llm_description: The UniProt ID or UniProtKB query string used for searching.
     form: llm
   - name: num_results

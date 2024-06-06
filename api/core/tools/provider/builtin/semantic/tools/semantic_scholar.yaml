@@ -1,0 +1,34 @@
+identity:
+  name: semantic
+  author: JiaWen Huang
+  label:
+    en_US: Semantic Scholar
+    zh_Hans: Semantic Scholar
+description:
+  human:
+    en_US:   A tool for batch access to scientific literature information from semanticists' repositories via paper id.
+    zh_Hans: 从Semantic Scholar资源库中通过paper id批量获取科学文献信息的工具。
+  llm:  A tool for batch access to scientific literature information from semanticists' repositories via paper id.
+parameters:
+  - name: ids
+    type: string
+    required: true
+    label:
+      en_US: Paper IDs
+      zh_Hans: 文献ID字符串
+    human_description:
+      en_US: The paper id string used to query the literature, separated by English commas.
+      zh_Hans: 用于查询文献的paper id字符串，使用英文逗号分隔。
+    llm_description: The paper id string used to query the literature, separated by English commas.
+    form: llm
+  - name: fields
+    type: string
+    required: True
+    label:
+      en_US: Fields
+      zh_Hans: 返回字段
+    human_description:
+      en_US: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,authors,year,citationCount,influentialCitationCount"
+    llm_description: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+    form: llm
