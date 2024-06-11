@@ -1,0 +1,35 @@
+identity:
+  name: uniprot_paper_id
+  author: JiaWen Huang
+  label:
+    en_US: UniProt Paper ID
+    zh_Hans: UniProt Paper ID
+description:
+  human:
+    en_US:  A tool for searching protein-related paper id from the UniProt repository. Inputs can be either UniProt IDs or content that matches UniProtKB query fields.
+    zh_Hans: 一个用于从UniProt存储库搜索蛋白质相关文献ID的工具。 输入可以是UniProt ID或者符合UniProtKB query fields的内容。
+  llm: A tool for searching protein-related paper id from the UniProt repository. Inputs can be either UniProt IDs or content that matches UniProtKB query fields.
+parameters:
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: Query string
+      zh_Hans: 查询字符串
+    human_description:
+      en_US: The UniProt ID or UniProtKB query string used for searching.
+      zh_Hans: 用于搜索的 UniProt ID 或UniProtKB查询字符串。。
+    llm_description: The UniProt ID or UniProtKB query string used for searching.
+    form: llm
+  - name: num_results
+    type: number
+    required: false
+    default: 50
+    label:
+      en_US: Number of results
+      zh_Hans: 结果数量
+    human_description:
+      en_US: The number of search results to return.
+      zh_Hans: 要返回的搜索结果数量。
+    llm_description: The number of search results to return.
+    form: form

@@ -23,7 +23,7 @@ parameters:
     form: llm
   - name: fields_of_study
     type: string
-    required: True
+    required: false
     label:
       en_US: Fields of Study
       zh_Hans: 研究领域
@@ -31,6 +31,7 @@ parameters:
       en_US: Fields of study to filter the search results, separated by commas.
       zh_Hans: 用于过滤搜索结果的研究领域，使用逗号分隔。
     llm_description: Fields of study to filter the search results, separated by commas.
+    default: "Medicine,Biology,Chemistry"
     form: llm
   - name: year
     type: string
@@ -42,17 +43,19 @@ parameters:
       en_US: The date range of the search results, separated by hyphens, e.g. 2015- means after 2015..
       zh_Hans: 搜索结果的日期范围，使用连字符号分割， 例如： 2015- 表示2015年以后。
     llm_description: The date range of the search results, separated by hyphens
+    default: "1980-"
     form: llm
   - name: fields
     type: string
-    required: True
+    required: false
     label:
       en_US: Fields
       zh_Hans: 返回字段
     human_description:
-      en_US: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
-      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,authors,year,citationCount,influentialCitationCount"
-    llm_description: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+      en_US: Fields to be returned, separated by commas. default is "title,abstract,year,citationCount,influentialCitationCount"
+      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,year,citationCount,influentialCitationCount"
+    llm_description: Fields to be returned, separated by commas. default is "title,abstract,year,citationCount,influentialCitationCount"
+    default: "title,abstract,year,citationCount,influentialCitationCount"
     form: llm
   - name: num_results
     type: number

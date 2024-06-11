@@ -2,7 +2,7 @@ identity:
   author: JiaWen Huang
   name: semantic
   label:
-    en_US: semantic
+    en_US: Semantic Scholar
     zh_Hans: Semantic Scholar
   description:
     en_US: Semantic Scholar is a research tool for scientific literature powered by artificial intelligence. It is developed at the Allen Institute for AI and was publicly released in November 2015.

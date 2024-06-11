@@ -28,7 +28,7 @@ parameters:
       en_US: Fields
       zh_Hans: 返回字段
     human_description:
-      en_US: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+      en_US: Fields to be returned, separated by commas. default is "title,abstract,year,citationCount,influentialCitationCount"
       zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,authors,year,citationCount,influentialCitationCount"
-    llm_description: Fields to be returned, separated by commas. default is "title,abstract,authors,year,citationCount,influentialCitationCount"
+    llm_description: Fields to be returned, separated by commas. default is "title,abstract,year,citationCount,influentialCitationCount"
     form: llm

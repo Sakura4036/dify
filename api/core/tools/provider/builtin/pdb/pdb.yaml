@@ -1,0 +1,12 @@
+identity:
+  author: JiaWen Huang
+  name: pdb
+  label:
+    en_US: PDB
+    zh_Hans: PDB
+  description:
+    en_US:  A tool for accessing RCSB PDB data via REST API Endpoints and URLs.
+    zh_Hans:  通过 REST API 端点和 URL 访问 RCSB PDB 数据的工具。
+  icon: icon.svg
+  tags:
+    - search

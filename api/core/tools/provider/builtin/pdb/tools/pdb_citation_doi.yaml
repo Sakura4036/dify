@@ -1,0 +1,43 @@
+identity:
+  name: pdb_citation_doi
+  author: JiaWen Huang
+  label:
+    en_US: PDB Citation DOI
+    zh_Hans: PDB引用文献DOI
+description:
+  human:
+    en_US: A tool to retrieve citation doi from the protein database by pdb id.
+    zh_Hans: 通过 pdb id 从蛋白质数据库中获取引用文献doi的工具。
+  llm:  A tool to retrieve citation doi from the protein database by pdb id.
+parameters:
+  - name: entry_id
+    type: string
+    required: true
+    label:
+      en_US: PDB ID
+      zh_Hans: PDB ID
+    human_description:
+      en_US: The PDB ID used to query the literature.
+      zh_Hans: 查询文献时使用的 PDB ID。
+    llm_description: The PDB ID used to query the literature.
+    form: llm
+  - name: mode
+    type: select
+    required: false
+    options:
+      - value: all
+        label:
+          en_US: all
+          zh_Hans: 全部
+      - value: primary
+        label:
+          en_US: primary(one)
+          zh_Hans: 主要(1个）
+    label:
+      en_US: Mode
+      zh_Hans: 模式
+    human_description:
+        en_US: The mode of the query.
+        zh_Hans: 查询模式。
+    llm_description: The mode of the query.
+    form: llm

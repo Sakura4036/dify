@@ -32,19 +32,18 @@ class SemanticScholarTool(BuiltinTool):
         if len(ids) > 500:
             return self.create_text_message('The number of papers should be less than 500')
 
-        with requests.post(self.base_url, json={"ids": ids}, params={"fields": fields}) as response:
-            if response.status_code != 200:
-                return self.create_text_message(f'Error querying Semantic Scholar: {response.json()["error"]}')
-            response = response.json()
-            result = []
-            for pid, paper in zip(ids, response):
-                if paper['abstract'] is None:
-                    continue
-                else:
-                    paper['id'] = pid
-                    result.append(paper)
+        response = requests.post(self.base_url, json={"ids": ids}, params={"fields": fields})
+        response.raise_for_status()
+        response = response.json()
+        result = []
+        for pid, paper in zip(ids, response):
+            if not paper or paper.get('abstract', None) is None:
+                continue
+            else:
+                paper['id'] = pid
+                result.append(paper)
 
-            return self.create_text_message(json.dumps(result))
+        return self.create_text_message(json.dumps(result))
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
@@ -57,13 +56,17 @@ class SemanticScholarTool(BuiltinTool):
         Returns:
             ToolInvokeMessage | list[ToolInvokeMessage]: The result of the tool invocation, which can be a single message or a list of messages.
         """
-        ids = tool_parameters.get('ids', '')
-        fields = tool_parameters.get('fields', 'title,abstract,authors,year,citationCount,influentialCitationCount')
+        ids = tool_parameters.get('ids')
+        fields = tool_parameters.get('fields')
 
         if not ids:
             return self.create_text_message('Please provide a list of paper ids.')
+        if not fields:
+            fields = 'title,abstract,year,citationCount,influentialCitationCount'
         try:
             ids = ids.split(',')
+            print("ids: ", ids)
+            print('fields: ', fields)
             return self.query(ids, fields)
         except Exception as e:
             logger.error(f'Error invoking Semantic Scholar tool: {e}')
