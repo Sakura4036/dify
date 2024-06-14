@@ -1,0 +1,120 @@
+identity:
+  name: ncbi_blast
+  author: JiaWen Huang
+  label:
+    en_US: NCBI BLAST
+    zh_Hans: NCBI BLAST
+description:
+  human:
+    en_US: A tool to search for similar sequences by protein sequence or nucleotide sequence.
+    zh_Hans: 一个通过蛋白质序列或核苷酸序列搜索相似序列的工具
+  llm: A tool to search for similar sequences by protein sequence or nucleotide sequence.
+parameters:
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: Sequence
+      zh_Hans: 序列
+    human_description:
+      en_US: protein sequence or nucleotide sequence.
+      zh_Hans: 蛋白质序列或核苷酸序列
+    llm_description: protein sequence or nucleotide sequence.
+    form: llm
+  - name: db
+    type: select
+    required: true
+    options:
+      - value: nt
+        label:
+          en_US: Nucleotide(DNA)
+          zh_Hans: Nucleotide(DNA)
+      - value: nr
+        label:
+          en_US: Non-redundant(Protein)
+          zh_Hans: Non-redundant(Protein)
+      - value: refseq_rna
+        label:
+          en_US: NCBI Transcript Reference Sequences(DNA)
+          zh_Hans: NCBI Transcript Reference Sequences(DNA)
+      - value: refseq_protein
+        label:
+          en_US: NCBI Protein Reference Sequences(Protein)
+          zh_Hans: NCBI Protein Reference Sequences(Protein)
+      - value: swissprot
+        label:
+          en_US: Non-redundant UniProtKB/SwissProt sequences
+          zh_Hans: Non-redundant UniProtKB/SwissProt sequences
+      - value: pdbaa
+        label:
+          en_US: PDB protein database
+          zh_Hans: PDB protein database
+      - value: pdbnt
+        label:
+          en_US: PDB nucleotide database
+          zh_Hans: PDB nucleotide database
+    label:
+      en_US: Search Database
+      zh_Hans: 检索数据库
+    human_description:
+      en_US: Search Database
+      zh_Hans: 检索数据库
+    llm_description: Search Database
+    default: nr
+    form: form
+  - name: program
+    type: select
+    required: true
+    options:
+      - value: blastp
+        label:
+          en_US: blastp
+          zh_Hans: blastp
+      - value: blastn
+        label:
+          en_US: blastn
+          zh_Hans: blastn
+      - value: blastx
+        label:
+          en_US: blastx
+          zh_Hans: blastx
+      - value: tblastn
+        label:
+          en_US: tblastn
+          zh_Hans: tblastn
+      - value: tblastx
+        label:
+          en_US: tblastx
+          zh_Hans: tblastx
+    label:
+      en_US: program
+      zh_Hans: 搜索程序
+    human_description:
+      en_US: used search program
+      zh_Hans: 使用的搜索程序
+    llm_description: program
+    default: blastp
+    form: form
+  - name: num_results
+    type: number
+    required: false
+    label:
+      en_US: Number of PubMed literature results
+      zh_Hans: PubMed文献结果数量
+    human_description:
+      en_US: Number of PubMed literature results to be returned
+      zh_Hans: 需要返回的PubMed文献结果数量
+    llm_description: Number of PubMed literature results to be returned
+    default: 50
+    form: llm
+  - name: rid
+    type: string
+    required: false
+    label:
+      en_US: Request ID
+      zh_Hans: 请求ID
+    human_description:
+      en_US: Request ID
+      zh_Hans: 请求ID
+    llm_description: Request ID
+    form: llm

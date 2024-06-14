@@ -4,6 +4,7 @@ from typing import Any
 import requests
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
+from core.tools.errors import ToolParameterValidationError
 from core.tools.tool.builtin_tool import BuiltinTool
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ class PDBCitationDOIsTool(BuiltinTool):
         mode = tool_parameters.get('mode')
 
         if not entry_id:
-            return self.create_text_message('Please provide a entry_id.')
+            raise ToolParameterValidationError('Please provide a entry_id.')
 
         if not mode:
             mode = 'all'

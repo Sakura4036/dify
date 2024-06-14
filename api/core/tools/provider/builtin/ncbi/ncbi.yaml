@@ -1,0 +1,12 @@
+identity:
+  author: JiaWen Huang
+  name: ncbi
+  label:
+    en_US: NCBI
+    zh_Hans: NCBI
+  description:
+    en_US: The National Center for Biotechnology Information advances science and health by providing access to biomedical and genomic information.
+    zh_Hans: 美国国家生物技术信息中心通过提供生物医学和基因组信息，促进科学和健康。
+  icon: icon.svg
+  tags:
+    - search

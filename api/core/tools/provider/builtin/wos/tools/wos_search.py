@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from typing import Any, Union
 
 import requests
@@ -19,6 +20,7 @@ class WosSearchAPI:
     def __init__(self, api_key: str) -> None:
         """Initialize Web of Science Search API tool provider."""
         self.wos_api_key = api_key
+        self.limit = 50
 
     @staticmethod
     def get_query(query: str, query_type: str = 'TS') -> str:
@@ -30,7 +32,47 @@ class WosSearchAPI:
         assert query_type in ['TS', 'TI', 'AU', 'DO', 'IS', 'PMID'], 'Invalid query type'
         return "{}={}".format(query_type, query)
 
-    def get_request(self, query: str, limit: int = 100, page: int = 1, sort_field: str = 'RS+D'):
+    @staticmethod
+    def _process_response(response: dict) -> list[dict]:
+        result = []
+        if response and 'hits' in response:
+            for wos_document in response['hits']:
+                identifiers = wos_document.get('identifiers')
+                if not identifiers:
+                    continue
+                document = {
+                    'uid': wos_document.get('uid'),
+                    'title': wos_document['title'],
+                    'doi': identifiers.get('doi', ''),
+                    # 'issn': wos_document['identifiers'].get('issn'),
+                    'pmid': identifiers.get('pmid', ''),
+                    # 'published_year': wos_document['source'].get('publishYear'),
+                    # 'published_month': wos_document['source'].get('publishMonth'),
+                    # 'types': wos_document.get('types'),
+                    # 'link': wos_document['links'].get('record'),
+                    # 'keywords': wos_document['keywords'].get('authorKeywords'),
+                    # 'authors': [author['displayName'] for author in wos_document['names']['authors']],
+                }
+                result.append(document)
+        return result
+
+    def query_once(self, query: str, limit: int = 50, page: int = 1, sort_field: str = 'RS+D') -> tuple[int, list[dict]]:
+        if limit <= 0:
+            return 0, []
+        request_str = f'https://api.clarivate.com/apis/wos-starter/v1/documents?q={query}&limit={limit}&page={page}&db=WOS&sortField={sort_field}'
+        print(f"Web of Science API request: {request_str}")
+        response = requests.get(request_str, headers={'X-ApiKey': self.wos_api_key})
+        response.raise_for_status()
+        if response.status_code != 200:
+            print(f"Web of Science API request failed: {response.json()}")
+            return 0, []
+        response = response.json()
+        print("metadata:", response['metadata'])
+        total = response['metadata']['total']
+        data = self._process_response(response)
+        return total, data
+
+    def search(self, query: str, query_type: str = 'TS', num_results: int = 50, sort_field: str = 'RS+D'):
         """
         web of science api: https://api.clarivate.com/swagger-ui/?apikey=none&url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-starter%2Fswagger
 
@@ -40,53 +82,30 @@ class WosSearchAPI:
                     RS - Relevance
                     TC - Times Cited
         """
-        response = {}
+        query = self.get_query(query, query_type)
 
-        for p in range(1, page + 1):
-            request_str = f'https://api.clarivate.com/apis/wos-starter/v1/documents?q={query}&limit={limit}&page={p}&db=WOS&sortField={sort_field}'
-            logger.debug(f'request_str: {request_str} ')
-            try:
-                initial_request = requests.get(request_str, headers={'X-ApiKey': self.wos_api_key})
-                initial_json = initial_request.json()
-                logger.debug(f'initial_json: {initial_json}')
-            except Exception as e:
-                if not response:
-                    logger.error(f'Error in request: {e}')
-                    raise e
-                else:
-                    return response
+        limit = min(num_results, self.limit)
+        page = 1
+        total, data = self.query_once(query, limit, page=page, sort_field=sort_field)
 
-            response.update(initial_json)
+        if total == 0:
+            return []
 
-        return response
+        result = data
+        rest_num = min(num_results, total) - limit
 
-    @staticmethod
-    def _process_response(response: dict) -> list[dict]:
-        result = []
-        if response and 'hits' in response:
-            for wos_document in response['hits']:
-                document = {
-                    'uid': wos_document.get('uid'),
-                    'title': wos_document['title'],
-                    'doi': wos_document['identifiers'].get('doi'),
-                    'issn': wos_document['identifiers'].get('issn'),
-                    'pmid': wos_document['identifiers'].get('pmid'),
-                    'published_year': wos_document['source'].get('publishYear'),
-                    'published_month': wos_document['source'].get('publishMonth'),
-                    'types': wos_document.get('types'),
-                    'link': wos_document['links'].get('record'),
-                    'keywords': wos_document['keywords'].get('authorKeywords'),
-                    'authors': [author['displayName'] for author in wos_document['names']['authors']],
-                }
-                result.append(document)
+        while rest_num > 0:
+            limit = min(rest_num, self.limit)
+            page += 1
+            total, data = self.query_once(query, limit, page, sort_field)
+            if total == 0:
+                break
+
+            result.extend(data)
+            rest_num -= limit
+            time.sleep(10)
 
         return result
-
-    def run(self, query: str, query_type, limit: int = 100, page: int = 1, sort_field: str = 'RS+D') -> list:
-        """Run query through Web of Science Search API and parse result."""
-        query = self.get_query(query, query_type)
-        request = self.get_request(query, limit=limit, page=page, sort_field=sort_field)
-        return self._process_response(request)
 
 
 class WOSSearchTool(BuiltinTool):
@@ -97,23 +116,18 @@ class WOSSearchTool(BuiltinTool):
         """
             invoke tools
         """
-        query = tool_parameters['query']
-        query_type = tool_parameters.get('query_type', 'TS')
-
-        limit = tool_parameters.get('limit', 50)
-        page = tool_parameters.get('page', 1)
-        sort_field = tool_parameters.get('sort', 'PY+D')
-
         api_key = self.runtime.credentials['wos_api_key']
+        query = tool_parameters.get('query')
+        query_type = tool_parameters.get('query_type')
+        limit = tool_parameters.get('limit')
+        sort_field = tool_parameters.get('sort')
+        if not query_type:
+            query_type = 'TS'
+        if not limit:
+            limit = 50
+        if not sort_field:
+            sort_field = 'RS+D'
 
-        logger.debug(f"query: {query}")
-        logger.debug(f"query_type: {query_type}")
+        result = WosSearchAPI(api_key).search(query, query_type, limit, sort_field)
 
-        result = WosSearchAPI(api_key).run(query, query_type, limit, page, sort_field)
-
-        if not result:
-            result = 'No results found'
-        else:
-            result = json.dumps(result)
-        # save search result to variable, use self.get_variable('wos_search_result_{user_id}') to get the result
-        return self.create_text_message(text=result, save_as=f'wos_search_result_{user_id}')
+        return self.create_text_message(json.dumps(result))

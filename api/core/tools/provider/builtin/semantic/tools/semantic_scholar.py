@@ -4,6 +4,7 @@ from typing import Any, Optional
 import requests
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
+from core.tools.errors import ToolParameterValidationError
 from core.tools.tool.builtin_tool import BuiltinTool
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class SemanticScholarTool(BuiltinTool):
         """
 
         if len(ids) > 500:
-            return self.create_text_message('The number of papers should be less than 500')
+            raise ToolParameterValidationError('The number of papers should be less than 500')
 
         response = requests.post(self.base_url, json={"ids": ids}, params={"fields": fields})
         response.raise_for_status()
@@ -60,14 +61,10 @@ class SemanticScholarTool(BuiltinTool):
         fields = tool_parameters.get('fields')
 
         if not ids:
-            return self.create_text_message('Please provide a list of paper ids.')
+            raise ToolParameterValidationError('query ids is required.')
+
         if not fields:
             fields = 'title,abstract,year,citationCount,influentialCitationCount'
-        try:
-            ids = ids.split(',')
-            print("ids: ", ids)
-            print('fields: ', fields)
-            return self.query(ids, fields)
-        except Exception as e:
-            logger.error(f'Error invoking Semantic Scholar tool: {e}')
-            return self.create_text_message(f'Error invoking Semantic Scholar tool: {e}')
+
+        ids = ids.split(',')
+        return self.query(ids, fields)

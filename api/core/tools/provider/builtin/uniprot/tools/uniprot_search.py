@@ -4,6 +4,7 @@ from typing import Any, Optional
 import requests
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
+from core.tools.errors import ToolParameterValidationError
 from core.tools.tool.builtin_tool import BuiltinTool
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,6 @@ class UniProtSearchTool(BuiltinTool):
         size = tool_parameters.get('num_results', 50)
 
         if not query:
-            return self.create_text_message('Please input query')
+            raise ToolParameterValidationError('query is required.')
 
         return self.query(query, size)

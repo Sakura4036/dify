@@ -55,7 +55,6 @@ parameters:
           en_US: ISSN
           zh_Hans: ISSN
           pt_BR: ISSN
-
     default: TS
     label:
       en_US: Query type
@@ -78,22 +77,8 @@ parameters:
       en_US: max number of results
       zh_Hans: 页面搜索结果数
       pt_BR: max number of results
-    form: form
+    form: llm
     default: 50
-
-  - name: page
-    type: number
-    required: false
-    label:
-      en_US: Max number of pages searched
-      zh_Hans: 搜索页面数
-      pt_BR: Max number of pages searched
-    human_description:
-      en_US: Max number of pages searched
-      zh_Hans: 最多搜索页面数
-      pt_BR: Max number of pages searched
-    form: form
-    default: 1
 
   - name: sort
     type: select
