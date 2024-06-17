@@ -31,7 +31,7 @@ class SearXNGSearchTool(BuiltinTool):
     "other","packages","weather","map","dictionaries","lyrics","cargo","movies","translate",
     "radio","q&a","wikimedia"]
     """
-    SEARCH_TYPE: dict = {
+    SEARCH_TYPE: dict[str, str] = {
         "page": "general",
         "news": "news",
         "image": "images",
@@ -39,14 +39,14 @@ class SearXNGSearchTool(BuiltinTool):
         # "file": "files"
     }
 
-    LINK_FILED: dict = {
+    LINK_FILED: dict[str, str] = {
         "page": "url",
         "news": "url",
         "image": "img_src",
         # "video": "iframe_src",
         # "file": "magnetlink"
     }
-    TEXT_FILED: dict = {
+    TEXT_FILED: dict[str, str] = {
         "page": "content",
         "news": "content",
         "image": "img_src",
@@ -122,9 +122,10 @@ class SearXNGSearchTool(BuiltinTool):
         result_type = tool_parameters.get('result_type', 'text') or 'text'
 
         return self._invoke_query(
-            user_id=user_id,
-            host=host,
-            query=query,
-            search_type=search_type,
-            result_type=result_type,
-            topK=num_results)
+            user_id=user_id, 
+            host=host, 
+            query=query, 
+            search_type=search_type, 
+            result_type=result_type, 
+            topK=num_results
+        )
