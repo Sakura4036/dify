@@ -31,7 +31,7 @@ class SearXNGSearchTool(BuiltinTool):
     "other","packages","weather","map","dictionaries","lyrics","cargo","movies","translate",
     "radio","q&a","wikimedia"]
     """
-    SEARCH_TYPE = {
+    SEARCH_TYPE: dict = {
         "page": "general",
         "news": "news",
         "image": "images",
@@ -39,14 +39,14 @@ class SearXNGSearchTool(BuiltinTool):
         # "file": "files"
     }
 
-    LINK_FILED = {
+    LINK_FILED: dict = {
         "page": "url",
         "news": "url",
         "image": "img_src",
         # "video": "iframe_src",
         # "file": "magnetlink"
     }
-    TEXT_FILED = {
+    TEXT_FILED: dict = {
         "page": "content",
         "news": "content",
         "image": "img_src",

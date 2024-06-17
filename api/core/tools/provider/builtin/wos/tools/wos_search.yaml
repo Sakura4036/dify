@@ -64,7 +64,7 @@ parameters:
       en_US: used for selecting the search type
       zh_Hans: 用于选择搜索类型，主题, 标题, 作者, DOI, ISSN
       pt_BR: used for selecting the search type
-    form: form
+    form: llm
 
   - name: limit
     type: number

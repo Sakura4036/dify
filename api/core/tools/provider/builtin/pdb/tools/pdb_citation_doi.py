@@ -17,7 +17,7 @@ class PDBCitationDOIsTool(BuiltinTool):
     entry_base_url: str = "https://data.rcsb.org/rest/v1/core/entry/"
     pubmed_base_url: str = "https://data.rcsb.org/rest/v1/pubmed/entry/"
     semantic_base_url: str = "https://api.semanticscholar.org/graph/v1/paper/batch"
-    semantic_doi_fields = 'title,abstract,authors,year,citationCount,influentialCitationCount'
+    semantic_doi_fields: str = 'title,abstract,authors,year,citationCount,influentialCitationCount'
 
     def get_pdb_citation_doi(self, entry_id: str, mode: str = 'all') -> list[str]:
         url = f"{self.entry_base_url}{entry_id}"

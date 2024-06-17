@@ -17,7 +17,7 @@ class PDBCitationsTool(BuiltinTool):
     entry_base_url: str = "https://data.rcsb.org/rest/v1/core/entry/"
     pubmed_base_url: str = "https://data.rcsb.org/rest/v1/pubmed/entry/"
     semantic_base_url: str = "https://api.semanticscholar.org/graph/v1/paper/batch"
-    semantic_doi_fields = 'title,abstract,authors,year,citationCount,influentialCitationCount'
+    semantic_doi_fields: str = 'title,abstract,authors,year,citationCount,influentialCitationCount'
 
     def get_info_by_doi(self, dois: list[str], fields: str = '') -> list[dict]:
         if not fields:

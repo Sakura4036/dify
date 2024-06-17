@@ -85,7 +85,7 @@ class SemanticRelevanceSearchTool(BuiltinTool):
             fields_of_study = 'Medicine,Biology,Chemistry'
         year = tool_parameters.get('year')
         if not year:
-            year = '1980-'
+            year = '1900-'
         fields = tool_parameters.get('fields')
         if not fields:
             fields = 'title,abstract,year,citationCount,influentialCitationCount'

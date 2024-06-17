@@ -14,8 +14,10 @@ logger = logging.getLogger(__name__)
 class WosSearchAPI:
     """
     Web of Science Search API tool provider.
+    API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data
     """
     wos_api_key: str = None
+    base_url: str = 'https://api.clarivate.com/apis/wos-starter/v1/documents'
 
     def __init__(self, api_key: str) -> None:
         """Initialize Web of Science Search API tool provider."""
@@ -34,6 +36,11 @@ class WosSearchAPI:
 
     @staticmethod
     def _process_response(response: dict) -> list[dict]:
+        """
+        Process response from Web of Science Search API.
+        response example:
+
+        """
         result = []
         if response and 'hits' in response:
             for wos_document in response['hits']:
@@ -56,10 +63,21 @@ class WosSearchAPI:
                 result.append(document)
         return result
 
-    def query_once(self, query: str, limit: int = 50, page: int = 1, sort_field: str = 'RS+D') -> tuple[int, list[dict]]:
+    def query_once(self, query: str, limit: int = 50, page: int = 1, sort_field: str = 'RS+D', db: str = 'WOK') -> tuple[int, list[dict]]:
+        """
+        Query Web of Science Search API once.
+
+        Args:
+            query: query string
+            limit: number of results to return
+            page: page number, default is 1(start from 1)
+            sort_field: sort field, default is 'RS+D'(Relevance + Descending)
+            db: database name, default is 'WOK'(all databases), 'WOS' for Web of Science Core Collection,
+             Available values : BCI, BIOABS, BIOSIS, CCC, DIIDW, DRCI, MEDLINE, PPRN, WOK, WOS, ZOOREC
+        """
         if limit <= 0:
             return 0, []
-        request_str = f'https://api.clarivate.com/apis/wos-starter/v1/documents?q={query}&limit={limit}&page={page}&db=WOS&sortField={sort_field}'
+        request_str = f'{self.base_url}?q={query}&limit={limit}&page={page}&sortField={sort_field}&db={db}'
         print(f"Web of Science API request: {request_str}")
         response = requests.get(request_str, headers={'X-ApiKey': self.wos_api_key})
         response.raise_for_status()
