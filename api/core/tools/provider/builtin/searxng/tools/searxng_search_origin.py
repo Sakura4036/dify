@@ -57,8 +57,7 @@ class SearXNGSearchTool(BuiltinTool):
         # "file": "magnetlink"
     }
 
-    def _invoke_query(self, user_id: str, host: str, query: str, search_type: str, result_type: str, topK: int = 5) -> ToolInvokeMessage | list[
-        ToolInvokeMessage]:
+    def _invoke_query(self, user_id: str, host: str, query: str, search_type: str, result_type: str, topK: int = 5) -> ToolInvokeMessage:
         """Run query and return the results."""
 
         search_type = search_type.lower()
@@ -74,41 +73,33 @@ class SearXNGSearchTool(BuiltinTool):
         if response.status_code != 200:
             raise Exception(f'Error {response.status_code}: {response.text}')
 
-        search_results = SearXNGSearchResults(response.text).results
+        search_results = SearXNGSearchResults(response.content.decode(encoding='utf-8')).results
         print("search_results len: ", len(search_results))
         search_results = search_results[:topK]
 
         if result_type == 'link':
-            results = []
             if search_type == "page" or search_type == "news":
-                for r in search_results:
-                    results.append(self.create_text_message(
-                        text=f'title:{r["title"]} \n'
-                             f'url:{r.get(self.LINK_FILED[search_type], "")} \n'
-                    ))
-            elif search_type == "image":
-                for r in search_results:
-                    results.append(self.create_image_message(
-                        image=r.get(self.LINK_FILED[search_type], "")
-                    ))
+                results = [{
+                    "title": r.get("title", ""),
+                    "url": r.get(self.LINK_FILED[search_type], "")
+                } for r in search_results]
             else:
-                for r in search_results:
-                    results.append(self.create_link_message(
-                        link=r.get(self.LINK_FILED[search_type], "")
-                    ))
-
-            return results
+                results = [{
+                    "url": r.get(self.LINK_FILED[search_type], ""),
+                } for r in search_results]
         else:
-            text = ''
-            for i, r in enumerate(search_results):
-                text += f'Number:{i + 1}\n' \
-                        f'title:{r["title"]}\n' \
-                        f'content:{r.get(self.TEXT_FILED[search_type], "")}\n' \
-                        f'url: {r.get(self.LINK_FILED[search_type], "")}\n\n'
+            results = [{
+                "title": r.get("title", ""),
+                "content": r.get(self.TEXT_FILED[search_type], ""),
+                "url": r.get(self.LINK_FILED[search_type], ""),
+            } for r in search_results]
 
-            return self.create_text_message(text=text)
+        for r in results:
+            print(r)
+            print("\n")
+        return self.create_text_message(json.dumps(results))
 
-    def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
+    def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage:
         """
         Invoke the SearXNG search tool.
 
@@ -117,7 +108,7 @@ class SearXNGSearchTool(BuiltinTool):
             tool_parameters (dict[str, Any]): The parameters for the tool invocation.
 
         Returns:
-            ToolInvokeMessage | list[ToolInvokeMessage]: The result of the tool invocation.
+            ToolInvokeMessage: The result of the tool invocation.
         """
 
         host = self.runtime.credentials.get('searxng_base_url', None)

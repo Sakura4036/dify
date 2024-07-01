@@ -64,7 +64,8 @@ class SemanticScholarTool(BuiltinTool):
             raise ToolParameterValidationError('query ids is required.')
 
         if not fields:
-            fields = 'title,abstract,year,citationCount,influentialCitationCount'
+            fields = "title,abstract,externalIds"
 
-        ids = ids.split(',')
+        ids = ids.strip().split(',')
+        print(f"Semantic Scholar search: {ids}")
         return self.query(ids, fields)

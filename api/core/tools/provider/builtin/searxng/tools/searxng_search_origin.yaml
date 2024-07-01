@@ -30,9 +30,8 @@ parameters:
       pt_BR: search type
     human_description:
       en_US: search type for page, news or image.
-      zh_Hans: 选择搜索的类型：网页，新闻，图片。
+      zh_Hans: 选择搜索的类型：网页，新闻，图片，科学。
       pt_BR: search type for page, news or image.
-    default: Page
     options:
       - value: Page
         label:
@@ -54,6 +53,7 @@ parameters:
           en_US: Image
           zh_Hans: 图片
           pt_BR: Image
+    default: Page
     form: llm
   - name: num_results
     type: number
@@ -65,7 +65,6 @@ parameters:
       en_US: The number of query results.
       zh_Hans: 返回查询结果的数量。
     form: form
-    default: 10
     min: 1
     max: 30
   - name: result_type

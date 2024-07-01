@@ -11,59 +11,55 @@ from core.tools.tool.builtin_tool import BuiltinTool
 logger = logging.getLogger(__name__)
 
 
-class SemanticRelevanceSearchTool(BuiltinTool):
+class SemanticBulkSearchTool(BuiltinTool):
     """
     A tool for searching literatures on Semantic Scholar.
     """
-    base_url: str = "https://api.semanticscholar.org/graph/v1/paper/search?"
-    max_num_query_once: int = 100
+    base_url: str = "https://api.semanticscholar.org/graph/v1/paper/search/bulk?"
 
-    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, offset: int = 0, limit: int = 50) -> tuple:
-        if limit <= 0:
-            return 0, []
-        url = f"{self.base_url}query={query}&year={year}&fieldsOfStudy={fields_of_study}&fields={fields}&offset={offset}&limit={limit}"
-        print(f"Querying Semantic Scholar: {url}")
+    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, token: str = None) -> tuple:
+        url = f"{self.base_url}query={query}&year={year}&fieldsOfStudy={fields_of_study}&fields={fields}"
+        if token:
+            # token is used to get the next page of results
+            url += f"&token={token}"
+
+        print(f"Semantic Scholar bulk search: {url}")
         response = requests.get(url, stream=False)
         response.raise_for_status()
         if response.status_code != 200:
             return 0, []
         response = response.json()
         total = response['total']
-        data = []
-        for paper in response['data']:
-            if paper['abstract'] is None:
-                continue
-            else:
-                data.append(paper)
-        return total, data
+        data = response['data']
+        token = response.get('token', None)
+        return total, data, token
 
     def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
         Paper relevance search on Semantic Scholar. API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_relevance_search
         """
-        limit = min(num_results, self.max_num_query_once)
-        total, data = self.query_once(query, fields_of_study, year, fields, limit=limit)
+        total, data, token = self.query_once(query, fields_of_study, year, fields, )
 
         if total == 0:
             return self.create_text_message('No results found.')
 
-        result = data
-        rest_num_results = min(num_results, total) - len(data)
-        offset = limit
+        if len(data) >= num_results:
+            # if the number of results is greater than or equal to the requested number of results, return the result
+            result = data[:num_results]
+        else:
+            # if the number of results is less than the requested number of results, get the next page of results
+            result = data
+            rest_num_results = min(num_results, total) - len(data)  # the maximum number of rest results that can be obtained
 
-        while rest_num_results > 0 and offset < num_results:
-            total, data = self.query_once(query, fields_of_study, year, fields, offset=offset, limit=min(rest_num_results, self.max_num_query_once))
-
-            if total == 0:
-                break
-
-            result.extend(data)
-            offset += self.max_num_query_once
-            rest_num_results -= len(data)
-
-            # sleep for 15 seconds to avoid rate limit
-            time.sleep(15)
-
+            while rest_num_results > 0:
+                total, data, token = self.query_once(query, fields_of_study, year, fields, token=token)
+                if token is None:
+                    break
+                result.extend(data)
+                rest_num_results -= len(data)
+                # sleep for 15 seconds to avoid rate limit
+                time.sleep(15)
+        print(f"Total results: {total},  result length: {len(result)}")
         return self.create_text_message(json.dumps(result))
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
@@ -88,8 +84,10 @@ class SemanticRelevanceSearchTool(BuiltinTool):
             year = '1900-'
         fields = tool_parameters.get('fields')
         if not fields:
+            # fields = 'title,abstract,year,citationCount,influentialCitationCount,openAccessPdf,externalIds'
             fields = "title,abstract,externalIds"
-        num_results = tool_parameters.get('num_results', 50)
+        num_results = tool_parameters.get('num_results')
+        print('num_results:', num_results)
         if not num_results:
             num_results = 50
 

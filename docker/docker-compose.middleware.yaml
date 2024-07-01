@@ -14,7 +14,10 @@ services:
     volumes:
       - ./volumes/db/data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
+    networks:
+      llm:
+        ipv4_address: 172.23.0.21
 
   # The redis cache.
   redis:
@@ -26,7 +29,10 @@ services:
     # Set the redis password when startup redis server.
     command: redis-server --requirepass difyai123456
     ports:
-      - "6379:6379"
+      - "6380:6379"
+    networks:
+      llm:
+        ipv4_address: 172.23.0.22
 
   # The Weaviate vector store.
   weaviate:
@@ -49,7 +55,10 @@ services:
       AUTHORIZATION_ADMINLIST_ENABLED: 'true'
       AUTHORIZATION_ADMINLIST_USERS: 'hello@dify.ai'
     ports:
-      - "8080:8080"
+      - "8081:8080"
+    networks:
+      llm:
+        ipv4_address: 172.23.0.23
 
   # The DifySandbox
   sandbox:
@@ -107,3 +116,6 @@ networks:
   ssrf_proxy_network:
     driver: bridge
     internal: true
+  llm:
+    driver: bridge
+    external: true

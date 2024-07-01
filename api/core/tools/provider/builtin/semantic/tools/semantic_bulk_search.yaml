@@ -1,14 +1,14 @@
 identity:
-  name: semantic relevance search
+  name: semantic bulk search
   author: JiaWen Huang
   label:
-    en_US: Semantic Relevance Search
-    zh_Hans: Semantic相关性搜索
+    en_US: Semantic Bulk Search
+    zh_Hans: Semantic批量搜索
 description:
   human:
-    en_US:   A tool for searching literature information by keywords from the Semantic Scholar repository.
-    zh_Hans: 一个从Semantic Scholar资源库中通过关键字搜索文献信息的工具。
-  llm:  A tool for searching literature information by keywords from the Semantic Scholar repository.
+    en_US:   A tool for bulk searching of literature information by keywords from the Semantic Scholar repository.
+    zh_Hans: 一个从Semantic Scholar资源库中通过关键字大批量搜索文献信息的工具。
+  llm:  A tool for bulk searching of literature information by keywords from the Semantic Scholar repository.
 parameters:
   - name: query
     type: string
@@ -17,9 +17,9 @@ parameters:
       en_US: query
       zh_Hans: 搜索
     human_description:
-      en_US: A plain-text search query string.
-      zh_Hans: 纯文本搜索查询字符串。
-    llm_description: A plain-text search query string.
+      en_US: Text query that will be matched against the paper's title and abstract. All terms are stemmed in English.
+      zh_Hans: 将与论文标题和摘要匹配的文本查询。所有术语均以英文为词干。
+    llm_description: Text query that will be matched against the paper's title and abstract. All terms are stemmed in English.
     form: llm
   - name: fields_of_study
     type: string
@@ -53,7 +53,7 @@ parameters:
       zh_Hans: 返回字段
     human_description:
       en_US: Fields to be returned, separated by commas. default is "title,abstract,externalIds"
-      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,year,citationCount,influentialCitationCount"
+      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,externalIds"
     llm_description: Fields to be returned, separated by commas. default is "title,abstract,externalIds"
     default: "title,abstract,externalIds"
     form: llm

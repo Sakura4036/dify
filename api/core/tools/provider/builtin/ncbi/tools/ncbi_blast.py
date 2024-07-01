@@ -17,8 +17,8 @@ class NCBIBlASTTool(BuiltinTool):
     A tool to search for similar sequences in the NCBI database using BLAST.
     api document: https://ncbi.github.io/blast-cloud/dev/api.html
     """
-    base_url = "https://blast.ncbi.nlm.nih.gov/Blast.cgi?"
-    base_efetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+    base_url: str = "https://blast.ncbi.nlm.nih.gov/Blast.cgi?"
+    base_efetch_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
 
     def put_request(self, query: str, db: str, program: str) -> str | None:
         url = f"{self.base_url}QUERY={query}&DATABASE={db}&PROGRAM={program}&CMD=Put"
