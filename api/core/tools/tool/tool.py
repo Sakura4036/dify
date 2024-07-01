@@ -207,6 +207,7 @@ class Tool(BaseModel, ABC):
             result = [result]
 
         return result
+<<<<<<< HEAD
 
     def _convert_tool_response_to_str(self, tool_response: list[ToolInvokeMessage]) -> str:
         """
@@ -231,6 +232,9 @@ class Tool(BaseModel, ABC):
 
         return result
 
+=======
+
+>>>>>>> main
     def _transform_tool_parameters_type(self, tool_parameters: dict[str, Any]) -> dict[str, Any]:
         """
         Transform tool parameters type
@@ -354,4 +358,13 @@ class Tool(BaseModel, ABC):
             type=ToolInvokeMessage.MessageType.BLOB,
             message=blob, meta=meta,
             save_as=save_as
+        )
+
+    def create_json_message(self, object: dict) -> ToolInvokeMessage:
+        """
+            create a json message
+        """
+        return ToolInvokeMessage(
+            type=ToolInvokeMessage.MessageType.JSON,
+            message=object
         )

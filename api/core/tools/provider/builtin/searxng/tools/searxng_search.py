@@ -112,8 +112,10 @@ class SearXNGSearchTool(BuiltinTool):
         """
 
         host = self.runtime.credentials.get('searxng_base_url', None)
-
-        query = tool_parameters.get('query', None)
+        if not host:
+            raise Exception('SearXNG api is required')
+                
+        query = tool_parameters.get('query')
         if not query:
             raise ToolParameterValidationError('query is required.')
 
