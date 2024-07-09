@@ -165,4 +165,4 @@ class NCBIBlASTTool(BuiltinTool):
             raise ToolParameterValidationError('query or rid is required.')
 
         result = self.blast(query, db, program, num_results, rid)
-        return self.create_text_message(json.dumps(result))
+        return self.create_json_message(result)

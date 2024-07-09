@@ -18,21 +18,31 @@ class WosSearchAPI:
     """
     wos_api_key: str = None
     base_url: str = 'https://api.clarivate.com/apis/wos-starter/v1/documents'
+    switch_grammar = {
+        "+": 'AND',
+        "|": 'OR',
+        "-": 'NOT',
+    }
 
     def __init__(self, api_key: str) -> None:
         """Initialize Web of Science Search API tool provider."""
         self.wos_api_key = api_key
         self.limit = 50
 
-    @staticmethod
-    def get_query(query: str, query_type: str = 'TS') -> str:
+    def check_query(self, query: str):
+        for key, value in self.switch_grammar.items():
+            query = query.replace(key, value)
+        return f"({query})"
+
+    def get_query(self, query: str, query_type: str = 'TS') -> str:
         """
         Get parameters for Web of Science Search API.
         :param query: query string
         :param query_type: query type: TI(title), AU(author), TS(title, abstract, author keywords, keywords plus), DO(doi), IS(ISSN),  PMID(PubMed ID),
         """
         assert query_type in ['TS', 'TI', 'AU', 'DO', 'IS', 'PMID'], 'Invalid query type'
-        return "{}={}".format(query_type, query)
+        query = "{}={}".format(query_type, self.check_query(query))
+        return query
 
     @staticmethod
     def _process_response(response: dict) -> list[dict]:

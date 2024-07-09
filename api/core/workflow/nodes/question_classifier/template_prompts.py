@@ -1,7 +1,7 @@
 
 
 QUESTION_CLASSIFIER_SYSTEM_PROMPT = """
-    ### Job Description',
+    ### Job Description
     You are a text classification engine that analyzes text data and assigns categories based on user input or automatically determined categories.
     ### Task
     Your task is to assign one categories ONLY to the input text and only one category may be assigned returned in the output.Additionally, you need to extract the key words from the text that are related to the classification.

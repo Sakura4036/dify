@@ -1,0 +1,46 @@
+identity:
+  name: literature search
+  author: JiaWen Huang
+  label:
+    en_US: Literature Search
+    zh_Hans: 文献搜索
+description:
+  human:
+    en_US: Literature is a one-click search tool that integrates WOS, Semantic, PubMed and other literature databases.
+    zh_Hans: literature是综合WOS、Semantic、PubMed等文献数据库于一体的一键式搜索工具。
+  llm:  Literature is a one-click search tool that integrates WOS, Semantic, PubMed and other literature databases.
+parameters:
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: query
+      zh_Hans: 搜索
+    human_description:
+      en_US: Text query that will be matched against the paper's title and abstract. All terms are stemmed in English.
+      zh_Hans: 将与论文标题和摘要匹配的文本查询。所有术语均以英文为词干。
+    llm_description: Text query that will be matched against the paper's title and abstract. All terms are stemmed in English.
+    form: llm
+  - name: fields_of_study
+    type: string
+    required: false
+    label:
+      en_US: Fields of Study
+      zh_Hans: 研究领域
+    human_description:
+      en_US: Fields of study to filter the search results, separated by commas.
+      zh_Hans: 用于过滤搜索结果的研究领域，使用逗号分隔。
+    llm_description: Fields of study to filter the search results, separated by commas.
+    form: llm
+  - name: num_results
+    type: number
+    required: false
+    default: 50
+    label:
+      en_US: Number of results
+      zh_Hans: 结果数量
+    human_description:
+      en_US: The number of search results to return.
+      zh_Hans: 要返回的搜索结果数量。
+    llm_description: The number of search results to return.
+    form: llm

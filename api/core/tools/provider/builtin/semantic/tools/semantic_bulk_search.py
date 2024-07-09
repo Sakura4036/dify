@@ -11,13 +11,45 @@ from core.tools.tool.builtin_tool import BuiltinTool
 logger = logging.getLogger(__name__)
 
 
-class SemanticBulkSearchTool(BuiltinTool):
+class SemanticBulkSearchAPI:
     """
     A tool for searching literatures on Semantic Scholar.
     """
     base_url: str = "https://api.semanticscholar.org/graph/v1/paper/search/bulk?"
+    switch_grammar = {
+        "AND": '+',
+        "OR": '|',
+        "NOT": '-',
+    }
+
+    def check_query(self, query: str):
+        for key, value in self.switch_grammar.items():
+            query = query.replace(key, value)
+        return f"({query})"
 
     def query_once(self, query: str, fields_of_study: str, year: str, fields: str, token: str = None) -> tuple:
+        """
+        Query once for the semantic scholar bulk search.
+        API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_bulk_search
+
+        return example:
+        {
+            "total": 1,
+            "token": "xxx",
+            "data": [
+                {
+                    "paperId": "649def34f8be52c8b66281af98ae884c09aef38b",
+                    "corpusId": 2314124,
+                    "externalIds": {},
+                    "url": "https://www.semanticscholar.org/paper/649def34f8be52c8b66281af98ae884c09aef38b",
+                    "title": "Construction of the Literature Graph in Semantic Scholar",
+                    "abstract": "We describe a deployed scalable system ...",
+                    ...
+                }
+            ]
+        }
+        """
+
         url = f"{self.base_url}query={query}&year={year}&fieldsOfStudy={fields_of_study}&fields={fields}"
         if token:
             # token is used to get the next page of results
@@ -34,14 +66,17 @@ class SemanticBulkSearchTool(BuiltinTool):
         token = response.get('token', None)
         return total, data, token
 
-    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50) -> ToolInvokeMessage | list[ToolInvokeMessage]:
+    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50) -> dict | list[dict]:
         """
-        Paper relevance search on Semantic Scholar. API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_relevance_search
+        Paper bulk search on Semantic Scholar.
         """
+        query = self.check_query(query)
+
         total, data, token = self.query_once(query, fields_of_study, year, fields, )
 
         if total == 0:
-            return self.create_text_message('No results found.')
+            data = [{}]
+            return data
 
         if len(data) >= num_results:
             # if the number of results is greater than or equal to the requested number of results, return the result
@@ -60,7 +95,10 @@ class SemanticBulkSearchTool(BuiltinTool):
                 # sleep for 15 seconds to avoid rate limit
                 time.sleep(15)
         print(f"Total results: {total},  result length: {len(result)}")
-        return self.create_text_message(json.dumps(result))
+        return result
+
+
+class SemanticBulkSearchTool(BuiltinTool):
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
@@ -90,5 +128,5 @@ class SemanticBulkSearchTool(BuiltinTool):
         print('num_results:', num_results)
         if not num_results:
             num_results = 50
-
-        return self.query(query, fields_of_study, year, fields, num_results)
+        result = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results)
+        return self.create_text_message(json.dumps(result))

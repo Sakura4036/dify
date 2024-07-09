@@ -94,9 +94,7 @@ class SearXNGSearchTool(BuiltinTool):
                 "url": r.get(self.LINK_FILED[search_type], ""),
             } for r in search_results]
 
-        for r in results:
-            print(r)
-            print("\n")
+        # return self.create_json_message(results)
         return self.create_text_message(json.dumps(results))
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage:

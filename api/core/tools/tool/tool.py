@@ -207,7 +207,6 @@ class Tool(BaseModel, ABC):
             result = [result]
 
         return result
-<<<<<<< HEAD
 
     def _convert_tool_response_to_str(self, tool_response: list[ToolInvokeMessage]) -> str:
         """
@@ -232,9 +231,6 @@ class Tool(BaseModel, ABC):
 
         return result
 
-=======
-
->>>>>>> main
     def _transform_tool_parameters_type(self, tool_parameters: dict[str, Any]) -> dict[str, Any]:
         """
         Transform tool parameters type
