@@ -320,4 +320,5 @@ class LiteratureSearchTool(BuiltinTool):
 
         result = PaperSearchAPI(api_key).search(query, fields_of_study, num_results=num_results)
 
-        return self.create_text_message(json.dumps(result))
+        # return self.create_text_message(json.dumps(result))
+        return [self.create_json_message(r) for r in result]

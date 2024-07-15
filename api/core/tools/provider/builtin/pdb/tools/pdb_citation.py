@@ -101,7 +101,7 @@ class PDBCitationsTool(BuiltinTool):
             mode (str): The mode of the query. 'all' to get all citation infos, 'primary' to get only primary citation
         """
         result = self.get_pdb_citations(entry_id, mode)
-        return self.create_text_message(json.dumps(result))
+        return [self.create_json_message(r) for r in result]
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """

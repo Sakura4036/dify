@@ -29,27 +29,28 @@ class UniProtSearchTool(BuiltinTool):
         with requests.get(url, stream=False) as response:
             response.raise_for_status()
             if response.status_code != 200:
-                return self.create_text_message(f'Error querying UniProt: {response.text}')
+                print(response.text)
+                return [self.create_json_message([])]
             response = response.json()
 
             # response is a dictionary for one protein when the query is an accession number, like "P33993"
             if response.get('results', None) is None:
                 if response.get('references', None) is not None:
                     references = response.get('references', [])
-                    return self.create_text_message(json.dumps(references))
+                    return [self.create_json_message(ref) for ref in references]
                 else:
-                    return self.create_text_message('No results found')
+                    return [self.create_json_message([])]
             else:
                 result = response['results']
                 return_messages = []
                 if isinstance(result, list):
                     for protein in result:
                         references = protein.get('references', [])
-                        return_messages.append(self.create_text_message(json.dumps(references)))
+                        return [self.create_json_message(ref) for ref in references]
                     return return_messages
                 else:
                     references = result.get('references', [])
-                    return self.create_text_message(json.dumps(references))
+                    return [self.create_json_message(ref) for ref in references]
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """

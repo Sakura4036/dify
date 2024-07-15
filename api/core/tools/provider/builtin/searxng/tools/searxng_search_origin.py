@@ -57,7 +57,7 @@ class SearXNGSearchTool(BuiltinTool):
         # "file": "magnetlink"
     }
 
-    def _invoke_query(self, user_id: str, host: str, query: str, search_type: str, result_type: str, topK: int = 5) -> ToolInvokeMessage:
+    def _invoke_query(self, user_id: str, host: str, query: str, search_type: str, result_type: str, topK: int = 5) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """Run query and return the results."""
 
         search_type = search_type.lower()
@@ -77,27 +77,15 @@ class SearXNGSearchTool(BuiltinTool):
         print("search_results len: ", len(search_results))
         search_results = search_results[:topK]
 
-        if result_type == 'link':
-            if search_type == "page" or search_type == "news":
-                results = [{
-                    "title": r.get("title", ""),
-                    "url": r.get(self.LINK_FILED[search_type], "")
-                } for r in search_results]
-            else:
-                results = [{
-                    "url": r.get(self.LINK_FILED[search_type], ""),
-                } for r in search_results]
-        else:
-            results = [{
+        results = [{
                 "title": r.get("title", ""),
                 "content": r.get(self.TEXT_FILED[search_type], ""),
                 "url": r.get(self.LINK_FILED[search_type], ""),
             } for r in search_results]
 
-        # return self.create_json_message(results)
-        return self.create_text_message(json.dumps(results))
+        return [self.create_json_message(r) for r in results]
 
-    def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage:
+    def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
         Invoke the SearXNG search tool.
 

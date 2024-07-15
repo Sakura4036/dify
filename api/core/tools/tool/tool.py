@@ -356,7 +356,7 @@ class Tool(BaseModel, ABC):
             save_as=save_as
         )
 
-    def create_json_message(self, object: dict) -> ToolInvokeMessage:
+    def create_json_message(self, object: Union[dict,list[dict]]) -> ToolInvokeMessage:
         """
             create a json message
         """

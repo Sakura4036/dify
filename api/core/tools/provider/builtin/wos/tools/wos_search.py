@@ -100,7 +100,7 @@ class WosSearchAPI:
         data = self._process_response(response)
         return total, data
 
-    def search(self, query: str, query_type: str = 'TS', num_results: int = 50, sort_field: str = 'RS+D'):
+    def search(self, query: str, query_type: str = 'TS', num_results: int = 50, sort_field: str = 'RS+D') -> list[dict]:
         """
         web of science api: https://api.clarivate.com/swagger-ui/?apikey=none&url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-starter%2Fswagger
 
@@ -156,6 +156,6 @@ class WOSSearchTool(BuiltinTool):
         if not sort_field:
             sort_field = 'RS+D'
 
-        result = WosSearchAPI(api_key).search(query, query_type, limit, sort_field)
+        results = WosSearchAPI(api_key).search(query, query_type, limit, sort_field)
 
-        return self.create_text_message(json.dumps(result))
+        return [self.create_json_message(r) for r in results]

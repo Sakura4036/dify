@@ -1,7 +1,7 @@
 version: '3'
 services:
   web:
-    image: langgenius/dify-web:0.6.12-fix1
+    image: langgenius/dify-web:0.6.13
     restart: always
     environment:
 

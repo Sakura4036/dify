@@ -12,7 +12,7 @@ services:
     volumes:
       - ./volumes/db/data:/var/lib/postgresql/data
     ports:
-      - "${EXPOSE_POSTGRES_PORT:-5432}:5432"
+      - "${EXPOSE_POSTGRES_PORT:-5433}:5432"
     networks:
       llm:
         ipv4_address: 172.23.0.21
@@ -27,7 +27,7 @@ services:
     # Set the redis password when startup redis server.
     command: redis-server --requirepass difyai123456
     ports:
-      - "${EXPOSE_REDIS_PORT:-6379}:6379"
+      - "${EXPOSE_REDIS_PORT:-6380}:6379"
     networks:
       llm:
         ipv4_address: 172.23.0.22
@@ -101,7 +101,7 @@ services:
       AUTHORIZATION_ADMINLIST_ENABLED: ${WEAVIATE_AUTHORIZATION_ADMINLIST_ENABLED:-true}
       AUTHORIZATION_ADMINLIST_USERS: ${WEAVIATE_AUTHORIZATION_ADMINLIST_USERS:-hello@dify.ai}
     ports:
-      - "${EXPOSE_WEAVIATE_PORT:-8080}:8080"
+      - "${EXPOSE_WEAVIATE_PORT:-8081}:8080"
     networks:
       llm:
         ipv4_address: 172.23.0.23

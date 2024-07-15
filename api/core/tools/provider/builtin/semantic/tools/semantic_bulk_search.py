@@ -128,5 +128,5 @@ class SemanticBulkSearchTool(BuiltinTool):
         print('num_results:', num_results)
         if not num_results:
             num_results = 50
-        result = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results)
-        return self.create_text_message(json.dumps(result))
+        results = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results)
+        return [self.create_json_message(r) for r in results]

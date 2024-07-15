@@ -103,7 +103,7 @@ class ToolInvokeMessage(BaseModel):
     """
         plain text, image url or link url
     """
-    message: Union[str, bytes, dict] = None
+    message: Union[str, bytes, dict, list[dict]] = None
     meta: dict[str, Any] = None
     save_as: str = ''
 

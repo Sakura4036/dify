@@ -44,7 +44,7 @@ class SemanticScholarTool(BuiltinTool):
                 paper['id'] = pid
                 result.append(paper)
 
-        return self.create_text_message(json.dumps(result))
+        return [self.create_json_message(r) for r in result]
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
