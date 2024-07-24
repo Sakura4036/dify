@@ -273,7 +273,6 @@ class PaperSearchAPI:
         # 输出摘要信息
         result = []
         for pmid, title, abstract in zip(pmid_list, titles, abstracts):
-
             title_text = title if title is not None else ""
             abstract_text = abstract if abstract is not None else ""
             result.append({
@@ -344,7 +343,7 @@ class PaperSearchAPI:
                     print(f"Error: {e}")
         if without_abstract_pmid:
             pmids = [r['pmid'] for r in without_abstract_pmid]
-            pubmed_result = self.pubmed_search_requests_xml(pmids)
+            pubmed_result = self.pubmed_search_requests(pmids)
             for r, pubmed_r in zip(without_abstract_pmid, pubmed_result):
                 if pubmed_r['abstract']:
                     r['title'] = pubmed_r['title']
