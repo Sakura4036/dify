@@ -10,14 +10,13 @@ from core.tools.tool.builtin_tool import BuiltinTool
 logger = logging.getLogger(__name__)
 
 
-class SemanticScholarTool(BuiltinTool):
+class SemanticScholarBatchAPI:
     """
-    A tool for searching literatures on Semantic Scholar.
-    """
+        A tool for searching literatures on Semantic Scholar.
+        """
     base_url: str = "https://api.semanticscholar.org/graph/v1/paper/batch"
 
-    def query(self, ids: list[str], fields: str, ) -> ToolInvokeMessage | list[
-        ToolInvokeMessage]:
+    def query(self, ids: list[str], fields: str, ) -> list[dict[str, Any]]:
         """
         get details for multiple papers at once. API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/post_graph_get_papers
 
@@ -44,7 +43,13 @@ class SemanticScholarTool(BuiltinTool):
                 paper['id'] = pid
                 result.append(paper)
 
-        return [self.create_json_message(r) for r in result]
+        return result
+
+
+class SemanticScholarTool(BuiltinTool):
+    """
+    A tool for searching literatures on Semantic Scholar.
+    """
 
     def _invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> ToolInvokeMessage | list[ToolInvokeMessage]:
         """
@@ -68,4 +73,5 @@ class SemanticScholarTool(BuiltinTool):
 
         ids = ids.strip().split(',')
         print(f"Semantic Scholar search: {ids}")
-        return self.query(ids, fields)
+        results = SemanticScholarBatchAPI().query(ids, fields)
+        return [self.create_json_message(r) for r in results]

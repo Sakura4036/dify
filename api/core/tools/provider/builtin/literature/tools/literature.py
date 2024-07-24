@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -7,6 +8,8 @@ import urllib.request
 from typing import Any, Optional
 import requests
 from xml.etree import ElementTree as ET
+
+from core.tools.provider.builtin.semantic.tools.semantic_scholar import SemanticScholarBatchAPI
 from core.tools.tool.builtin_tool import BuiltinTool
 from core.tools.entities.tool_entities import ToolInvokeMessage
 from core.tools.errors import ToolParameterValidationError
@@ -193,7 +196,7 @@ class PaperSearchAPI:
         }
         return article
 
-    def pubmed_search_requests(self, pmid_list: str | list, ) -> list[dict]:
+    def pubmed_search_requests_xml(self, pmid_list: str | list, ) -> list[dict]:
         if isinstance(pmid_list, list):
             pmid_list = ",".join(str(pmid) for pmid in pmid_list)
         # 构建请求URL
@@ -238,6 +241,48 @@ class PaperSearchAPI:
             })
         return result
 
+    def pubmed_search_requests(self, pmid_list: str | list, ) -> list[dict]:
+        if isinstance(pmid_list, list):
+            pmid_list = ",".join(str(pmid) for pmid in pmid_list)
+        # 构建请求URL
+        url = self.pubmed_fetch_url + f"db=pubmed&id={pmid_list}&retmode=xml"
+
+        retry = 0
+        while True:
+            try:
+                # 发送HTTP GET请求
+                response = requests.get(url)
+                if response.status_code == 429:
+                    print(
+                        f"Too Many Requests, "
+                        f"waiting for {self.sleep_time:.2f} seconds..."
+                    )
+                    time.sleep(self.sleep_time)
+                    self.sleep_time *= 2
+                    retry += 1
+                elif response.status_code != 200:
+                    response.raise_for_status()
+                else:
+                    break
+            except Exception as e:
+                raise e
+
+        xml_text = response.content.decode("utf-8")
+        abstracts = re.findall(r'<AbstractText>(.*?)</AbstractText>', xml_text, re.DOTALL)
+        titles = re.findall(r'<ArticleTitle>(.*?)</ArticleTitle>', xml_text, re.DOTALL)
+        # 输出摘要信息
+        result = []
+        for pmid, title, abstract in zip(pmid_list, titles, abstracts):
+
+            title_text = title if title is not None else ""
+            abstract_text = abstract if abstract is not None else ""
+            result.append({
+                "pmid": pmid,
+                "title": title_text,
+                "abstract": abstract_text,
+            })
+        return result
+
     def get_pmid_by_doi(self, doi: str) -> str:
         esearch_url = self.pubmed_search_url + f"db=pubmed&term={doi}[DOI]"
         esearch_response = requests.get(esearch_url)
@@ -246,7 +291,7 @@ class PaperSearchAPI:
         return pmid
 
     def search(self, query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-               fields: str = 'title,abstract,externalIds', num_results: int = 50) -> list[dict]:
+               fields: str = 'title,abstract,externalIds,openAccessPdf', num_results: int = 50) -> list[dict]:
         # first, use SemanticScholar to search literature
         semantic_result = semantic_bulk_search(query, fields_of_study, year, fields, num_results)
 
@@ -259,18 +304,33 @@ class PaperSearchAPI:
         without_abstract_pmid = []
         for r in merge_and_deduplicate(semantic_result, wos_result):
             if r['abstract']:
-                # add the result to the final list if it has an abstract
-                result.append(r)
-            else:
-                if r['pmid']:
-                    without_abstract_pmid.append(r)
-                elif r['doi']:
+                if r['doi']:
                     without_abstract_doi.append(r)
+                # add the result to the final list if it has an abstract
+                elif r['pmid']:
+                    without_abstract_pmid.append(r)
                 else:
                     print(f"Warning: no DOI or PMID for the following result: {r}")
+                result.append(r)
+            else:
+                pass
         print(f"Found {len(result)} results with abstracts.")
         print(f"Found {len(without_abstract_doi)} results without abstracts but with DOIs.")
         print(f"Found {len(without_abstract_pmid)} results without abstracts but with PMIDs.")
+
+        # get abstracts with doi by SemanticScholar
+        search_dois = [f"DOI:{r['doi']}" for r in without_abstract_doi]
+        doi_search_results = SemanticScholarBatchAPI().query(search_dois, fields)
+        print(f"Found len:{doi_search_results} results with abstracts by DOI.")
+
+        for search_result in doi_search_results:
+            if search_result['id'] in search_dois:
+                r = without_abstract_doi[search_dois.index(search_result['id'])]
+                r['title'] = search_result['title']
+                r['abstract'] = search_result['abstract']
+                result.append(r)
+                without_abstract_doi.remove(r)
+
         # fourth, use PubMed to search literature whose abstracts are not available in SemanticScholar and Web of Science
         if without_abstract_doi:
             # get PMIDs by DOIs
@@ -284,7 +344,7 @@ class PaperSearchAPI:
                     print(f"Error: {e}")
         if without_abstract_pmid:
             pmids = [r['pmid'] for r in without_abstract_pmid]
-            pubmed_result = self.pubmed_search_requests(pmids)
+            pubmed_result = self.pubmed_search_requests_xml(pmids)
             for r, pubmed_r in zip(without_abstract_pmid, pubmed_result):
                 if pubmed_r['abstract']:
                     r['title'] = pubmed_r['title']
