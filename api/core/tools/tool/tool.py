@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from copy import deepcopy
 from enum import Enum
 from typing import Any, Optional, Union
@@ -190,8 +191,9 @@ class Tool(BaseModel, ABC):
 
         return result
 
-    def invoke(self, user_id: str, tool_parameters: dict[str, Any]) -> list[ToolInvokeMessage]:
+    def invoke(self, user_id: str, tool_parameters: Mapping[str, Any]) -> list[ToolInvokeMessage]:
         # update tool_parameters
+        # TODO: Fix type error.
         if self.runtime.runtime_parameters:
             tool_parameters.update(self.runtime.runtime_parameters)
 
@@ -208,30 +210,7 @@ class Tool(BaseModel, ABC):
 
         return result
 
-    def _convert_tool_response_to_str(self, tool_response: list[ToolInvokeMessage]) -> str:
-        """
-        Handle tool response
-        """
-        result = ''
-        for response in tool_response:
-            if response.type == ToolInvokeMessage.MessageType.TEXT:
-                result += response.message
-            elif response.type == ToolInvokeMessage.MessageType.LINK:
-                result += f"result link: {response.message}. please tell user to check it. \n"
-            elif response.type == ToolInvokeMessage.MessageType.IMAGE_LINK or \
-                 response.type == ToolInvokeMessage.MessageType.IMAGE:
-                result += "image has been created and sent to user already, you do not need to create it, just tell the user to check it now. \n"
-            elif response.type == ToolInvokeMessage.MessageType.BLOB:
-                if len(response.message) > 114:
-                    result += str(response.message[:114]) + '...'
-                else:
-                    result += str(response.message)
-            else:
-                result += f"tool response: {response.message}. \n"
-
-        return result
-
-    def _transform_tool_parameters_type(self, tool_parameters: dict[str, Any]) -> dict[str, Any]:
+    def _transform_tool_parameters_type(self, tool_parameters: Mapping[str, Any]) -> dict[str, Any]:
         """
         Transform tool parameters type
         """
@@ -264,7 +243,7 @@ class Tool(BaseModel, ABC):
 
             :return: the runtime parameters
         """
-        return self.parameters
+        return self.parameters or []
 
     def get_all_runtime_parameters(self) -> list[ToolParameter]:
         """
@@ -356,7 +335,7 @@ class Tool(BaseModel, ABC):
             save_as=save_as
         )
 
-    def create_json_message(self, object: Union[dict,list[dict]]) -> ToolInvokeMessage:
+    def create_json_message(self, object: dict) -> ToolInvokeMessage:
         """
             create a json message
         """
