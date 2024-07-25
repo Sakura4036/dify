@@ -318,17 +318,21 @@ class PaperSearchAPI:
         print(f"Found {len(without_abstract_pmid)} results without abstracts but with PMIDs.")
 
         # get abstracts with doi by SemanticScholar
-        search_dois = [f"DOI:{r['doi']}" for r in without_abstract_doi]
-        doi_search_results = SemanticScholarBatchAPI().query(search_dois, fields)
-        print(f"Found len:{doi_search_results} results with abstracts by DOI.")
+        search_dois = [r['doi'] for r in without_abstract_doi]
+        search_doi_str = [f"DOI:{doi}" for doi in search_dois]
+        doi_search_results = SemanticScholarBatchAPI().query(search_doi_str, fields)
+        print(f"Found len:{len(doi_search_results)} results with abstracts by DOI.")
 
+        remove_index = []
         for search_result in doi_search_results:
-            if search_result['id'] in search_dois:
-                r = without_abstract_doi[search_dois.index(search_result['id'])]
-                r['title'] = search_result['title']
-                r['abstract'] = search_result['abstract']
-                result.append(r)
-                without_abstract_doi.remove(r)
+            index = search_doi_str.index(search_result['id'])
+            r = without_abstract_doi[index]
+            r['title'] = search_result['title']
+            r['abstract'] = search_result['abstract']
+            result.append(r)
+            remove_index.append(index)
+
+        without_abstract_doi = [r for i, r in enumerate(without_abstract_doi) if i not in remove_index]
 
         # fourth, use PubMed to search literature whose abstracts are not available in SemanticScholar and Web of Science
         if without_abstract_doi:

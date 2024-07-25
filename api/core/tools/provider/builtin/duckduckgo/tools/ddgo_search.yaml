@@ -31,7 +31,7 @@ parameters:
     human_description:
       en_US: The max results.
       zh_Hans: 最大结果数量
-    form: form
+    form: llm
   - name: result_type
     type: select
     required: true
