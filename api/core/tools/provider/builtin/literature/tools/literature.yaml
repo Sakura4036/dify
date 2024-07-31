@@ -32,15 +32,27 @@ parameters:
       zh_Hans: 用于过滤搜索结果的研究领域，使用逗号分隔。
     llm_description: Fields of study to filter the search results, separated by commas.
     form: llm
-  - name: num_results
+  - name: wos_num
     type: number
     required: false
     default: 50
     label:
-      en_US: Number of results
-      zh_Hans: 结果数量
+      en_US: wos_num
+      zh_Hans: wos_num
     human_description:
-      en_US: The number of search results to return.
-      zh_Hans: 要返回的搜索结果数量。
-    llm_description: The number of search results to return.
+      en_US: The number of search results to return by WOS.
+      zh_Hans: WOS返回的搜索结果数量。
+    llm_description: The number of search results to return by WOS.
+    form: llm
+  - name: semantic_num
+    type: number
+    required: false
+    default: 50
+    label:
+      en_US: semantic_num
+      zh_Hans: semantic_num
+    human_description:
+      en_US: The number of search results to return by Semantic Scholar.
+      zh_Hans: Semantic Scholar返回的搜索结果数量。
+    llm_description: The number of search results to return by Semantic Scholar.
     form: llm

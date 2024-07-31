@@ -290,12 +290,12 @@ class PaperSearchAPI:
         return pmid
 
     def search(self, query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-               fields: str = 'title,abstract,externalIds,openAccessPdf', num_results: int = 50) -> list[dict]:
+               fields: str = 'title,abstract,externalIds,openAccessPdf', wos_num: int = 80, semantic_num: int = 20) -> list[dict]:
         # first, use SemanticScholar to search literature
-        semantic_result = semantic_bulk_search(query, fields_of_study, year, fields, num_results)
+        semantic_result = semantic_bulk_search(query, fields_of_study, year, fields, semantic_num)
 
         # second, use Web of Science to search literature
-        wos_result = wos_search(query, self.wos_api_key, limit=num_results)
+        wos_result = wos_search(query, self.wos_api_key, limit=wos_num)
 
         # third, merge the results
         result = []
@@ -377,11 +377,14 @@ class LiteratureSearchTool(BuiltinTool):
         fields_of_study = tool_parameters.get('fields_of_study')
         if not fields_of_study:
             fields_of_study = 'Medicine,Biology,Chemistry'
-        num_results = tool_parameters.get('num_results')
-        if not num_results:
-            num_results = 50
+        wos_num = tool_parameters.get('wos_num')
+        if not wos_num:
+            wos_num = 80
+        semantic_num = tool_parameters.get('semantic_num')
+        if not semantic_num:
+            semantic_num = 20
 
-        result = PaperSearchAPI(api_key).search(query, fields_of_study, num_results=num_results)
+        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num, semantic_num)
 
         # return self.create_text_message(json.dumps(result))
         return [self.create_json_message(r) for r in result]
