@@ -177,6 +177,19 @@ class WorkflowEngineManager:
         graph = workflow.graph_dict
 
         try:
+            answer_prov_node_ids = []
+            for node in graph.get('nodes', []):
+                if node.get('id', '') == 'answer':
+                    try:
+                        answer_prov_node_ids.append(node.get('data', {})
+                                                    .get('answer', '')
+                                                    .replace('#', '')
+                                                    .replace('.text', '')
+                                                    .replace('{{', '')
+                                                    .replace('}}', '').split('.')[0])
+                    except Exception as e:
+                        logger.error(e)
+
             predecessor_node: BaseNode | None = None
             current_iteration_node: BaseIterationNode | None = None
             has_entry_node = False
@@ -301,6 +314,9 @@ class WorkflowEngineManager:
                     else:
                         next_node = self._get_node(workflow_run_state=workflow_run_state, graph=graph, node_id=next_node_id, callbacks=callbacks)
 
+                if next_node and next_node.node_id in answer_prov_node_ids:
+                    next_node.is_answer_previous_node = True
+
                 # run workflow, run multiple target nodes in the future
                 self._run_workflow_node(
                     workflow_run_state=workflow_run_state,
@@ -389,11 +405,10 @@ class WorkflowEngineManager:
                 environment_variables=workflow.environment_variables,
             )
 
+            if node_cls is None:
+                raise ValueError('Node class not found')
             # variable selector to variable mapping
-            try:
-                variable_mapping = node_cls.extract_variable_selector_to_variable_mapping(node_config)
-            except NotImplementedError:
-                variable_mapping = {}
+            variable_mapping = node_cls.extract_variable_selector_to_variable_mapping(node_config)
 
             self._mapping_user_inputs_to_variable_pool(
                 variable_mapping=variable_mapping,
@@ -473,10 +488,9 @@ class WorkflowEngineManager:
         for node_config in iteration_nested_nodes:
             # mapping user inputs to variable pool
             node_cls = node_classes.get(NodeType.value_of(node_config.get('data', {}).get('type')))
-            try:
-                variable_mapping = node_cls.extract_variable_selector_to_variable_mapping(node_config)
-            except NotImplementedError:
-                variable_mapping = {}
+            if node_cls is None:
+                raise ValueError('Node class not found')
+            variable_mapping = node_cls.extract_variable_selector_to_variable_mapping(node_config)
 
             # remove iteration variables
             variable_mapping = {
@@ -856,6 +870,10 @@ class WorkflowEngineManager:
 
             raise ValueError(f"Node {node.node_data.title} run failed: {node_run_result.error}")
 
+        if node.is_answer_previous_node and not isinstance(node, LLMNode):
+            if not node_run_result.metadata:
+                node_run_result.metadata = {}
+            node_run_result.metadata["is_answer_previous_node"]=True
         workflow_nodes_and_result.result = node_run_result
 
         # node run success
@@ -942,7 +960,7 @@ class WorkflowEngineManager:
         return new_value
 
     def _mapping_user_inputs_to_variable_pool(self,
-                                              variable_mapping: dict,
+                                              variable_mapping: Mapping[str, Sequence[str]],
                                               user_inputs: dict,
                                               variable_pool: VariablePool,
                                               tenant_id: str,

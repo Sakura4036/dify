@@ -49,6 +49,8 @@ class BaseNode(ABC):
 
     callbacks: Sequence[WorkflowCallback]
 
+    is_answer_previous_node: bool = False
+
     def __init__(self, tenant_id: str,
                  app_id: str,
                  workflow_id: str,
@@ -110,12 +112,13 @@ class BaseNode(ABC):
                     text=text,
                     metadata={
                         "node_type": self.node_type,
+                        "is_answer_previous_node": self.is_answer_previous_node,
                         "value_selector": value_selector
                     }
                 )
 
     @classmethod
-    def extract_variable_selector_to_variable_mapping(cls, config: dict) -> dict[str, list[str]]:
+    def extract_variable_selector_to_variable_mapping(cls, config: dict):
         """
         Extract variable selector to variable mapping
         :param config: node config
@@ -125,14 +128,13 @@ class BaseNode(ABC):
         return cls._extract_variable_selector_to_variable_mapping(node_data)
 
     @classmethod
-    @abstractmethod
-    def _extract_variable_selector_to_variable_mapping(cls, node_data: BaseNodeData) -> dict[str, list[str]]:
+    def _extract_variable_selector_to_variable_mapping(cls, node_data: BaseNodeData) -> Mapping[str, Sequence[str]]:
         """
         Extract variable selector to variable mapping
         :param node_data: node data
         :return:
         """
-        raise NotImplementedError
+        return {}
 
     @classmethod
     def get_default_config(cls, filters: Optional[dict] = None) -> dict:
