@@ -6,6 +6,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Optional
+
+import numpy as np
 import requests
 from xml.etree import ElementTree as ET
 
@@ -107,7 +109,7 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
                 new_entry['orders']['semantic_order'] = semantic_order
             if wos_order is not None:
                 new_entry['orders']['wos_order'] = wos_order
-            merged_dict[key] = new_entry
+
             # 移除原有的order字段
             if 'semantic_order' in new_entry:
                 del new_entry['semantic_order']
@@ -115,6 +117,7 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
                 del new_entry['wos_order']
 
             new_entry['abstract'] = abstract
+            merged_dict[key] = new_entry
 
     # 将字典转换回列表形式
     deduplicated_list = list(merged_dict.values())
@@ -302,37 +305,44 @@ class PaperSearchAPI:
         without_abstract_doi = []
         without_abstract_pmid = []
         for r in merge_and_deduplicate(semantic_result, wos_result):
-            if r['abstract']:
+            if not r['abstract']:
                 if r['doi']:
                     without_abstract_doi.append(r)
-                # add the result to the final list if it has an abstract
                 elif r['pmid']:
                     without_abstract_pmid.append(r)
                 else:
-                    print(f"Warning: no DOI or PMID for the following result: {r}")
-                result.append(r)
+                    print(f"Warning: no DOI or PMID for the following result: {r['title']}")
             else:
-                pass
+                # add the result to the final list if it has an abstract
+                result.append(r)
         print(f"Found {len(result)} results with abstracts.")
         print(f"Found {len(without_abstract_doi)} results without abstracts but with DOIs.")
         print(f"Found {len(without_abstract_pmid)} results without abstracts but with PMIDs.")
 
         # get abstracts with doi by SemanticScholar
-        search_dois = [r['doi'] for r in without_abstract_doi]
-        search_doi_str = [f"DOI:{doi}" for doi in search_dois]
-        doi_search_results = SemanticScholarBatchAPI().query(search_doi_str, fields)
-        print(f"Found len:{len(doi_search_results)} results with abstracts by DOI.")
+        if without_abstract_doi:
+            search_dois = [r['doi'] for r in without_abstract_doi]
+            search_doi_str = [f"DOI:{doi}" for doi in search_dois]
+            if len(search_doi_str) > 500:
+                doi_str_list = np.array_split(search_doi_str, len(search_doi_str) // 500 + 1)
+                doi_search_results = []
+                for doi_str in doi_str_list:
+                    doi_search_results.extend(SemanticScholarBatchAPI().query(doi_str, fields))
+            else:
+                doi_search_results = SemanticScholarBatchAPI().query(search_doi_str, fields)
+            print(f"Found {len(doi_search_results)} results with abstracts by DOI.")
 
-        remove_index = []
-        for search_result in doi_search_results:
-            index = search_doi_str.index(search_result['id'])
-            r = without_abstract_doi[index]
-            r['title'] = search_result['title']
-            r['abstract'] = search_result['abstract']
-            result.append(r)
-            remove_index.append(index)
+            remove_index = []
+            for search_result in doi_search_results:
+                index = search_doi_str.index(search_result['id'])
+                r = without_abstract_doi[index]
+                r['title'] = search_result['title']
+                r['abstract'] = search_result['abstract']
+                result.append(r)
+                remove_index.append(index)
 
-        without_abstract_doi = [r for i, r in enumerate(without_abstract_doi) if i not in remove_index]
+            without_abstract_doi = [r for i, r in enumerate(without_abstract_doi) if i not in remove_index]
+            print(f"Found {len(without_abstract_doi)} results without abstracts by DOI.")
 
         # fourth, use PubMed to search literature whose abstracts are not available in SemanticScholar and Web of Science
         if without_abstract_doi:
@@ -346,6 +356,7 @@ class PaperSearchAPI:
                 except Exception as e:
                     print(f"Error: {e}")
         if without_abstract_pmid:
+            print(f"Found {len(without_abstract_pmid)} results without abstracts but with PMIDs.")
             pmids = [r['pmid'] for r in without_abstract_pmid]
             pubmed_result = self.pubmed_search_requests(pmids)
             for r, pubmed_r in zip(without_abstract_pmid, pubmed_result):
@@ -371,7 +382,9 @@ class LiteratureSearchTool(BuiltinTool):
             ToolInvokeMessage | list[ToolInvokeMessage]: The result of the tool invocation, which can be a single message or a list of messages.
         """
         query = tool_parameters.get('query')
-        api_key = self.runtime.credentials['wos_api_key']
+        if not query:
+            raise ToolParameterValidationError('query is required.')
+
         if not query:
             raise ToolParameterValidationError('query is required.')
         fields_of_study = tool_parameters.get('fields_of_study')
@@ -384,7 +397,11 @@ class LiteratureSearchTool(BuiltinTool):
         if not semantic_num:
             semantic_num = 20
 
-        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num, semantic_num)
+        api_key = tool_parameters.get('wos_api_key')
+        if not api_key:
+            api_key = self.runtime.credentials['wos_api_key']
+
+        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num=wos_num, semantic_num=semantic_num)
 
         # return self.create_text_message(json.dumps(result))
         return [self.create_json_message(r) for r in result]

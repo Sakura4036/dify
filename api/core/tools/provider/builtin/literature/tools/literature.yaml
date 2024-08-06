@@ -56,3 +56,14 @@ parameters:
       zh_Hans: Semantic Scholar返回的搜索结果数量。
     llm_description: The number of search results to return by Semantic Scholar.
     form: llm
+  - name: wos_api_key
+    type: string
+    required: false
+    label:
+      en_US: wos_api_key
+      zh_Hans: wos_api_key
+    human_description:
+      en_US: Web of Science API key.
+      zh_Hans: Web of Science API key。
+    llm_description: Web of Science API key.
+    form: llm

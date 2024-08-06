@@ -27,7 +27,7 @@ def download(sci_doi_url) -> Union[bytes, None]:
 class SciHubAPI:
     scihub_urls = ['https://sci.bban.top/pdf/']
     marker_api_url = 'http://192.168.1.5:8011/convert'
-    download_dir = "/temp/scihub/"
+    download_dir = "~/temp/dify/scihub/"
 
     def __init__(self, scihub_url: str, download_dir: str = None):
         if scihub_url:
@@ -90,7 +90,7 @@ class SciHubTool(BuiltinTool):
         convert = tool_parameters.get("convert")
 
         scihub = SciHubAPI(scihub_url)
-        
+
         if convert:
             return self.create_text_message(text=scihub.invoke(doi, title, convert))
         else:

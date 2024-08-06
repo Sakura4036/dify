@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class WosSearchAPI:
     """
     Web of Science Search API tool provider.
-    API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data
+    API documentation: https://api.clarivate.com/swagger-ui/?apikey=none&url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-starter%2Fswagger
     """
     wos_api_key: str = None
     base_url: str = 'https://api.clarivate.com/apis/wos-starter/v1/documents'
