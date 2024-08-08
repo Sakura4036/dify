@@ -1,0 +1,189 @@
+identity:
+  name: patent_query
+  author: JiaWen Huang
+  label:
+    en_US: Patent Query
+    zh_Hans: 专利查询
+    pt_BR: Patent Query
+description:
+  human:
+    en_US: A tool for querying patent information, returning information including number of patents, patent publication number, patent ID.
+    zh_Hans: 一个调用智慧芽检索式检索专利P002的工具，用于查询专利信息，返回信息包含专利数量、专利公开号、专利ID。
+    pt_BR: A tool for querying patent information, returning information including number of patents, patent publication number, patent ID.
+  llm: A tool for querying patent information, returning information including number of patents, patent publication number, patent ID.
+parameters:
+  - name: query
+    type: string
+    required: true
+    label:
+      en_US: Query text
+      zh_Hans: 查询文本
+      pt_BR: Query text
+    human_description:
+      en_US: analytics search string, max length 1500 characters
+      zh_Hans: Analytics检索式，最大长度为1500字符。
+      pt_BR: analytics search string, max length 1500 characters
+    llm_description: analytics search string, max length 1500 characters
+    form: llm
+
+  - name: num
+    type: number
+    required: false
+    label:
+      en_US: num
+      zh_Hans: 搜索结果数
+      pt_BR: num
+    human_description:
+      en_US: max number of results
+      zh_Hans: 页面搜索结果数
+      pt_BR: max number of results
+    form: llm
+    default: 50
+
+  - name: sort
+    type: select
+    required: false
+    options:
+      - value: SCORE
+        label:
+          en_US: Relevance score
+          zh_Hans: 相关性分数
+          pt_BR: Relevance score
+      - value: PBDT_YEARMONTHDAY
+        label:
+          en_US: Publication year-month-day
+          zh_Hans: 公开日
+          pt_BR: Publication year-month-day
+      - value: APD_YEARMONTHDAY
+        label:
+          en_US: Application year-month-day
+          zh_Hans: 申请日
+          pt_BR: Application year-month-day
+      - value: ISD
+        label:
+          en_US: ISD
+          zh_Hans: ISD
+          pt_BR: ISD
+    default: PBDT_YEARMONTHDAY
+    label:
+      en_US: Order by field
+      zh_Hans: 字段排序
+      pt_BR: Order by field
+    human_description:
+      en_US: Sorting of search results
+      zh_Hans: 检索结果的排序方式
+      pt_BR: Sorting of search results
+    form: form
+
+  - name: sort_order
+    type: select
+    required: false
+    options:
+      - value: desc
+        label:
+          en_US: Descending
+          zh_Hans: 降序
+          pt_BR: Descending
+      - value: asc
+        label:
+          en_US: Ascending
+          zh_Hans: 升序
+          pt_BR: Ascending
+    default: desc
+    label:
+      en_US: Sort order
+      zh_Hans: 排序顺序
+      pt_BR: Sort order
+    form: form
+
+  - name: collapse_type
+    type: select
+    required: false
+    options:
+      - value: ALL
+        label:
+          en_US: ALL
+          zh_Hans: 不去重
+          pt_BR: ALL
+      - value: APNO
+        label:
+          en_US: APNO
+          zh_Hans: 申请号
+          pt_BR: APNO
+      - value: DOCDB
+        label:
+          en_US: DOCDB
+          zh_Hans: 简单同族
+          pt_BR: DOCDB
+      - value: INPADOC
+        label:
+          en_US: INPADOC
+          zh_Hans: INPADOC同族
+          pt_BR: INPADOC
+      - value: EXTEND
+        label:
+          en_US: EXTEND
+          zh_Hans: patsnap同族
+          pt_BR: EXTEND
+    default: DOCDB
+    label:
+      en_US: Patent deduplication
+      zh_Hans: 专利去重
+      pt_BR: Patent deduplication
+    form: form
+
+  - name: collapse_by
+    type: select
+    required: false
+    options:
+      - value: SCORE
+        label:
+          en_US: Relevance score
+          zh_Hans: 相关性分数
+          pt_BR: Relevance score
+      - value: PBD
+        label:
+          en_US: Publication date
+          zh_Hans: 公开日
+          pt_BR: Publication date
+      - value: APD
+        label:
+          en_US: Application date
+          zh_Hans: 申请日
+          pt_BR: Application date
+      - value: AUTHORITY
+        label:
+          en_US: Authority
+          zh_Hans: 受理局
+          pt_BR: Authority
+    default: PBD
+    label:
+      en_US: Patented de-duplicated sorted fields
+      zh_Hans: 专利去重的排序字段
+      pt_BR: Patented de-duplicated sorted fields
+    form: form
+
+  - name: collapse_order
+    type: select
+    required: false
+    options:
+      - value: LATEST
+        label:
+          en_US: latest
+          zh_Hans: 从新到旧
+          pt_BR: latest
+      - value: OLDEST
+        label:
+          en_US: oldest
+          zh_Hans: 从旧到新
+          pt_BR: oldest
+    default: latest
+    label:
+      en_US: Deduplication order
+      zh_Hans: 去重排序
+      pt_BR: Deduplication order
+    form: form
+
+
+
+
