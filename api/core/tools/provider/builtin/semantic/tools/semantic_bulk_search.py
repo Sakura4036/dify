@@ -123,7 +123,7 @@ class SemanticBulkSearchTool(BuiltinTool):
         fields = tool_parameters.get('fields')
         if not fields:
             # fields = 'title,abstract,year,citationCount,influentialCitationCount,openAccessPdf,externalIds'
-            fields = "title,abstract,externalIds"
+            fields = "title,abstract,externalIds,openAccessPdf"
         num_results = tool_parameters.get('num_results')
         print('num_results:', num_results)
         if not num_results:

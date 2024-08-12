@@ -31,7 +31,9 @@ class SemanticRelevanceSearchTool(BuiltinTool):
         total = response['total']
         data = []
         for paper in response['data']:
-            if paper['abstract'] is None:
+            if not paper:
+                continue
+            elif 'abstract' in fields and paper.get('abstract', None) is None:
                 continue
             else:
                 data.append(paper)
@@ -88,7 +90,7 @@ class SemanticRelevanceSearchTool(BuiltinTool):
             year = '1900-'
         fields = tool_parameters.get('fields')
         if not fields:
-            fields = "title,abstract,externalIds"
+            fields = "title,abstract,externalIds,openAccessPdf"
         num_results = tool_parameters.get('num_results', 50)
         if not num_results:
             num_results = 50

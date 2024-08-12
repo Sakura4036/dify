@@ -43,7 +43,7 @@ class ZhiHuiYaProvider(BuiltinToolProviderController):
     def _validate_credentials(self, credentials: dict[str, Any]) -> None:
         try:
             import requests
-            url = "https://connect.zhihuiya.com/search/patent/query-search-count"
+            url = "https://connect.zhihuiya.com/search/patent/query-search-count/v2"
 
             params = {
                 "apikey": credentials["api_key"]

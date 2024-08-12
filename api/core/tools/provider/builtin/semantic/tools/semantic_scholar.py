@@ -37,7 +37,9 @@ class SemanticScholarBatchAPI:
         response = response.json()
         result = []
         for pid, paper in zip(ids, response):
-            if not paper or paper.get('abstract', None) is None:
+            if not paper:
+                continue
+            elif 'abstract' in fields and paper.get('abstract', None) is None:
                 continue
             else:
                 paper['id'] = pid
@@ -69,7 +71,7 @@ class SemanticScholarTool(BuiltinTool):
             raise ToolParameterValidationError('query ids is required.')
 
         if not fields:
-            fields = "title,abstract,externalIds"
+            fields = "title,abstract,externalIds,openAccessPdf"
 
         ids = ids.strip().split(',')
         print(f"Semantic Scholar search: {ids}")

@@ -56,6 +56,17 @@ parameters:
       zh_Hans: Semantic Scholar返回的搜索结果数量。
     llm_description: The number of search results to return by Semantic Scholar.
     form: llm
+  - name: fields
+    type: string
+    required: false
+    label:
+      en_US: Semantic Return Fields
+      zh_Hans: Semantic返回字段
+    human_description:
+      en_US: Fields to be returned, separated by commas. default is "title,abstract,externalIds,openAccessPdf"
+      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,externalIds,openAccessPdf"
+    llm_description: Fields to be returned, separated by commas. default is "title,abstract,externalIds,openAccessPdf"
+    form: llm
   - name: wos_api_key
     type: string
     required: false

@@ -396,12 +396,15 @@ class LiteratureSearchTool(BuiltinTool):
         semantic_num = tool_parameters.get('semantic_num')
         if not semantic_num:
             semantic_num = 20
+        fields = tool_parameters.get('fields')
+        if not fields:
+            fields = 'title,abstract,externalIds,openAccessPdf'
 
         api_key = tool_parameters.get('wos_api_key')
         if not api_key:
             api_key = self.runtime.credentials['wos_api_key']
 
-        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num=wos_num, semantic_num=semantic_num)
+        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num=wos_num, semantic_num=semantic_num, fields=fields)
 
         # return self.create_text_message(json.dumps(result))
         return [self.create_json_message(r) for r in result]

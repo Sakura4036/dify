@@ -28,10 +28,9 @@ parameters:
       pt_BR: patent_number
     llm_description: patent_number id
     form: llm
-
   - name: lang
     type: select
-    required: True
+    required: false
     options:
       - value: en
         label:
@@ -53,31 +52,28 @@ parameters:
       zh_Hans: 优先语言
       pt_BR: language
     default: en
-    form: llm
-
+    form: form
   - name: title_abstract
-      type: boolean
-      default: true
-      label:
-        en_US: Require title and abstract
-        zh_Hans: 需要返回标题和摘要
-      form: form
-
+    type: boolean
+    default: true
+    label:
+      en_US: Require title and abstract
+      zh_Hans: 需要返回标题和摘要
+    form: form
   - name: claim
-      type: boolean
-      default: false
-      label:
-        en_US: Require claim text
-        zh_Hans: 需要返回权利要求
-      form: form
-
+    type: boolean
+    default: false
+    label:
+      en_US: Require claim text
+      zh_Hans: 需要返回权利要求
+    form: form
   - name: tech_summary
-      type: boolean
-      default: false
-      label:
-        en_US: Require Technological triad
-        zh_Hans: 需要返回技术三要素
-      form: form
+    type: boolean
+    default: false
+    label:
+      en_US: Require Technological triad
+      zh_Hans: 需要返回技术三要素
+    form: form
 
 
 

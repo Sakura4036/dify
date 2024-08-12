@@ -36,7 +36,7 @@ credentials_for_provider:
       pt_BR: zhihuiya client secret
     placeholder:
       en_US: Please input your zhihuiya client secret
-      zh_Hans: 请输入你的智慧芽 API key
+      zh_Hans: 请输入你的智慧芽客户端密钥
       pt_BR: Please input your zhihuiya client secret
     help:
       en_US: Get your zhihuiya client secret from open.zhihuiya.com

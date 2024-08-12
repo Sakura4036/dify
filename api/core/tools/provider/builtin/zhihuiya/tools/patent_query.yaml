@@ -39,7 +39,19 @@ parameters:
       pt_BR: max number of results
     form: llm
     default: 50
-
+  - name: stemming
+    type: boolean
+    required: True
+    default: true
+    label:
+      en_US: Stemming
+      zh_Hans: 是否开启截词功能
+      pt_BR: Stemming
+    form: form
+    human_description:
+        en_US: enable the truncation function (word form expansion), such as come will be expanded to comes, coming, etc.
+        zh_Hans: 开启截词功能后，可以自动将检索词进行词形扩展，例如come会扩展为comes,coming等
+        pt_BR: enable the truncation function (word form expansion), such as come will be expanded to comes, coming, etc.
   - name: sort
     type: select
     required: false
@@ -62,7 +74,7 @@ parameters:
       - value: ISD
         label:
           en_US: ISD
-          zh_Hans: ISD
+          zh_Hans: 授权日
           pt_BR: ISD
     default: PBDT_YEARMONTHDAY
     label:
@@ -79,12 +91,12 @@ parameters:
     type: select
     required: false
     options:
-      - value: desc
+      - value: DESC
         label:
           en_US: Descending
           zh_Hans: 降序
           pt_BR: Descending
-      - value: asc
+      - value: ASC
         label:
           en_US: Ascending
           zh_Hans: 升序
@@ -95,7 +107,6 @@ parameters:
       zh_Hans: 排序顺序
       pt_BR: Sort order
     form: form
-
   - name: collapse_type
     type: select
     required: false

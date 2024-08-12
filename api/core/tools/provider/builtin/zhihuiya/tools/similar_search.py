@@ -9,7 +9,7 @@ from core.tools.tool.builtin_tool import BuiltinTool
 
 class SimilarSearchAPI:
     api_key = ""
-    api_url = "https://connect.zhihuiya.com/search/patent/similar-search-patent"
+    api_url = "https://connect.zhihuiya.com/search/patent/similar-search-patent/v2"
     max_limit = 1000
     max_offset = 20000
     interval = 1
@@ -50,15 +50,16 @@ class SimilarSearchAPI:
 
         headers = {
             "Content-Type": "application/json",
-            "authorization": "Bearer {token}"
+            "authorization": "Bearer {}".format(self.token)
         }
 
         response = requests.request("POST", self.api_key, params=params, json=payload, headers=headers)
         response.raise_for_status()
 
-        data = json.loads(response.text)
+        data = response.json()
         if data['error_code'] != 0:
             raise Exception(data['error_msg'])
+        data = data['data']
         total = data['total_search_result_count']
         data = data['results']
         return total, data
