@@ -1,0 +1,54 @@
+identity:
+  name: PDFDownload
+  author: JiaWen Huang
+  label:
+    en_US: PDFDownload
+    zh_Hans: PDF下载
+description:
+  human:
+    en_US: PDFDownload is a tool that downloads papers from a given doi.
+    zh_Hans: PDFDownload是一个给定doi下载论文的工具。
+  llm: PDFDownload is a tool that downloads papers from a given doi.
+parameters:
+  - name: doi
+    type: string
+    required: true
+    label:
+      en_US: doi
+      zh_Hans: doi
+    human_description:
+      en_US: The DOI of the paper to download.
+      zh_Hans: 要下载的论文的DOI。
+    llm_description: The DOI of the paper to download.
+    form: llm
+  - name: title
+    type: string
+    required: false
+    label:
+      en_US: title
+      zh_Hans: 标题
+    human_description:
+      en_US: The title of the paper to download.
+      zh_Hans: 要下载的论文的标题。
+    llm_description: The title of the paper to download.
+    form: llm
+  - name: url
+    type: string
+    required: false
+    label:
+      en_US: url of pdf file
+      zh_Hans: pdf文件url
+    llm_description: the url of pdf file
+    form: llm
+  - name: convert
+    type: boolean
+    required: false
+    label:
+      en_US: convert
+      zh_Hans: convert
+    human_description:
+      en_US: Whether to convert the downloaded paper to markdown format.
+      zh_Hans: 是否将下载的论文转换为markdown格式。
+    llm_description: Whether to convert the downloaded paper to markdown format.
+    form: form
+

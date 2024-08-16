@@ -1,0 +1,50 @@
+identity:
+  name: crossref_query_doi
+  author: JiaWen Huang
+  label:
+    en_US: CrossRef Query DOI
+    zh_Hans: CrossRef DOI 查询
+    pt_BR: CrossRef Query DOI
+description:
+  human:
+    en_US: A tool for searching literature information using CrossRef by DOI.
+    zh_Hans: 一个使用CrossRef通过DOI获取文献信息的工具。
+    pt_BR: A tool for searching literature information using CrossRef by DOI.
+  llm: A tool for searching literature information using CrossRef by DOI.
+parameters:
+  - name: doi
+    type: string
+    required: true
+    label:
+      en_US: DOI
+      zh_Hans: DOI
+      pt_BR: DOI
+    llm_description: DOI for searching in CrossRef
+    form: llm
+  - name: return_type
+    type: boolean
+    default: false
+    label:
+      en_US: Require claim text
+      zh_Hans: 需要返回权利要求
+    form: form
+  - name: return_type
+    type: select
+    required: false
+    options:
+      - value: basic
+        label:
+          en_US: Basic
+          zh_Hans: 基础信息
+          pt_BR: Basic
+      - value: all
+        label:
+          en_US: All
+          zh_Hans: 全部信息
+          pt_BR: All
+    label:
+      en_US: return type
+      zh_Hans: 返回类型
+      pt_BR: return type
+    default: basic
+    form: llm

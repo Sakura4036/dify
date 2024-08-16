@@ -1,0 +1,61 @@
+identity:
+  author: JiaWen Huang
+  name: chrome_downloader
+  label:
+    en_US: ChromeDownloader
+    zh_Hans: ChromeDownloader
+  description:
+    en_US: ChromeDownloader is a tool that can download literature pdfs.
+    zh_Hans: ChromeDownloader是一个可以下载文献pdf的工具。
+  icon: icon.svg
+  tags:
+    - utilities
+credentials_for_provider:
+  marker_api:
+    type: text-input
+    required: true
+    label:
+      en_US: a api url of marker
+      zh_Hans: Marker的api接口
+      pt_BR: a api url of marker
+    placeholder:
+      en_US: Please input your Marker's api url
+      zh_Hans: 请输入你的Marker的api接口
+      pt_BR: Please input your Marker's api url
+    help:
+      en_US: Please deploy the Marker service and input its api interface
+      zh_Hans: 请部署Marker服务并输入其api接口
+      pt_BR: Please deploy the Marker service and input its api interface
+    url: https://github.com/adithya-s-k/marker-api
+  chrome_executable_path:
+    type: text-input
+    required: true
+    label:
+      en_US: chrome driver path
+      zh_Hans: chrome driver文件路径
+      pt_BR: chrome driver path
+    placeholder:
+      en_US: Please input your Chrome driver file path
+      zh_Hans: 请输入你的Chrome driver文件路径
+      pt_BR: Please input your Chrome driver file path
+    help:
+      en_US: Please install Chrome and download Chrome Driver
+      zh_Hans: 请安装Chrome和下载Chrome Driver
+      pt_BR: Please install Chrome and download Chrome Driver
+    url: https://chromedriver.storage.googleapis.com/index.html
+  chrome_download_dir:
+    type: text-input
+    required: true
+    label:
+      en_US: download dir
+      zh_Hans: 下载文件保存路径
+      pt_BR: download dir
+    placeholder:
+      en_US: Please input your download file save dir
+      zh_Hans: 请输入你的下载文件保存文件夹
+      pt_BR: Please input your download file save dir
+    help:
+      en_US: Please set to an absolute path, otherwise there may be problems
+      zh_Hans: 请最好设置为绝对路径，否则可能会出现问题
+      pt_BR: Please set to an absolute path, otherwise there may be problems
+

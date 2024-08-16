@@ -22,8 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def semantic_bulk_search(query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-                         fields: str = 'title,abstract,externalIds',
-                         num_results: int = 50) -> list[dict]:
+                         fields: str = 'title,abstract,externalIds', num_results: int = 50, filtered: bool = False) -> list[dict]:
     """
     Paper relevance search on Semantic Scholar. API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_relevance_search
 
@@ -41,13 +40,13 @@ def semantic_bulk_search(query: str, fields_of_study: str = 'Medicine,Biology,Ch
         }
     ]
     """
-    result = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results)
+    result = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results, filtered=filtered)
     print("semantic_bulk_search result num:", len(result))
     for i, r in enumerate(result):
         r['semantic_order'] = i
         r['doi'] = r['externalIds'].get('DOI', '')
         r['pmid'] = r['externalIds'].get('PubMed', '')
-        del r['externalIds']
+        # del r['externalIds']
     return result
 
 
@@ -293,7 +292,11 @@ class PaperSearchAPI:
         return pmid
 
     def search(self, query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-               fields: str = 'title,abstract,externalIds,openAccessPdf', wos_num: int = 80, semantic_num: int = 20) -> list[dict]:
+               fields: str = 'title,abstract,externalIds,openAccessPdf', wos_num: int = 80, semantic_num: int = 20,
+               filtered: bool = True) -> list[dict]:
+        """
+        Search literature using SemanticScholar and Web of Science.
+        """
         # first, use SemanticScholar to search literature
         semantic_result = semantic_bulk_search(query, fields_of_study, year, fields, semantic_num)
 
@@ -304,6 +307,7 @@ class PaperSearchAPI:
         result = []
         without_abstract_doi = []
         without_abstract_pmid = []
+        filtered_result = []
         for r in merge_and_deduplicate(semantic_result, wos_result):
             if not r['abstract']:
                 if r['doi']:
@@ -311,6 +315,7 @@ class PaperSearchAPI:
                 elif r['pmid']:
                     without_abstract_pmid.append(r)
                 else:
+                    filtered_result.append(r)
                     print(f"Warning: no DOI or PMID for the following result: {r['title']}")
             else:
                 # add the result to the final list if it has an abstract
@@ -327,9 +332,9 @@ class PaperSearchAPI:
                 doi_str_list = np.array_split(search_doi_str, len(search_doi_str) // 500 + 1)
                 doi_search_results = []
                 for doi_str in doi_str_list:
-                    doi_search_results.extend(SemanticScholarBatchAPI().query(doi_str, fields))
+                    doi_search_results.extend(SemanticScholarBatchAPI().query(doi_str, fields, filtered=True))
             else:
-                doi_search_results = SemanticScholarBatchAPI().query(search_doi_str, fields)
+                doi_search_results = SemanticScholarBatchAPI().query(search_doi_str, fields, filtered=True)
             print(f"Found {len(doi_search_results)} results with abstracts by DOI.")
 
             remove_index = []
@@ -353,8 +358,11 @@ class PaperSearchAPI:
                     if pmid:
                         r['pmid'] = pmid
                         without_abstract_pmid.append(r)
+                    else:
+                        filtered_result.append(r)
                 except Exception as e:
                     print(f"Error: {e}")
+                    filtered_result.append(r)
         if without_abstract_pmid:
             print(f"Found {len(without_abstract_pmid)} results without abstracts but with PMIDs.")
             pmids = [r['pmid'] for r in without_abstract_pmid]
@@ -364,6 +372,26 @@ class PaperSearchAPI:
                     r['title'] = pubmed_r['title']
                     r['abstract'] = pubmed_r['abstract']
                     result.append(r)
+                else:
+                    filtered_result.append(r)
+
+        for r in result:
+            r['url'] = f"https://doi.org/{r['doi']}" if r['doi'] else f"https://pubmed.ncbi.nlm.nih.gov/{r['pmid']}"
+
+        if not filtered:
+            for r in filtered_result:
+                if r['doi']:
+                    r['url'] = f"https://doi.org/{r['doi']}"
+                elif r['pmid']:
+                    r['url'] = f"https://pubmed.ncbi.nlm.nih.gov/{r['pmid']}"
+                else:
+                    r['url'] = ''
+                if not r.get('title'):
+                    r['title'] = ''
+                if not r.get('abstract'):
+                    r['abstract'] = ''
+
+            result.extend(filtered_result)
 
         print(f"Total number of results: {len(result)}")
         return result
@@ -400,11 +428,13 @@ class LiteratureSearchTool(BuiltinTool):
         if not fields:
             fields = 'title,abstract,externalIds,openAccessPdf'
 
+        filtered = tool_parameters.get('filtered', True)
+
         api_key = tool_parameters.get('wos_api_key')
         if not api_key:
             api_key = self.runtime.credentials['wos_api_key']
 
-        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num=wos_num, semantic_num=semantic_num, fields=fields)
+        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num=wos_num, semantic_num=semantic_num, fields=fields, filtered=filtered)
 
         # return self.create_text_message(json.dumps(result))
         return [self.create_json_message(r) for r in result]

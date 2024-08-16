@@ -27,7 +27,7 @@ class SemanticBulkSearchAPI:
             query = query.replace(key, value)
         return f"({query})"
 
-    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, token: str = None) -> tuple:
+    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, token: str = None, filtered: bool = False) -> tuple:
         """
         Query once for the semantic scholar bulk search.
         API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_bulk_search
@@ -62,17 +62,25 @@ class SemanticBulkSearchAPI:
             return 0, []
         response = response.json()
         total = response['total']
-        data = response['data']
+
+        data = []
+        for paper in response['data']:
+            if not paper:
+                continue
+            if filtered and 'abstract' in fields and paper.get('abstract', None) is None:
+                continue
+            data.append(paper)
+
         token = response.get('token', None)
         return total, data, token
 
-    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50) -> dict | list[dict]:
+    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50, filtered: bool = False) -> dict | list[dict]:
         """
         Paper bulk search on Semantic Scholar.
         """
         query = self.check_query(query)
 
-        total, data, token = self.query_once(query, fields_of_study, year, fields, )
+        total, data, token = self.query_once(query, fields_of_study, year, fields, filtered=filtered)
 
         if total == 0:
             data = [{}]
@@ -87,7 +95,7 @@ class SemanticBulkSearchAPI:
             rest_num_results = min(num_results, total) - len(data)  # the maximum number of rest results that can be obtained
 
             while rest_num_results > 0:
-                total, data, token = self.query_once(query, fields_of_study, year, fields, token=token)
+                total, data, token = self.query_once(query, fields_of_study, year, fields, token=token, filtered=filtered)
                 if token is None:
                     break
                 result.extend(data)
@@ -125,8 +133,9 @@ class SemanticBulkSearchTool(BuiltinTool):
             # fields = 'title,abstract,year,citationCount,influentialCitationCount,openAccessPdf,externalIds'
             fields = "title,abstract,externalIds,openAccessPdf"
         num_results = tool_parameters.get('num_results')
-        print('num_results:', num_results)
         if not num_results:
             num_results = 50
-        results = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results)
+        filtered = tool_parameters.get('filtered', False)
+
+        results = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results, filtered)
         return [self.create_json_message(r) for r in results]

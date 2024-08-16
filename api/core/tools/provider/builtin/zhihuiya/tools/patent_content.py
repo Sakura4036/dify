@@ -14,6 +14,8 @@ def get_text_by_lang(content: List[dict], lang=None, return_key="text"):
     """
     get text by language, if lang is None, return the first text
     """
+    if not content:
+        return ""
     if lang is None:
         lang = ["EN", "CN", "JP"]
     if not isinstance(lang, list):
@@ -26,6 +28,8 @@ def get_text_by_lang(content: List[dict], lang=None, return_key="text"):
 
 
 def html_to_markdown(html_text: str, return_markdown: bool = False) -> str:
+    if not html_text:
+        return ""
     # 使用BeautifulSoup解析HTML
     soup = BeautifulSoup(html_text, "html.parser")
 
@@ -79,7 +83,7 @@ class PatentContentAPI:
         self.token = ZhiHuiYaProvider().get_bearer_token(credentials)
 
     def get_title_abstract(self, patent_id: str, patent_number: str, lang: str = 'en'):
-        if not patent_id or not patent_number:
+        if not patent_id and not patent_number:
             return None
 
         params = {
@@ -102,19 +106,24 @@ class PatentContentAPI:
         if response['error_code'] != 0:
             raise Exception(response['error_msg'])
         data = {}
-        for d in response['data']:
-            data[d['patent_id']] = {
-                "patent_id": d['patent_id'],
-                "patent_number": d['pn'],
-                "patent_type": d['bibliographic_data']['patent_type'],
-                "title": get_text_by_lang(d['bibliographic_data']['invention_title'], lang=lang),
-                "abstract": get_text_by_lang(d['bibliographic_data']['abstracts'], lang=lang),
-            }
+        try:
+            for d in response['data']:
+                data[d['patent_id']] = {
+                    "patent_id": d['patent_id'],
+                    "patent_number": d['pn'],
+                    "patent_type": d['bibliographic_data']['patent_type'],
+                    "title": get_text_by_lang(d['bibliographic_data'].get('invention_title'), lang=lang),
+                    "abstract": get_text_by_lang(d['bibliographic_data'].get('abstracts'), lang=lang),
+                }
+        except Exception as e:
+            print("Error: ", d)
+            print("-" * 50)
+            raise e
 
         return data
 
     def get_claim_data(self, patent_id: str, patent_number: str, lang: str = 'en'):
-        if not patent_id or not patent_number:
+        if not patent_id and not patent_number:
             return None
 
         params = {
@@ -142,14 +151,14 @@ class PatentContentAPI:
             data[d['patent_id']] = {
                 "patent_id": d['patent_id'],
                 "patent_number": d['pn'],
-                "claims": html_to_markdown(get_text_by_lang(d['claims'], lang=lang, return_key="claim_text")),
+                "claims": html_to_markdown(get_text_by_lang(d.get('claims'), lang=lang, return_key="claim_text")),
                 "claim_count": d['claim_count'],
             }
 
         return data
 
     def get_tech_summary(self, patent_id: str, patent_number: str, lang: str = 'en'):
-        if not patent_id or not patent_number:
+        if not patent_id and not patent_number:
             return None
 
         params = {
@@ -176,9 +185,9 @@ class PatentContentAPI:
             data[d['patent_id']] = {
                 "patent_id": d['patent_id'],
                 "patent_number": d['pn'],
-                "benefit_summary": d['benefit_summary'],
-                "tech_problem_summary": d['tech_problem_summary'],
-                "technical_approach_summary": d['technical_approach_summary']
+                "benefit_summary": d.get('benefit_summary',""),
+                "tech_problem_summary": d.get('tech_problem_summary',""),
+                "technical_approach_summary": d.get('technical_approach_summary',"")
             }
         return data
 
@@ -193,7 +202,7 @@ class PatentContentAPI:
         :param claim: get claim data or not, default is True
         :param tech_summary: get tech summary or not, default is False
         """
-        if not patent_id or not patent_number:
+        if not patent_id and not patent_number:
             raise ValueError("at least one of patent_id and patent_number should be provided")
         if patent_id:
             patent_ids = patent_id.split(',')

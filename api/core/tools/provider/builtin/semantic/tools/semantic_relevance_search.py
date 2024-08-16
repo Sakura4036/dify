@@ -18,7 +18,7 @@ class SemanticRelevanceSearchTool(BuiltinTool):
     base_url: str = "https://api.semanticscholar.org/graph/v1/paper/search?"
     max_num_query_once: int = 100
 
-    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, offset: int = 0, limit: int = 50) -> tuple:
+    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, offset: int = 0, limit: int = 50, filtered: bool = True) -> tuple:
         if limit <= 0:
             return 0, []
         url = f"{self.base_url}query={query}&year={year}&fieldsOfStudy={fields_of_study}&fields={fields}&offset={offset}&limit={limit}"
@@ -33,18 +33,18 @@ class SemanticRelevanceSearchTool(BuiltinTool):
         for paper in response['data']:
             if not paper:
                 continue
-            elif 'abstract' in fields and paper.get('abstract', None) is None:
+            if filtered and 'abstract' in fields and paper.get('abstract', None) is None:
                 continue
-            else:
-                data.append(paper)
+            data.append(paper)
         return total, data
 
-    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50) -> ToolInvokeMessage | list[ToolInvokeMessage]:
+    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50, filtered: bool = True) -> ToolInvokeMessage | list[
+        ToolInvokeMessage]:
         """
         Paper relevance search on Semantic Scholar. API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_relevance_search
         """
         limit = min(num_results, self.max_num_query_once)
-        total, data = self.query_once(query, fields_of_study, year, fields, limit=limit)
+        total, data = self.query_once(query, fields_of_study, year, fields, limit=limit, filtered=filtered)
 
         if total == 0:
             return self.create_text_message('No results found.')
@@ -54,7 +54,9 @@ class SemanticRelevanceSearchTool(BuiltinTool):
         offset = limit
 
         while rest_num_results > 0 and offset < num_results:
-            total, data = self.query_once(query, fields_of_study, year, fields, offset=offset, limit=min(rest_num_results, self.max_num_query_once))
+            total, data = self.query_once(query, fields_of_study, year, fields, offset=offset,
+                                          limit=min(rest_num_results, self.max_num_query_once),
+                                          filtered=filtered)
 
             if total == 0:
                 break
@@ -94,5 +96,6 @@ class SemanticRelevanceSearchTool(BuiltinTool):
         num_results = tool_parameters.get('num_results', 50)
         if not num_results:
             num_results = 50
+        filtered = tool_parameters.get('filtered', True)
 
-        return self.query(query, fields_of_study, year, fields, num_results)
+        return self.query(query, fields_of_study, year, fields, num_results, filtered)

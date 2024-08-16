@@ -69,3 +69,15 @@ parameters:
       zh_Hans: 要返回的搜索结果数量。
     llm_description: The number of search results to return.
     form: llm
+  - name: filtered
+    type: boolean
+    required: False
+    default: True
+    label:
+      en_US: filtered
+      zh_Hans: 过滤无效文献
+    human_description:
+      en_US: Filter invalid literature, invalid literature includes literature without abstract, literature not searched
+      zh_Hans: 过滤无效文献，无效文献包括无摘要、未搜索到的文献
+    llm_description: Filter invalid literature, invalid literature includes literature without abstract, literature not searched
+    form: form

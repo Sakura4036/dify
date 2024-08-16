@@ -27,7 +27,7 @@ def download(sci_doi_url) -> Union[bytes, None]:
 class SciHubAPI:
     scihub_urls = ['https://sci.bban.top/pdf/']
     marker_api_url = 'http://192.168.1.5:8011/convert'
-    download_dir = "~/temp/dify/scihub/"
+    download_dir = "/home/huangjiawen/matwings/data/dify/pdf"
 
     def __init__(self, scihub_url: str, download_dir: str = None):
         if scihub_url:
