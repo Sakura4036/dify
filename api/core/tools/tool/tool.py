@@ -2,13 +2,12 @@ from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from core.app.entities.app_invoke_entities import InvokeFrom
-from core.file.file_obj import FileVar
 from core.tools.entities.tool_entities import (
     ToolDescription,
     ToolIdentity,
@@ -22,6 +21,9 @@ from core.tools.entities.tool_entities import (
 )
 from core.tools.tool_file_manager import ToolFileManager
 from core.tools.utils.tool_parameter_converter import ToolParameterConverter
+
+if TYPE_CHECKING:
+    from core.file.file_obj import FileVar
 
 
 class Tool(BaseModel, ABC):
@@ -290,7 +292,7 @@ class Tool(BaseModel, ABC):
                                  message=image,
                                  save_as=save_as)
 
-    def create_file_var_message(self, file_var: FileVar) -> ToolInvokeMessage:
+    def create_file_var_message(self, file_var: "FileVar") -> ToolInvokeMessage:
         return ToolInvokeMessage(type=ToolInvokeMessage.MessageType.FILE_VAR,
                                  message='',
                                  meta={
