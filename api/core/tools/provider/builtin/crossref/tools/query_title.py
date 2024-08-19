@@ -1,11 +1,3 @@
-# !/usr/bin/env python3
-# _*_ coding:utf-8 _*_
-"""
-@File     : query.py
-@Time     : 2024/8/16 10:03
-@Author   : Hjw
-@License  : (C)Copyright 2018-2025
-"""
 import time
 import requests
 from typing import Any, Union, List

@@ -1,11 +1,3 @@
-# !/usr/bin/env python3
-# _*_ coding:utf-8 _*_
-"""
-@File     : utils.py
-@Time     : 2024/8/16 10:59
-@Author   : Hjw
-@License  : (C)Copyright 2018-2025
-"""
 import re
 
 
