@@ -19,6 +19,7 @@ import os
 
 from typing import Any, List, Union
 
+from core.tools.provider.builtin.crossref.tools.query_title import CrossRefQueryTitleAPI
 from core.tools.provider.builtin.semantic.tools.semantic_scholar import SemanticScholarBatchAPI
 from core.tools.tool.builtin_tool import BuiltinTool
 from core.tools.entities.tool_entities import ToolInvokeMessage
@@ -90,19 +91,19 @@ def get_latest_file(folder_path: str) -> str:
     return latest_file
 
 
-def exist_crdownload_file(directory):
-    for filename in os.listdir(directory):
+def exist_crdownload_file(dirpath):
+    for filename in os.listdir(dirpath):
         # 检查文件是否以 .crdownload 结尾
         if filename.endswith('.crdownload') or filename.endswith('.tmp'):
             return filename
     return ''
 
 
-def clean_cache_download_files(directory):
-    for filename in os.listdir(directory):
+def clean_cache_download_files(dirpath):
+    for filename in os.listdir(dirpath):
         # 检查文件是否以 .crdownload 结尾
         if filename.endswith('.crdownload') or filename.endswith('.tmp'):
-            os.remove(os.path.join(directory, filename))
+            os.remove(os.path.join(dirpath, filename))
 
 
 def wait_for_download(directory, pre_latest_file, max_retries=10, check_interval=1, download_timeout=120):
@@ -124,7 +125,12 @@ def wait_for_download(directory, pre_latest_file, max_retries=10, check_interval
 
                     # 如果超时，则返回 False, 和缓冲文件
                     if time.time() - start_time > download_timeout:
-                        return False, latest_file
+                        try:
+                            os.remove(latest_file)
+                        except Exception as e:
+                            print(f"Error while removing file: {latest_file}")
+                            print(traceback.format_exc())
+                        return False, ''
 
                     # 每隔一段时间检查一次
                     time.sleep(check_interval)
@@ -141,6 +147,21 @@ def wait_for_download(directory, pre_latest_file, max_retries=10, check_interval
     return False, ''
 
 
+def get_doi_from_title(title: str) -> str:
+    paper = CrossRefQueryTitleAPI("jiawen.huang@matwings.com").query(title, rows=1, fuzzy_query=False)
+    if paper:
+        return paper[0].get('doi', '')
+    return ''
+
+
+def check_filepath(name: str, ext: str, dirpath:str) -> str:
+    filename = sanitize_filename(name, ext)
+    for fn in os.listdir(dirpath):
+        if filename == fn:
+            return os.path.join(dirpath, fn)
+    return ''
+
+
 class PDFDownloader:
     scihub_url_template: str = 'https://sci.bban.top/pdf/{}.pdf'
     unpaywall_url_template: str = 'https://api.unpaywall.org/v2/{}?email=sdsxlwf@email.com'
@@ -150,41 +171,40 @@ class PDFDownloader:
     def __init__(self, executable_path: str, marker_api: str = None, download_dir: str = None, timeout=60, interval=1):
         self.executable_path = executable_path
         self.marker_api = marker_api
-        self.download_dir = download_dir or '../data/download/pdf'
-        os.makedirs(self.download_dir, exist_ok=True)
+
+        self.download_dir = download_dir or '../data/download'
+        self.markdown_dir = os.path.join(self.download_dir, 'markdown')
+        self.pdf_download_dir = os.path.join(self.download_dir, 'pdf')
+        os.makedirs(self.markdown_dir, exist_ok=True)
+        os.makedirs(self.pdf_download_dir, exist_ok=True)
+
+        self.fail_download_doi_file = os.path.join(self.download_dir, 'fail_download_doi.txt')
+        if os.path.exists(self.fail_download_doi_file):
+            self.fail_download_doi_set = set(open(self.fail_download_doi_file).read().splitlines())
+        else:
+            self.fail_download_doi_set = set()
+
         self.timeout = timeout
         self.interval = interval
+        self.chrome_driver = create_driver(executable_path, self.pdf_download_dir)
 
-        self.chrome_driver = create_driver(executable_path, self.download_dir)
-
-        self.last_file = get_latest_file(self.download_dir)
-
-    def check_pdf_filepath(self, name: str, ext: str = 'pdf') -> str:
-        print("check download_dir", self.download_dir)
-        filename = sanitize_filename(name, ext)
-        for fn in os.listdir(self.download_dir):
-            if filename == fn:
-                return os.path.join(self.download_dir, fn)
-        return ''
+        self.last_pdf_file = get_latest_file(self.pdf_download_dir)
 
     def download_by_url(self, url: str, filename: str) -> str:
         self.chrome_driver.get(url)
 
-        success, file_path = wait_for_download(self.download_dir, self.last_file, self.timeout, self.interval)
+        success, file_path = wait_for_download(self.pdf_download_dir, self.last_pdf_file, self.timeout, self.interval)
         if not success:
-            # 删除缓存文件
-            if file_path:
-                os.remove(file_path)
             return ''
         print("latest filepath:", file_path)
-        if file_path == self.last_file:
+        if file_path == self.last_pdf_file:
             return ''
 
         # rename the file
-        new_file_path = os.path.join(self.download_dir, filename)
+        new_file_path = os.path.join(self.pdf_download_dir, filename)
         print("download filepath:", new_file_path)
         shutil.move(file_path, new_file_path)
-        self.last_file = new_file_path
+        self.last_pdf_file = new_file_path
         return new_file_path
 
     def get_url_from_scihub(self, doi: str):
@@ -244,16 +264,28 @@ class PDFDownloader:
         return '', ''
 
     def convert_pdf_to_markdown(self, filepath: str, ) -> str:
-        print("convert_pdf_to_markdown:", filepath)
+        filename = os.path.basename(filepath)
+        markdown_filename = os.path.splitext(filename)[0] + '.md'
+        markdown_filepath = os.path.join(self.markdown_dir, markdown_filename)
+        if os.path.exists(markdown_filepath):
+            print("load markdown from cache:", markdown_filepath)
+            with open(markdown_filepath, 'r', encoding='utf-8') as rf:
+                return rf.read()
+
+        print("convert_pdf_to_markdown:", filepath, markdown_filepath)
         with open(filepath, 'rb') as rf:
             pdf = rf.read()
-        filename = os.path.basename(filepath)
+
         files = [('pdf_file', (filename, pdf, 'application/pdf'))]
         response = requests.post(self.marker_api, files=files, params={'extract_images': False})
         if response.status_code == 200:
             # Save markdown and images
             response_data = response.json()[0]
             markdown_text = response_data['markdown']
+
+            with open(markdown_filepath, 'w', encoding='utf-8') as wf:
+                wf.write(markdown_text)
+
             return markdown_text
         return "Failed to convert PDF to markdown."
 
@@ -265,25 +297,92 @@ class PDFDownloader:
         :param url: PDF URL of the paper.
         :param convert: whether convert pdf to markdown
         """
-        paper = {
-            'doi': doi,
-            'title': title or '',
-            'url': url or '',
-        }
+        if not doi and not title:
+            raise ValueError("DOI or title is required.")
+        if not doi:
+            if title:
+                paper = CrossRefQueryTitleAPI("jiawen.huang@matwings.com").query(title, rows=1, fuzzy_query=False)
+                if paper:
+                    paper = paper[0]
+                    doi = paper.get("doi")
+                    title = paper.get("title")
+                    url = url or paper.get("pdf_url") or paper.get("url")
+                else:
+                    print("Cannot find paper by title, DOI is required.")
+                    print("title:", title)
+                    # raise ValueError("Cannot find paper by title, DOI is required.")
+                    return {
+                        'doi': '',
+                        'title': title.strip(),
+                        'url': url.strip() or '',
+                    }
 
-        filepath = self.check_pdf_filepath(doi)
+        paper = {
+            'doi': doi.strip(),
+            'title': title.strip() or '',
+            'url': url.strip() or '',
+        }
+        if paper['doi'] in self.fail_download_doi_set:
+            print("find in failed list, skip:", paper['doi'])
+            return paper
+
+        filepath = check_filepath(doi, ext='pdf', dirpath=self.pdf_download_dir)
         if filepath:
+            print("load pdf from cache:", filepath)
             paper['pdf_path'] = filepath
         else:
             filepath, url = self._download(doi, url)
             if filepath:
                 paper['pdf_path'] = filepath
                 paper['url'] = url
+            else:
+                # add to failed list
+                self.fail_download_doi_set.add(doi)
 
         if filepath and convert:
             paper['markdown'] = self.convert_pdf_to_markdown(filepath)
 
         return paper
+
+    def batch_download(self, doi, title, url, convert: bool = False):
+        length = 0
+        if doi:
+            doi_list = doi.strip().split('\n')
+            print("doi_list:", doi_list)
+            length = len(doi_list)
+        if title:
+            title_list = title.strip().split('\n')
+            print("title_list:", title_list)
+            if length:
+                if len(title_list) != length:
+                    raise ValueError("The number of DOI and title should be the same.")
+            else:
+                length = len(title_list)
+        if url:
+            url_list = url.strip().split('\n')
+            print("url_list:", url_list)
+            if length and len(url_list) != length:
+                raise ValueError("The number of DOI and URL should be the same.")
+        if not length:
+            raise ValueError("DOI or title is required.")
+
+        if not doi:
+            doi_list = [''] * length
+        if not title:
+            title_list = [''] * length
+        if not url:
+            url_list = [''] * length
+
+        results = []
+        for i in range(length):
+            result = self.download(doi_list[i], title_list[i], url_list[i], convert)
+            results.append(result)
+
+        # save failed doi list
+        with open(self.fail_download_doi_file, 'w', encoding='utf-8') as wf:
+            for doi in self.fail_download_doi_set:
+                wf.write(doi + '\n')
+        return results
 
     def close(self):
         self.chrome_driver.quit()
@@ -297,14 +396,15 @@ class PDFDownloaderTool(BuiltinTool):
         marker_api = self.runtime.credentials['marker_api']
 
         doi = tool_parameters.get('doi')
-        if not doi:
-            raise ToolParameterValidationError("DOI is required")
         title = tool_parameters.get('title')
+        if not doi and not title:
+            raise ToolParameterValidationError("DOI or title is required")
         url = tool_parameters.get('url')
+
         convert = tool_parameters.get('convert', False)
 
         downloader = PDFDownloader(executable_path, marker_api, download_dir)
-        result = downloader.download(doi, title, url, convert)
+        results = downloader.batch_download(doi, title, url, convert)
         downloader.close()
 
-        return self.create_json_message(result)
+        return [self.create_json_message(result) for result in results]

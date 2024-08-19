@@ -12,7 +12,7 @@ description:
 parameters:
   - name: doi
     type: string
-    required: true
+    required: false
     label:
       en_US: doi
       zh_Hans: doi
