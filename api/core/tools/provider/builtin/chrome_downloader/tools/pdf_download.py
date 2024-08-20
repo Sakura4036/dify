@@ -313,17 +313,17 @@ class PDFDownloader:
                     # raise ValueError("Cannot find paper by title, DOI is required.")
                     return {
                         'doi': '',
-                        'title': title.strip(),
-                        'url': url.strip() or '',
+                        'title': title,
+                        'url': url or '',
                     }
 
         paper = {
-            'doi': doi.strip(),
-            'title': title.strip() or '',
-            'url': url.strip() or '',
+            'doi': doi,
+            'title': title or '',
+            'url': url or '',
         }
-        if paper['doi'] in self.fail_download_doi_set:
-            print("find in failed list, skip:", paper['doi'])
+        if doi in self.fail_download_doi_set:
+            print("find in failed list, skip:", doi)
             return paper
 
         filepath = check_filepath(doi, ext='pdf', dirpath=self.pdf_download_dir)
@@ -375,7 +375,7 @@ class PDFDownloader:
 
         results = []
         for i in range(length):
-            result = self.download(doi_list[i], title_list[i], url_list[i], convert)
+            result = self.download(doi_list[i].strip(), title_list[i].strip(), url_list[i].strip(), convert)
             results.append(result)
 
         # save failed doi list

@@ -58,4 +58,20 @@ credentials_for_provider:
       en_US: Please set to an absolute path, otherwise there may be problems
       zh_Hans: 请最好设置为绝对路径，否则可能会出现问题
       pt_BR: Please set to an absolute path, otherwise there may be problems
+  download_api:
+    type: text-input
+    required: true
+    label:
+      en_US: download api
+      zh_Hans: 下载文件api
+      pt_BR: download api
+    placeholder:
+      en_US: Please input your download api
+      zh_Hans: 请输入你的下载文件api
+      pt_BR: Please input your download api
+    help:
+      en_US: please deploy a flask api for download file
+      zh_Hans: 请部署一个flask api用于返回文件
+      pt_BR: please deploy a flask api for download file
+
 

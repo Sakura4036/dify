@@ -1,0 +1,41 @@
+identity:
+  name: Export Data
+  author: JiaWen Huang
+  label:
+    en_US: Export Data
+    zh_Hans: 导出数据
+description:
+  human:
+    en_US: export data to a specified format file, return the file path
+    zh_Hans: 导出数据为指定格式的文件，返回文件路径
+  llm: export data to a specified format file, return the file path
+parameters:
+  - name: data
+    type: string
+    required: True
+    label:
+      en_US: data_string
+      zh_Hans: 文本数据
+    human_description:
+      en_US: the data to export
+      zh_Hans: 导出的文本数据
+    llm_description: the data to export
+    form: llm
+  - name: filetype
+    type: string
+    required: True
+    label:
+      en_US: filetype
+      zh_Hans: 文件类型
+    llm_description: the file format of the exported file
+    form: llm
+  - name: filename
+    type: string
+    required: false
+    label:
+      en_US: filename
+      zh_Hans: 文件名
+    llm_description: the filename of the exported file
+    form: llm
+
+
