@@ -71,8 +71,8 @@ parameters:
     form: llm
   - name: filtered
     type: boolean
-    required: False
-    default: True
+    required: false
+    default: true
     label:
       en_US: filtered
       zh_Hans: 过滤无效文献

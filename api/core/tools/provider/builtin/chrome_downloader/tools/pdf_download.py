@@ -9,6 +9,8 @@
 
 import shutil
 import traceback
+from concurrent.futures import ThreadPoolExecutor, ALL_COMPLETED, wait
+
 import requests
 import re
 from selenium import webdriver
@@ -276,8 +278,8 @@ class PDFDownloader:
         with open(filepath, 'rb') as rf:
             pdf = rf.read()
 
-        files = [('pdf_file', (filename, pdf, 'application/pdf'))]
-        response = requests.post(self.marker_api, files=files, params={'extract_images': False})
+        files = [('file', (filename, pdf, 'application/pdf'))]
+        response = requests.post(self.marker_api, files=files)
         if response.status_code == 200:
             # Save markdown and images
             response_data = response.json()[0]
@@ -374,9 +376,17 @@ class PDFDownloader:
             url_list = [''] * length
 
         results = []
+        # 串行下载
         for i in range(length):
             result = self.download(doi_list[i].strip(), title_list[i].strip(), url_list[i].strip(), convert)
             results.append(result)
+        # 并行下载?
+        # with ThreadPoolExecutor(max_workers=4) as executor:
+        #     tasks = []
+        #     for i in range(length):
+        #         tasks.append(executor.submit(self.download, doi_list[i].strip(), title_list[i].strip(), url_list[i].strip(), convert))
+        #     wait(tasks, return_when=ALL_COMPLETED)
+        # results = [task.result() for task in tasks]
 
         # save failed doi list
         with open(self.fail_download_doi_file, 'w', encoding='utf-8') as wf:

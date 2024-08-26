@@ -1,0 +1,68 @@
+identity:
+  name: semantic citation
+  author: JiaWen Huang
+  label:
+    en_US: Semantic Citation
+    zh_Hans: Semantic引用查询
+description:
+  human:
+    en_US: A tool for querying the citations of a paper from the Semantic Scholar repository by paper ID.
+    zh_Hans: 一个从Semantic Scholar资源库中通过paper ID查询文章引用的工具。
+  llm:  A tool for querying the citations of a paper from the Semantic Scholar repository by paper ID.
+parameters:
+  - name: paper_id
+    type: string
+    required: true
+    label:
+      en_US: paper id
+      zh_Hans: paper id
+    llm_description: a unique identifier for the paper, support DOI, arXiv ID, and Semantic Scholar ID.
+    form: llm
+  - name: fields
+    type: string
+    required: false
+    label:
+      en_US: Fields
+      zh_Hans: 返回字段
+    human_description:
+      en_US: Fields to be returned, separated by commas. default is "title,abstract,publicationTypes,publicationDate,journal,externalIds,referenceCount,citationCount,openAccessPdf"
+      zh_Hans: 需要返回的字段，使用逗号分割。 默认为"title,abstract,publicationTypes,publicationDate,journal,externalIds,referenceCount,citationCount,openAccessPdf"
+    llm_description: Fields to be returned, separated by commas. default is "title,abstract,publicationTypes,publicationDate,journal,externalIds,referenceCount,citationCount,openAccessPdf"
+    default: "title,abstract,publicationTypes,publicationDate,journal,externalIds,referenceCount,citationCount,openAccessPdf"
+    form: llm
+  - name: limit
+    type: number
+    required: false
+    default: 50
+    label:
+      en_US: Number of results
+      zh_Hans: 结果数量
+    human_description:
+      en_US: The number of search results to return.
+      zh_Hans: 要返回的搜索结果数量。
+    llm_description: The number of search results to return.
+    form: llm
+  - name: citation
+    type: boolean
+    required: true
+    default: true
+    label:
+      en_US: Get citation
+      zh_Hans: 获取引用文献
+    human_description:
+      en_US: Whether to get the citation literature
+      zh_Hans: 是否获取引用文献
+    llm_description: Whether to get the citation literature
+    form: form
+  - name: reference
+    type: boolean
+    required: true
+    default: true
+    label:
+      en_US: Get reference
+      zh_Hans: 获取文献参考
+    human_description:
+      en_US: Whether to get the literature references
+      zh_Hans: 是否获取文献参考
+    llm_description: Whether to get the literature references
+    form: form

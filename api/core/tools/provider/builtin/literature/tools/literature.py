@@ -44,6 +44,8 @@ def semantic_bulk_search(query: str, fields_of_study: str = 'Medicine,Biology,Ch
     print("semantic_bulk_search result num:", len(result))
     for i, r in enumerate(result):
         r['semantic_order'] = i
+        if 'externalIds' not in r:
+            r['externalIds'] = {}
         r['doi'] = r['externalIds'].get('DOI', '')
         r['pmid'] = r['externalIds'].get('PubMed', '')
         # del r['externalIds']
