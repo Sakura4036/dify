@@ -19,7 +19,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 import os
 
-from typing import Any, List, Union
+from typing import Any, List, Union, Tuple
 
 from core.tools.provider.builtin.crossref.tools.query_title import CrossRefQueryTitleAPI
 from core.tools.provider.builtin.semantic.tools.semantic_scholar import SemanticScholarBatchAPI
@@ -271,25 +271,24 @@ class PDFDownloader:
         markdown_filepath = os.path.join(self.markdown_dir, markdown_filename)
         if os.path.exists(markdown_filepath):
             print("load markdown from cache:", markdown_filepath)
-            with open(markdown_filepath, 'r', encoding='utf-8') as rf:
-                return rf.read()
+            return markdown_filepath
 
         print("convert_pdf_to_markdown:", filepath, markdown_filepath)
         with open(filepath, 'rb') as rf:
             pdf = rf.read()
 
+        # marker convert api: file for upload file
         files = [('file', (filename, pdf, 'application/pdf'))]
         response = requests.post(self.marker_api, files=files)
         if response.status_code == 200:
             # Save markdown and images
-            response_data = response.json()[0]
+            response_data = response.json()
             markdown_text = response_data['markdown']
 
             with open(markdown_filepath, 'w', encoding='utf-8') as wf:
                 wf.write(markdown_text)
-
-            return markdown_text
-        return "Failed to convert PDF to markdown."
+            return markdown_filepath
+        return ""
 
     def download(self, doi: str, title: str = None, url: str = None, convert: bool = False):
         """
@@ -342,18 +341,18 @@ class PDFDownloader:
                 self.fail_download_doi_set.add(doi)
 
         if filepath and convert:
-            paper['markdown'] = self.convert_pdf_to_markdown(filepath)
+            paper['md_path'] = self.convert_pdf_to_markdown(filepath)
 
         return paper
 
-    def batch_download(self, doi, title, url, convert: bool = False):
+    def batch_download(self, doi:str, title:str, url:str, convert: bool = False):
         length = 0
         if doi:
-            doi_list = doi.strip().split('\n')
+            doi_list = doi.split('\n')
             print("doi_list:", doi_list)
             length = len(doi_list)
         if title:
-            title_list = title.strip().split('\n')
+            title_list = title.split('\n')
             print("title_list:", title_list)
             if length:
                 if len(title_list) != length:
@@ -361,7 +360,7 @@ class PDFDownloader:
             else:
                 length = len(title_list)
         if url:
-            url_list = url.strip().split('\n')
+            url_list = url.split('\n')
             print("url_list:", url_list)
             if length and len(url_list) != length:
                 raise ValueError("The number of DOI and URL should be the same.")
@@ -411,7 +410,8 @@ class PDFDownloaderTool(BuiltinTool):
             raise ToolParameterValidationError("DOI or title is required")
         url = tool_parameters.get('url')
 
-        convert = tool_parameters.get('convert', False)
+        convert = tool_parameters.get('convert', 'false')
+        convert = convert.lower() in ['true', '1', 'yes', 'y']
 
         downloader = PDFDownloader(executable_path, marker_api, download_dir)
         results = downloader.batch_download(doi, title, url, convert)

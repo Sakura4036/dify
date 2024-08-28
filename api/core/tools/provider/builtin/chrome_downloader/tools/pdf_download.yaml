@@ -41,8 +41,9 @@ parameters:
     llm_description: the url of pdf file
     form: llm
   - name: convert
-    type: boolean
+    type: string
     required: false
+    default: false
     label:
       en_US: convert
       zh_Hans: convert
@@ -50,5 +51,5 @@ parameters:
       en_US: Whether to convert the downloaded paper to markdown format.
       zh_Hans: 是否将下载的论文转换为markdown格式。
     llm_description: Whether to convert the downloaded paper to markdown format.
-    form: form
+    form: llm
 
