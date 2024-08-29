@@ -23,7 +23,7 @@ class SemanticScholarBatchAPI:
 
         Args:
             ids: a list of paper ids. supported ids are Semantic Scholar ID, DOI, arXiv IDs, PubMed IDs, and ACL Anthology IDs.
-            fields: a comma separated list of fields to return. Default is "title,abstract,externalIds,openAccessPdf"
+            fields: a comma separated list of fields to return. Default is "title,abstract,externalIds,openAccessPdf,year"
             filtered: whether to filter out papers with missing fields. Default is True.
 
         example:
@@ -74,7 +74,7 @@ class SemanticScholarTool(BuiltinTool):
             raise ToolParameterValidationError('query ids is required.')
 
         if not fields:
-            fields = "title,abstract,externalIds,openAccessPdf"
+            fields = "title,abstract,externalIds,openAccessPdf,year"
 
         ids = ids.strip().split(',')
         # print(f"Semantic Scholar search: {ids}")

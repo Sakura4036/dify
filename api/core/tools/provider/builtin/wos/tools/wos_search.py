@@ -65,7 +65,8 @@ class WosSearchAPI:
                     'pmid': identifiers.get('pmid', ''),
                     'year': wos_document['source'].get('publishYear'),
                     'month': wos_document['source'].get('publishMonth'),
-                    # 'types': wos_document.get('types'),
+                    # https://webofscience.help.clarivate.com/en-us/Content/document-types.html
+                    'types': wos_document.get('types', []),
                     # 'link': wos_document['links'].get('record'),
                     # 'keywords': wos_document['keywords'].get('authorKeywords'),
                     # 'authors': [author['displayName'] for author in wos_document['names']['authors']],

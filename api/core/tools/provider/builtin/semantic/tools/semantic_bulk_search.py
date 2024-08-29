@@ -131,7 +131,7 @@ class SemanticBulkSearchTool(BuiltinTool):
         fields = tool_parameters.get('fields')
         if not fields:
             # fields = 'title,abstract,year,citationCount,influentialCitationCount,openAccessPdf,externalIds'
-            fields = "title,abstract,externalIds,openAccessPdf"
+            fields = "title,abstract,externalIds,openAccessPdf,year"
         num_results = tool_parameters.get('num_results')
         if not num_results:
             num_results = 50

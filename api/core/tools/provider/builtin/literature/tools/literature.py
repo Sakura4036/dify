@@ -294,7 +294,7 @@ class PaperSearchAPI:
         return pmid
 
     def search(self, query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-               fields: str = 'title,abstract,externalIds,openAccessPdf', wos_num: int = 80, semantic_num: int = 20,
+               fields: str = 'title,abstract,externalIds,openAccessPdf,year', wos_num: int = 80, semantic_num: int = 20,
                filtered: bool = True) -> list[dict]:
         """
         Search literature using SemanticScholar and Web of Science.
@@ -428,7 +428,7 @@ class LiteratureSearchTool(BuiltinTool):
             semantic_num = 20
         fields = tool_parameters.get('fields')
         if not fields:
-            fields = 'title,abstract,externalIds,openAccessPdf'
+            fields = 'title,abstract,externalIds,openAccessPdf,year'
 
         filtered = tool_parameters.get('filtered', True)
 
