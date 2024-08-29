@@ -48,7 +48,10 @@ def semantic_bulk_search(query: str, fields_of_study: str = 'Medicine,Biology,Ch
             r['externalIds'] = {}
         r['doi'] = r['externalIds'].get('DOI', '')
         r['pmid'] = r['externalIds'].get('PubMed', '')
+        r['types'] = r.get('publicationTypes', [])
+        r['year'] = r.get('year', '')
         # del r['externalIds']
+        del r['publicationTypes']
     return result
 
 
@@ -102,6 +105,10 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
                 merged_dict[key]['orders']['semantic_order'] = semantic_order
             if wos_order is not None:
                 merged_dict[key]['orders']['wos_order'] = wos_order
+            # update entry
+            for k, v in entry.items():
+                if k not in merged_dict[key] or not merged_dict[key][k]:
+                    merged_dict[key][k] = v
         else:
             # 创建新条目，并初始化orders列表
             new_entry = entry.copy()
@@ -428,7 +435,7 @@ class LiteratureSearchTool(BuiltinTool):
             semantic_num = 20
         fields = tool_parameters.get('fields')
         if not fields:
-            fields = 'title,abstract,externalIds,openAccessPdf,year'
+            fields = 'title,abstract,externalIds,openAccessPdf,year,publicationTypes'
 
         filtered = tool_parameters.get('filtered', True)
 
