@@ -21,6 +21,49 @@ parameters:
       zh_Hans: 将与论文标题和摘要匹配的文本查询。所有术语均以英文为词干。
     llm_description: Text query that will be matched against the paper's title and abstract. All terms are stemmed in English.
     form: llm
+
+  - name: year
+    type: string
+    required: false
+    label:
+      en_US: Date range
+      zh_Hans: 日期范围（年）
+    human_description:
+      en_US: The date range of the search results, separated by hyphens, e.g. 2015- means after 2015..
+      zh_Hans: 搜索结果的日期范围，使用连字符号分割， 例如： 2015- 表示2015年以后。
+    llm_description: The date range of the search results, separated by hyphens
+    default: "1960-"
+    form: llm
+
+  - name: document_type
+    type: select
+    required: false
+    options:
+      - value: All
+        label:
+          en_US: all document types
+          zh_Hans: 所有文档类型
+          pt_BR: all document types
+      - value: Article
+        label:
+          en_US: Article
+          zh_Hans: 文章
+          pt_BR: Article
+      - value: Review
+        label:
+          en_US: Review
+          zh_Hans: 综述
+          pt_BR: Review
+    default: all
+    label:
+      en_US: Document type
+      zh_Hans: 文档类型
+    human_description:
+      en_US: The type of document to filter the search results.
+      zh_Hans: 用于过滤搜索结果的文档类型。
+    llm_description: The type of document to filter the search results.
+    form: llm
+
   - name: fields_of_study
     type: string
     required: false
@@ -33,18 +76,7 @@ parameters:
     llm_description: Fields of study to filter the search results, separated by commas.
     default: "Medicine,Biology,Chemistry"
     form: llm
-  - name: year
-    type: string
-    required: false
-    label:
-      en_US: Date range
-      zh_Hans: 日期范围（年）
-    human_description:
-      en_US: The date range of the search results, separated by hyphens, e.g. 2015- means after 2015..
-      zh_Hans: 搜索结果的日期范围，使用连字符号分割， 例如： 2015- 表示2015年以后。
-    llm_description: The date range of the search results, separated by hyphens
-    default: "1980-"
-    form: llm
+
   - name: fields
     type: string
     required: false
@@ -57,6 +89,7 @@ parameters:
     llm_description: Fields to be returned, separated by commas. default is "title,abstract,externalIds,openAccessPdf,year"
     default: "title,abstract,externalIds,openAccessPdf,year"
     form: llm
+
   - name: num_results
     type: number
     required: false

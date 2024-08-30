@@ -21,8 +21,13 @@ from core.tools.provider.builtin.semantic.tools.semantic_bulk_search import Sema
 logger = logging.getLogger(__name__)
 
 
-def semantic_bulk_search(query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-                         fields: str = 'title,abstract,externalIds', num_results: int = 50, filtered: bool = False) -> list[dict]:
+def semantic_bulk_search(query: str,
+                         year: str = '1960-',
+                         document_type: str = '',
+                         fields_of_study: str = '',
+                         fields: str = 'title,abstract,externalIds,year,publicationTypes',
+                         num_results: int = 50,
+                         filtered: bool = False) -> list[dict]:
     """
     Paper relevance search on Semantic Scholar. API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_relevance_search
 
@@ -40,22 +45,33 @@ def semantic_bulk_search(query: str, fields_of_study: str = 'Medicine,Biology,Ch
         }
     ]
     """
-    result = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results, filtered=filtered)
+    result = SemanticBulkSearchAPI().query(query, year, document_type, fields_of_study, fields, num_results, filtered)
     print("semantic_bulk_search result num:", len(result))
     for i, r in enumerate(result):
         r['semantic_order'] = i
         if 'externalIds' not in r:
             r['externalIds'] = {}
+        if 'openAccessPdf' in r and r['openAccessPdf']:
+            r['openAccessPdf'] = r['openAccessPdf'].get('url', '')
         r['doi'] = r['externalIds'].get('DOI', '')
         r['pmid'] = r['externalIds'].get('PubMed', '')
         r['types'] = r.get('publicationTypes', [])
         r['year'] = r.get('year', '')
-        # del r['externalIds']
-        del r['publicationTypes']
+        if 'publicationTypes' in r:
+            del r['publicationTypes']
+        if 'paperId' in r:
+            del r['paperId']
+        del r['externalIds']
     return result
 
 
-def wos_search(query: str, api_key: str, query_type: str = 'TS', limit: int = 50, sort_field: str = 'RS+D') -> list[dict]:
+def wos_search(api_key: str,
+               query: str,
+               query_type: str = 'TS',
+               year: str = "",
+               document_type: str = '',
+               limit: int = 50,
+               sort_field: str = 'RS+D') -> list[dict]:
     """
     Search literatures on Web of Science. API documentation: https://developer.clarivate.com/apis/wos-search
     return example:
@@ -68,7 +84,7 @@ def wos_search(query: str, api_key: str, query_type: str = 'TS', limit: int = 50
         }
     ]
     """
-    result = WosSearchAPI(api_key).search(query, query_type, limit, sort_field)
+    result = WosSearchAPI(api_key).search(query, query_type, year, document_type, limit, sort_field)
     print("wos_search result num:", len(result))
     for i, r in enumerate(result):
         r['wos_order'] = i
@@ -87,24 +103,18 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
         pmid = entry.get('pmid')
         title = entry.get('title')
         abstract = entry.get('abstract')
-        # 检测并获取order字段
-        semantic_order = entry.get('semantic_order')
-        wos_order = entry.get('wos_order')
 
         # 根据优先级确定去重的键
         if doi:
             key = doi.lower()
         elif pmid:
             key = pmid.lower()
-        else:
+        elif title:
             key = title.lower()
+        else:
+            continue
 
         if key in merged_dict:
-            # 合并order字段
-            if semantic_order is not None:
-                merged_dict[key]['orders']['semantic_order'] = semantic_order
-            if wos_order is not None:
-                merged_dict[key]['orders']['wos_order'] = wos_order
             # update entry
             for k, v in entry.items():
                 if k not in merged_dict[key] or not merged_dict[key][k]:
@@ -112,18 +122,7 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
         else:
             # 创建新条目，并初始化orders列表
             new_entry = entry.copy()
-            new_entry['orders'] = {}
-            if semantic_order is not None:
-                new_entry['orders']['semantic_order'] = semantic_order
-            if wos_order is not None:
-                new_entry['orders']['wos_order'] = wos_order
-
-            # 移除原有的order字段
-            if 'semantic_order' in new_entry:
-                del new_entry['semantic_order']
-            if 'wos_order' in new_entry:
-                del new_entry['wos_order']
-
+            # entry中可能不包含abstract字段
             new_entry['abstract'] = abstract
             merged_dict[key] = new_entry
 
@@ -131,7 +130,7 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
     deduplicated_list = list(merged_dict.values())
 
     print("merge_and_deduplicate result num:", len(deduplicated_list))
-    print("example of merged_and_deduplicated result: ", deduplicated_list[0])
+    # print("example of merged_and_deduplicated result: ", deduplicated_list[0])
 
     return deduplicated_list
 
@@ -300,17 +299,23 @@ class PaperSearchAPI:
         pmid = esearch_tree.findtext('IdList/Id')
         return pmid
 
-    def search(self, query: str, fields_of_study: str = 'Medicine,Biology,Chemistry', year: str = '1960-',
-               fields: str = 'title,abstract,externalIds,openAccessPdf,year', wos_num: int = 80, semantic_num: int = 20,
+    def search(self, query: str,
+               year: str = '1960-',
+               document_type: str = '',
+               fields_of_study: str = '',
+               fields: str = 'title,abstract,externalIds,openAccessPdf,year,publicationTypes',
+               wos_num: int = 80,
+               semantic_num: int = 20,
                filtered: bool = True) -> list[dict]:
         """
         Search literature using SemanticScholar and Web of Science.
         """
         # first, use SemanticScholar to search literature
-        semantic_result = semantic_bulk_search(query, fields_of_study, year, fields, semantic_num)
+        # filtered set False to get all results
+        semantic_result = semantic_bulk_search(query, year, document_type, fields_of_study, fields, semantic_num, filtered=False)
 
         # second, use Web of Science to search literature
-        wos_result = wos_search(query, self.wos_api_key, limit=wos_num)
+        wos_result = wos_search(self.wos_api_key, query, query_type='TS', year=year, document_type=document_type, limit=wos_num)
 
         # third, merge the results
         result = []
@@ -424,15 +429,24 @@ class LiteratureSearchTool(BuiltinTool):
 
         if not query:
             raise ToolParameterValidationError('query is required.')
+
+        year = tool_parameters.get('year')
+        if not year:
+            year = "1960-"
+
+        document_type = tool_parameters.get('document_type', 'All')
+
         fields_of_study = tool_parameters.get('fields_of_study')
         if not fields_of_study:
             fields_of_study = 'Medicine,Biology,Chemistry'
+
         wos_num = tool_parameters.get('wos_num')
         if not wos_num:
             wos_num = 80
         semantic_num = tool_parameters.get('semantic_num')
         if not semantic_num:
             semantic_num = 20
+
         fields = tool_parameters.get('fields')
         if not fields:
             fields = 'title,abstract,externalIds,openAccessPdf,year,publicationTypes'
@@ -443,7 +457,8 @@ class LiteratureSearchTool(BuiltinTool):
         if not api_key:
             api_key = self.runtime.credentials['wos_api_key']
 
-        result = PaperSearchAPI(api_key).search(query, fields_of_study, wos_num=wos_num, semantic_num=semantic_num, fields=fields, filtered=filtered)
+        result = PaperSearchAPI(api_key).search(query, year, document_type, fields_of_study, fields=fields,
+                                                wos_num=wos_num, semantic_num=semantic_num, filtered=filtered)
 
         # return self.create_text_message(json.dumps(result))
         return [self.create_json_message(r) for r in result]

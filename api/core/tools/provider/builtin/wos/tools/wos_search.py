@@ -6,6 +6,7 @@ from typing import Any, Union
 import requests
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
+from core.tools.errors import ToolParameterValidationError
 from core.tools.tool.builtin_tool import BuiltinTool
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,14 @@ class WosSearchAPI:
             query = query.replace(key, value)
         return f"({query})"
 
+    def check_type(self, document: str):
+        if not document or document == 'All':
+            return ''
+        if document in ['Article', 'Review']:
+            return document
+        else:
+            raise ToolParameterValidationError(f"Invalid publication type: {document}")
+
     def get_query(self, query: str, query_type: str = 'TS') -> str:
         """
         Get parameters for Web of Science Search API.
@@ -58,13 +67,13 @@ class WosSearchAPI:
                 if not identifiers:
                     continue
                 document = {
-                    'uid': wos_document.get('uid'),
+                    'wos_uid': wos_document.get('uid'),
                     'title': wos_document['title'],
                     'doi': identifiers.get('doi', ''),
                     # 'issn': wos_document['identifiers'].get('issn'),
                     'pmid': identifiers.get('pmid', ''),
                     'year': wos_document['source'].get('publishYear'),
-                    'month': wos_document['source'].get('publishMonth'),
+                    # 'month': wos_document['source'].get('publishMonth'),
                     # https://webofscience.help.clarivate.com/en-us/Content/document-types.html
                     'types': wos_document.get('types', []),
                     # 'link': wos_document['links'].get('record'),
@@ -101,10 +110,18 @@ class WosSearchAPI:
         data = self._process_response(response)
         return total, data
 
-    def search(self, query: str, query_type: str = 'TS', num_results: int = 50, sort_field: str = 'RS+D') -> list[dict]:
+    def search(self, query: str, query_type: str = 'TS', year: str = "", document_type: str = '',
+               num_results: int = 50, sort_field: str = 'RS+D') -> list[dict]:
         """
         web of science api: https://api.clarivate.com/swagger-ui/?apikey=none&url=https%3A%2F%2Fdeveloper.clarivate.com%2Fapis%2Fwos-starter%2Fswagger
-
+        query_type:
+            TI - Title
+            AU - Author
+            DO - DOI
+            IS - ISSN
+            DT - Document Type
+            TS - Topic, Title, Abstract, Author Keywords, Keywords Plus
+            etc.
         sortField: Order by field(s). Field name and order by clause separated by '+', use A for ASC and D for DESC, ex: PY+D. Multiple values are separated by comma. Supported fields:
                     LD - Load Date
                     PY - Publication Year
@@ -112,6 +129,13 @@ class WosSearchAPI:
                     TC - Times Cited
         """
         query = self.get_query(query, query_type)
+
+        if year:
+            query = f"{query} AND PY=({year})"
+
+        document_type = self.check_type(document_type)
+        if document_type:
+            query = f"{query} AND DT=({document_type})"
 
         limit = min(num_results, self.limit)
         page = 1
@@ -147,7 +171,9 @@ class WOSSearchTool(BuiltinTool):
         """
         api_key = self.runtime.credentials['wos_api_key']
         query = tool_parameters.get('query')
-        query_type = tool_parameters.get('query_type')
+        query_type = tool_parameters.get('query_type', )
+        year = tool_parameters.get('year', '')
+        document_type = tool_parameters.get('document_type', 'All')
         limit = tool_parameters.get('limit')
         sort_field = tool_parameters.get('sort')
         if not query_type:
@@ -157,6 +183,6 @@ class WOSSearchTool(BuiltinTool):
         if not sort_field:
             sort_field = 'RS+D'
 
-        results = WosSearchAPI(api_key).search(query, query_type, limit, sort_field)
+        results = WosSearchAPI(api_key).search(query, query_type, year, document_type, limit, sort_field)
 
         return [self.create_json_message(r) for r in results]

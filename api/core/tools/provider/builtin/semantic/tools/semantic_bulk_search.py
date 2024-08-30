@@ -27,7 +27,23 @@ class SemanticBulkSearchAPI:
             query = query.replace(key, value)
         return f"({query})"
 
-    def query_once(self, query: str, fields_of_study: str, year: str, fields: str, token: str = None, filtered: bool = False) -> tuple:
+    def check_type(self, types: str):
+        if not types or types == 'All':
+            return ''
+        if types == 'Article':
+            return 'JournalArticle'
+        if types == 'Review':
+            return 'Review'
+        else:
+            raise ToolParameterValidationError(f"Invalid publication type: {types}")
+
+    def query_once(self, query: str,
+                   year: str = '',
+                   document_type: str = '',
+                   fields_of_study: str = '',
+                   fields: str = '',
+                   token: str = None,
+                   filtered: bool = False) -> tuple:
         """
         Query once for the semantic scholar bulk search.
         API documentation: https://api.semanticscholar.org/api-docs#tag/Paper-Data/operation/get_graph_paper_bulk_search
@@ -49,8 +65,15 @@ class SemanticBulkSearchAPI:
             ]
         }
         """
-
-        url = f"{self.base_url}query={query}&year={year}&fieldsOfStudy={fields_of_study}&fields={fields}"
+        url = f"{self.base_url}query={query}"
+        if fields_of_study:
+            url += f"&fieldsOfStudy={fields_of_study}"
+        if year:
+            url += f"&year={year}"
+        if fields:
+            url += f"&fields={fields}"
+        if document_type:
+            url += f"&publicationTypes={document_type}"
         if token:
             # token is used to get the next page of results
             url += f"&token={token}"
@@ -74,13 +97,20 @@ class SemanticBulkSearchAPI:
         token = response.get('token', None)
         return total, data, token
 
-    def query(self, query: str, fields_of_study: str, year: str, fields: str, num_results: int = 50, filtered: bool = False) -> dict | list[dict]:
+    def query(self, query: str,
+              year: str = '',
+              document_type: str = '',
+              fields_of_study: str = '',
+              fields: str = '',
+              num_results: int = 50,
+              filtered: bool = False) -> dict | list[dict]:
         """
         Paper bulk search on Semantic Scholar.
         """
         query = self.check_query(query)
+        document_type = self.check_type(document_type)
 
-        total, data, token = self.query_once(query, fields_of_study, year, fields, filtered=filtered)
+        total, data, token = self.query_once(query, year, document_type, fields_of_study, fields, filtered=filtered)
 
         if total == 0:
             data = [{}]
@@ -95,7 +125,7 @@ class SemanticBulkSearchAPI:
             rest_num_results = min(num_results, total) - len(data)  # the maximum number of rest results that can be obtained
 
             while rest_num_results > 0:
-                total, data, token = self.query_once(query, fields_of_study, year, fields, token=token, filtered=filtered)
+                total, data, token = self.query_once(query, year, document_type, fields_of_study, fields, token=token, filtered=filtered)
                 if token is None:
                     break
                 result.extend(data)
@@ -124,18 +154,18 @@ class SemanticBulkSearchTool(BuiltinTool):
             raise ToolParameterValidationError('query is required.')
         fields_of_study = tool_parameters.get('fields_of_study')
         if not fields_of_study:
-            fields_of_study = 'Medicine,Biology,Chemistry'
+            fields_of_study = ''
         year = tool_parameters.get('year')
         if not year:
-            year = '1900-'
+            year = '1960-'
         fields = tool_parameters.get('fields')
         if not fields:
-            # fields = 'title,abstract,year,citationCount,influentialCitationCount,openAccessPdf,externalIds'
-            fields = "title,abstract,externalIds,openAccessPdf,year"
+            fields = "title,abstract,externalIds,openAccessPdf,year,publicationTypes"
+        document_type = tool_parameters.get('document_type', 'All')
         num_results = tool_parameters.get('num_results')
         if not num_results:
             num_results = 50
         filtered = tool_parameters.get('filtered', False)
 
-        results = SemanticBulkSearchAPI().query(query, fields_of_study, year, fields, num_results, filtered)
+        results = SemanticBulkSearchAPI().query(query, year, document_type, fields_of_study, fields, num_results, filtered)
         return [self.create_json_message(r) for r in results]

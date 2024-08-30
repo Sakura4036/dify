@@ -66,6 +66,49 @@ parameters:
       pt_BR: used for selecting the search type
     form: llm
 
+  - name: year
+    type: string
+    required: false
+    label:
+      en_US: publication year
+      zh_Hans: 发表年份
+      pt_BR: publication year
+    human_description:
+      en_US: search articles published in specific year(s)
+      zh_Hans: 搜索指定发表年限的文章
+      pt_BR: search articles published in specific year(s)
+    llm_description: search articles published in specific year(s)
+    form: llm
+
+  - name: document_type
+    type: select
+    required: false
+    options:
+      - value: All
+        label:
+          en_US: all document types
+          zh_Hans: 所有文档类型
+          pt_BR: all document types
+      - value: Article
+        label:
+          en_US: Article
+          zh_Hans: 文章
+          pt_BR: Article
+      - value: Review
+        label:
+          en_US: Review
+          zh_Hans: 综述
+          pt_BR: Review
+    default: all
+    label:
+      en_US: Document type
+      zh_Hans: 文档类型
+    human_description:
+      en_US: The type of document to filter the search results.
+      zh_Hans: 用于过滤搜索结果的文档类型。
+    llm_description: The type of document to filter the search results.
+    form: llm
+
   - name: limit
     type: number
     required: false
