@@ -11,7 +11,7 @@ class CrossRefProvider(BuiltinToolProviderController):
                     "credentials": credentials,
                 }
             ).invoke(
-                user_id='',
+                user_id="",
                 tool_parameters={
                     "doi": '10.1007/s00894-022-05373-8',
                     "return_type": "basic"

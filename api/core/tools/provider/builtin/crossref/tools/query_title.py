@@ -25,12 +25,11 @@ class CrossRefQueryTitleAPI:
         response.raise_for_status()
         rate_limit = int(response.headers['x-ratelimit-limit'])
         rate_interval = convert_time_str_to_seconds(response.headers['x-ratelimit-interval'])
-
         self.rate_limit = rate_limit
         self.rate_interval = rate_interval
 
         response = response.json()
-        if response['status'] != 'ok':
+        if response["status"] != "ok":
             return []
 
         message = response['message']
@@ -43,9 +42,10 @@ class CrossRefQueryTitleAPI:
                 return message['items']
             if return_type == 'basic':
                 return [get_basic_info(p) for p in message['items']]
+
         else:
-            for paper in message['items']:
-                title = paper['title'][0]
+            for paper in message["items"]:
+                title = paper["title"][0]
                 if title.lower() != query.lower():
                     continue
                 if return_type == 'all':

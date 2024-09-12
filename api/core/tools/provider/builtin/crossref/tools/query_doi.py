@@ -22,7 +22,7 @@ class CrossRefQueryDOITool(BuiltinTool):
         if response['status'] != 'ok':
             return {}
 
-        message = response['message']
+        message = response.get("message", {})
         if return_type == 'all':
             return message
 
