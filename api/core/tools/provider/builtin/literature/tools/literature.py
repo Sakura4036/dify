@@ -5,6 +5,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime
 from typing import Any, Optional
 
 import numpy as np
@@ -230,7 +231,8 @@ class PaperSearchAPI:
                 else:
                     break
             except Exception as e:
-                raise e
+                print(f"Error in pubmed_search_requests_xml: {e}")
+                return []
 
         # 解析返回的XML数据
         root = ET.fromstring(response.content)
@@ -275,7 +277,9 @@ class PaperSearchAPI:
                 else:
                     break
             except Exception as e:
-                raise e
+                print(f"Error in pubmed_search_requests for pmid {pmid_list}: ", e)
+                # raise e
+                return []
 
         xml_text = response.content.decode("utf-8")
         abstracts = re.findall(r'<AbstractText>(.*?)</AbstractText>', xml_text, re.DOTALL)
@@ -294,13 +298,17 @@ class PaperSearchAPI:
 
     def get_pmid_by_doi(self, doi: str) -> str:
         esearch_url = self.pubmed_search_url + f"db=pubmed&term={doi}[DOI]"
-        esearch_response = requests.get(esearch_url)
-        esearch_tree = ET.fromstring(esearch_response.content)
-        pmid = esearch_tree.findtext('IdList/Id')
+        try:
+            esearch_response = requests.get(esearch_url)
+            esearch_tree = ET.fromstring(esearch_response.content)
+            pmid = esearch_tree.findtext('IdList/Id')
+        except Exception as e:
+            print(f"Error in get_pmid_by_doi for doi {doi}: {e}")
+            return ""
         return pmid
 
     def search(self, query: str,
-               year: str = '1960-',
+               year: str = '',
                document_type: str = '',
                fields_of_study: str = '',
                fields: str = 'title,abstract,externalIds,openAccessPdf,year,publicationTypes',
@@ -381,13 +389,16 @@ class PaperSearchAPI:
             print(f"Found {len(without_abstract_pmid)} results without abstracts but with PMIDs.")
             pmids = [r['pmid'] for r in without_abstract_pmid]
             pubmed_result = self.pubmed_search_requests(pmids)
-            for r, pubmed_r in zip(without_abstract_pmid, pubmed_result):
-                if pubmed_r['abstract']:
-                    r['title'] = pubmed_r['title']
-                    r['abstract'] = pubmed_r['abstract']
-                    result.append(r)
-                else:
-                    filtered_result.append(r)
+            if not pubmed_result:
+                filtered_result.extend(without_abstract_pmid)
+            else:
+                for r, pubmed_r in zip(without_abstract_pmid, pubmed_result):
+                    if pubmed_r['abstract']:
+                        r['title'] = pubmed_r['title']
+                        r['abstract'] = pubmed_r['abstract']
+                        result.append(r)
+                    else:
+                        filtered_result.append(r)
 
         for r in result:
             r['url'] = f"https://doi.org/{r['doi']}" if r['doi'] else f"https://pubmed.ncbi.nlm.nih.gov/{r['pmid']}"
@@ -432,7 +443,7 @@ class LiteratureSearchTool(BuiltinTool):
 
         year = tool_parameters.get('year')
         if not year:
-            year = "1960-"
+            year = "1960-{}".format(datetime.now().year)
 
         document_type = tool_parameters.get('document_type', 'All')
 

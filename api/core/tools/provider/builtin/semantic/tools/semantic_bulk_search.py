@@ -1,6 +1,6 @@
-import json
 import logging
 import time
+import traceback
 from typing import Any, Optional
 import requests
 
@@ -9,6 +9,34 @@ from core.tools.errors import ToolParameterValidationError
 from core.tools.tool.builtin_tool import BuiltinTool
 
 logger = logging.getLogger(__name__)
+
+
+def check_type(document_type: str):
+    """
+    Check the publication type.
+    Restrict results to any of the following paper publication document_type:
+    Review
+    JournalArticle
+    CaseReport
+    ClinicalTrial
+    Conference
+    Dataset
+    Editorial
+    LettersAndComments
+    MetaAnalysis
+    News
+    Study
+    Book
+    BookSection
+    """
+    if not document_type or document_type == 'All':
+        return ''
+    if document_type == 'Article':
+        return 'JournalArticle'
+    if document_type == 'Review':
+        return 'Review'
+    else:
+        raise ToolParameterValidationError(f"Invalid publication type: {document_type}")
 
 
 class SemanticBulkSearchAPI:
@@ -26,16 +54,6 @@ class SemanticBulkSearchAPI:
         for key, value in self.switch_grammar.items():
             query = query.replace(key, value)
         return f"({query})"
-
-    def check_type(self, types: str):
-        if not types or types == 'All':
-            return ''
-        if types == 'Article':
-            return 'JournalArticle'
-        if types == 'Review':
-            return 'Review'
-        else:
-            raise ToolParameterValidationError(f"Invalid publication type: {types}")
 
     def query_once(self, query: str,
                    year: str = '',
@@ -79,10 +97,15 @@ class SemanticBulkSearchAPI:
             url += f"&token={token}"
 
         print(f"Semantic Scholar bulk search: {url}")
-        response = requests.get(url, stream=False)
-        response.raise_for_status()
+        try:
+            response = requests.get(url, stream=False)
+        except Exception as e:
+            print(f"Semantic Scholar bulk search Error: {e}")
+            traceback.print_exc()
+            return 0, [], None
+
         if response.status_code != 200:
-            return 0, []
+            return 0, [], None
         response = response.json()
         total = response['total']
 
@@ -108,7 +131,7 @@ class SemanticBulkSearchAPI:
         Paper bulk search on Semantic Scholar.
         """
         query = self.check_query(query)
-        document_type = self.check_type(document_type)
+        document_type = check_type(document_type)
 
         total, data, token = self.query_once(query, year, document_type, fields_of_study, fields, filtered=filtered)
 

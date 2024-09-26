@@ -1,6 +1,8 @@
 import json
 import logging
 import time
+import traceback
+from datetime import datetime
 from typing import Any, Union
 
 import requests
@@ -10,6 +12,19 @@ from core.tools.errors import ToolParameterValidationError
 from core.tools.tool.builtin_tool import BuiltinTool
 
 logger = logging.getLogger(__name__)
+
+
+def check_type(document_type: str):
+    """
+    Check the publication type.
+    WOS support: https://webofscience.help.clarivate.com/en-us/Content/document-types.html
+    """
+    if not document_type or document_type == 'All':
+        return ''
+    if document_type in ['Article', 'Review']:
+        return document_type
+    else:
+        raise ToolParameterValidationError(f"Invalid publication type: {document_type}")
 
 
 class WosSearchAPI:
@@ -34,14 +49,6 @@ class WosSearchAPI:
         for key, value in self.switch_grammar.items():
             query = query.replace(key, value)
         return f"({query})"
-
-    def check_type(self, document: str):
-        if not document or document == 'All':
-            return ''
-        if document in ['Article', 'Review']:
-            return document
-        else:
-            raise ToolParameterValidationError(f"Invalid publication type: {document}")
 
     def get_query(self, query: str, query_type: str = 'TS') -> str:
         """
@@ -99,8 +106,12 @@ class WosSearchAPI:
             return 0, []
         request_str = f'{self.base_url}?q={query}&limit={limit}&page={page}&sortField={sort_field}&db={db}'
         print(f"Web of Science API request: {request_str}")
-        response = requests.get(request_str, headers={'X-ApiKey': self.wos_api_key})
-        response.raise_for_status()
+        try:
+            response = requests.get(request_str, headers={'X-ApiKey': self.wos_api_key})
+        except Exception as e:
+            print(f"Web of Science API request failed: {e}")
+            traceback.print_exc()
+            return 0, []
         if response.status_code != 200:
             print(f"Web of Science API request failed: {response.json()}")
             return 0, []
@@ -131,9 +142,13 @@ class WosSearchAPI:
         query = self.get_query(query, query_type)
 
         if year:
+            if year.endswith('-'):
+                year = "{}-{}".format(year, datetime.now().year)
+            if year.startswith('-'):
+                year = '{}-{}'.format(1900, year)
             query = f"{query} AND PY=({year})"
 
-        document_type = self.check_type(document_type)
+        document_type = check_type(document_type)
         if document_type:
             query = f"{query} AND DT=({document_type})"
 

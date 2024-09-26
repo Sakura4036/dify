@@ -33,9 +33,11 @@ class SemanticScholarBatchAPI:
 
         if len(ids) > self.max_query_size:
             raise ToolParameterValidationError('The number of papers should be less than 500')
-
-        response = requests.post(self.base_url, json={"ids": ids}, params={"fields": fields})
-        response.raise_for_status()
+        try:
+            response = requests.post(self.base_url, json={"ids": ids}, params={"fields": fields})
+        except Exception as e:
+            logger.error(f"Error in SemanticScholarBatchAPI: {e}")
+            return []
         response = response.json()
         result = []
 
