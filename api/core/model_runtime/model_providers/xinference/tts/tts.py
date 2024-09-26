@@ -73,8 +73,7 @@ class XinferenceText2SpeechModel(TTSModel):
             if "/" in credentials["model_uid"] or "?" in credentials["model_uid"] or "#" in credentials["model_uid"]:
                 raise CredentialsValidateFailedError("model_uid should not contain /, ?, or #")
 
-            if credentials["server_url"].endswith("/"):
-                credentials["server_url"] = credentials["server_url"][:-1]
+            credentials["server_url"] = credentials["server_url"].removesuffix("/")
 
             extra_param = XinferenceHelper.get_xinference_extra_parameter(
                 server_url=credentials["server_url"],
@@ -189,8 +188,7 @@ class XinferenceText2SpeechModel(TTSModel):
         :param voice: model timbre
         :return: text translated to audio file
         """
-        if credentials["server_url"].endswith("/"):
-            credentials["server_url"] = credentials["server_url"][:-1]
+        credentials["server_url"] = credentials["server_url"].removesuffix("/")
 
         try:
             api_key = credentials.get("api_key")
@@ -210,21 +208,21 @@ class XinferenceText2SpeechModel(TTSModel):
                 executor = concurrent.futures.ThreadPoolExecutor(max_workers=min(3, len(sentences)))
                 futures = [
                     executor.submit(
-                        handle.speech, input=sentences[i], voice=voice, response_format="mp3", speed=1.0, stream=False
+                        handle.speech, input=sentences[i], voice=voice, response_format="mp3", speed=1.0, stream=True
                     )
                     for i in range(len(sentences))
                 ]
 
                 for future in futures:
                     response = future.result()
-                    for i in range(0, len(response), 1024):
-                        yield response[i : i + 1024]
+                    for chunk in response:
+                        yield chunk
             else:
                 response = handle.speech(
-                    input=content_text.strip(), voice=voice, response_format="mp3", speed=1.0, stream=False
+                    input=content_text.strip(), voice=voice, response_format="mp3", speed=1.0, stream=True
                 )
 
-                for i in range(0, len(response), 1024):
-                    yield response[i : i + 1024]
+                for chunk in response:
+                    yield chunk
         except Exception as ex:
             raise InvokeBadRequestError(str(ex))
