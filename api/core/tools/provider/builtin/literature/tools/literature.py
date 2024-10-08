@@ -46,6 +46,8 @@ def semantic_bulk_search(query: str,
         }
     ]
     """
+    if not num_results:
+        return []
     result = SemanticBulkSearchAPI().query(query, year, document_type, fields_of_study, fields, num_results, filtered)
     print("semantic_bulk_search result num:", len(result))
     for i, r in enumerate(result):
@@ -85,6 +87,8 @@ def wos_search(api_key: str,
         }
     ]
     """
+    if not limit:
+        return []
     result = WosSearchAPI(api_key).search(query, query_type, year, document_type, limit, sort_field)
     print("wos_search result num:", len(result))
     for i, r in enumerate(result):
@@ -321,9 +325,15 @@ class PaperSearchAPI:
         # first, use SemanticScholar to search literature
         # filtered set False to get all results
         semantic_result = semantic_bulk_search(query, year, document_type, fields_of_study, fields, semantic_num, filtered=False)
+        print(f"SemanticScholar search results: {len(semantic_result)}")
 
         # second, use Web of Science to search literature
         wos_result = wos_search(self.wos_api_key, query, query_type='TS', year=year, document_type=document_type, limit=wos_num)
+        print(f"Web of Science search results: {len(wos_result)}")
+
+        if not semantic_result and not wos_result:
+            print("No results found.")
+            return []
 
         # third, merge the results
         result = []
@@ -451,12 +461,8 @@ class LiteratureSearchTool(BuiltinTool):
         if not fields_of_study:
             fields_of_study = 'Medicine,Biology,Chemistry'
 
-        wos_num = tool_parameters.get('wos_num')
-        if not wos_num:
-            wos_num = 80
-        semantic_num = tool_parameters.get('semantic_num')
-        if not semantic_num:
-            semantic_num = 20
+        wos_num = tool_parameters.get('wos_num', 80)
+        semantic_num = tool_parameters.get('semantic_num', 20)
 
         fields = tool_parameters.get('fields')
         if not fields:

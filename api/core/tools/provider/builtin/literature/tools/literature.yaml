@@ -75,7 +75,6 @@ parameters:
   - name: wos_num
     type: number
     required: false
-    default: 50
     label:
       en_US: wos_num
       zh_Hans: wos_num
@@ -87,7 +86,6 @@ parameters:
   - name: semantic_num
     type: number
     required: false
-    default: 50
     label:
       en_US: semantic_num
       zh_Hans: semantic_num
