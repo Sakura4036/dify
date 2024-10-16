@@ -100,7 +100,7 @@ def merge_and_deduplicate(list_a: list[dict], list_b: list[dict]) -> list[dict]:
     # 合并两个列表
     combined_list = list_a + list_b
 
-    # 使用一个字典来存储去重后的结果，键是(doi, pmid, title)的组合，值是文献信息字典
+    # 使用一个字典来存储去重后的结果，键是doi, pmid, title，值是文献信息字典
     merged_dict = {}
 
     for entry in combined_list:
@@ -461,8 +461,12 @@ class LiteratureSearchTool(BuiltinTool):
         if not fields_of_study:
             fields_of_study = 'Medicine,Biology,Chemistry'
 
-        wos_num = tool_parameters.get('wos_num', 80)
-        semantic_num = tool_parameters.get('semantic_num', 20)
+        wos_num = tool_parameters.get('wos_num')
+        if not wos_num:
+            wos_num = 80
+        semantic_num = tool_parameters.get('semantic_num')
+        if not semantic_num:
+            semantic_num = 20
 
         fields = tool_parameters.get('fields')
         if not fields:

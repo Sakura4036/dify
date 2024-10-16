@@ -156,7 +156,7 @@ def get_doi_from_title(title: str) -> str:
     return ''
 
 
-def check_filepath(name: str, ext: str, dirpath:str) -> str:
+def check_filepath(name: str, ext: str, dirpath: str) -> str:
     filename = sanitize_filename(name, ext)
     for fn in os.listdir(dirpath):
         if filename == fn:
@@ -165,14 +165,17 @@ def check_filepath(name: str, ext: str, dirpath:str) -> str:
 
 
 class PDFDownloader:
-    scihub_url_template: str = 'https://sci.bban.top/pdf/{}.pdf'
+    scihub_url: str = 'https://sci.bban.top/pdf'
     unpaywall_url_template: str = 'https://api.unpaywall.org/v2/{}?email=sdsxlwf@email.com'
     crossref_url_template: str = 'https://api.crossref.org/works/{}'
     semantic_api: object = SemanticScholarBatchAPI()
 
-    def __init__(self, executable_path: str, marker_api: str = None, download_dir: str = None, timeout=60, interval=1):
+    def __init__(self, executable_path: str, marker_api: str = None, download_dir: str = None,
+                 scihub_url: str = None, timeout=60, interval=1):
         self.executable_path = executable_path
         self.marker_api = marker_api
+        self.scihub_url = scihub_url or self.scihub_url
+        self.scihub_url_template = self.scihub_url + "/{}.pdf"
 
         self.download_dir = download_dir or '../data/download'
         self.markdown_dir = os.path.join(self.download_dir, 'markdown')
@@ -345,14 +348,14 @@ class PDFDownloader:
 
         return paper
 
-    def batch_download(self, doi:str, title:str, url:str, convert: bool = False):
+    def batch_download(self, doi: str, title: str, url: str, convert: bool = False):
         length = 0
         if doi:
-            doi_list = doi.split('\n')
+            doi_list = doi.strip().split('\n')
             print("doi_list:", doi_list)
             length = len(doi_list)
         if title:
-            title_list = title.split('\n')
+            title_list = title.strip().split('\n')
             print("title_list:", title_list)
             if length:
                 if len(title_list) != length:
@@ -360,7 +363,7 @@ class PDFDownloader:
             else:
                 length = len(title_list)
         if url:
-            url_list = url.split('\n')
+            url_list = url.strip().split('\n')
             print("url_list:", url_list)
             if length and len(url_list) != length:
                 raise ValueError("The number of DOI and URL should be the same.")
@@ -413,7 +416,11 @@ class PDFDownloaderTool(BuiltinTool):
         convert = tool_parameters.get('convert', 'false')
         convert = convert.lower() in ['true', '1', 'yes', 'y']
 
-        downloader = PDFDownloader(executable_path, marker_api, download_dir)
+        scihub_url = tool_parameters.get('scihub_url')
+        if not scihub_url:
+            scihub_url = "https://sci.bban.top/pdf"
+
+        downloader = PDFDownloader(executable_path, marker_api, download_dir, scihub_url=scihub_url)
         results = downloader.batch_download(doi, title, url, convert)
         downloader.close()
 

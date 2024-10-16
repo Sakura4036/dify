@@ -7,7 +7,7 @@ identity:
 description:
   human:
     en_US: PDFDownload is a tool that downloads papers from a given doi.
-    zh_Hans: PDFDownload是一个给定doi下载论文的工具。
+    zh_Hans: PDFDownload是一个给定doi下载论文的工具
   llm: PDFDownload is a tool that downloads papers from a given doi.
 parameters:
   - name: doi
@@ -18,7 +18,7 @@ parameters:
       zh_Hans: doi
     human_description:
       en_US: The DOI of the paper to download.
-      zh_Hans: 要下载的论文的DOI。
+      zh_Hans: 要下载的论文的DOI
     llm_description: The DOI of the paper to download.
     form: llm
   - name: title
@@ -29,7 +29,7 @@ parameters:
       zh_Hans: 标题
     human_description:
       en_US: The title of the paper to download.
-      zh_Hans: 要下载的论文的标题。
+      zh_Hans: 要下载的论文的标题
     llm_description: The title of the paper to download.
     form: llm
   - name: url
@@ -49,7 +49,18 @@ parameters:
       zh_Hans: convert
     human_description:
       en_US: Whether to convert the downloaded paper to markdown format.
-      zh_Hans: 是否将下载的论文转换为markdown格式。
+      zh_Hans: 是否将下载的论文转换为markdown格式
     llm_description: Whether to convert the downloaded paper to markdown format.
+    form: llm
+  - name: scihub_url
+    type: string
+    required: false
+    label:
+      en_US: scihub
+      zh_Hans: scihub
+    human_description:
+      en_US: The url of the scihub.
+      zh_Hans: scihub的url
+    llm_description: The url of the scihub.
     form: llm
 
