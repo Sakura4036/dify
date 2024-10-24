@@ -87,14 +87,6 @@ ignore = [
 "tests/*" = [
     "F811", # redefined-while-unused
     "F401", # unused-import
-    "PT001", # missing-function-docstring
-    "PT004", # missing-parameter-docstring
-]
-"core/rag/extractor/word_extractor.py" = [
-    "RUF100", # Unused `noqa` directive
-]
-"core/tools/provider/builtin/gitlab/tools/gitlab_commits.py" = [
-    "PLR1714", # Consider merging multiple comparisons
 ]
 
 [tool.ruff.lint.pyflakes]
@@ -256,6 +248,7 @@ pymochow = "1.3.1"
 qdrant-client = "1.7.3"
 tcvectordb = "1.3.2"
 tidb-vector = "0.0.9"
+upstash-vector = "0.6.0"
 volcengine-compat = "~1.0.156"
 weaviate-client = "~3.21.0"
 
