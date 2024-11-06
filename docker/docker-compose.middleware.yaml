@@ -18,8 +18,7 @@ services:
     volumes:
       - ${PGDATA_HOST_VOLUME:-./volumes/db/data}:/var/lib/postgresql/data
     ports:
-
-      - "${EXPOSE_POSTGRES_PORT:-5432}:5432"
+      - "${EXPOSE_POSTGRES_PORT:-5433}:5432"
     healthcheck:
       test: [ "CMD", "pg_isready" ]
       interval: 1s
@@ -93,7 +92,7 @@ services:
       - ssrf_proxy_network
       - llm
 
-  # The Weaviate vector store.
+    # The Weaviate vector store.
   weaviate:
     image: semitechnologies/weaviate:1.19.0
     profiles:
