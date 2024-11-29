@@ -306,6 +306,9 @@ class PaperSearchAPI:
             esearch_response = requests.get(esearch_url)
             esearch_tree = ET.fromstring(esearch_response.content)
             pmid = esearch_tree.findtext('IdList/Id')
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            print(f"请求超时或连接错误: {e}")
+            raise e
         except Exception as e:
             print(f"Error in get_pmid_by_doi for doi {doi}: {e}")
             return ""
@@ -324,6 +327,7 @@ class PaperSearchAPI:
         """
         # first, use SemanticScholar to search literature
         # filtered set False to get all results
+        print(f"semantic: {semantic_num}, wos: {wos_num}")
         semantic_result = semantic_bulk_search(query, year, document_type, fields_of_study, fields, semantic_num, filtered=False)
         print(f"SemanticScholar search results: {len(semantic_result)}")
 
@@ -384,7 +388,12 @@ class PaperSearchAPI:
         # fourth, use PubMed to search literature whose abstracts are not available in SemanticScholar and Web of Science
         if without_abstract_doi:
             # get PMIDs by DOIs
+            timeout_error_flag = False
             for r in without_abstract_doi:
+                if timeout_error_flag:
+                    # 遇到请求超时或连接错误，跳过后续请求
+                    filtered_result.append(r)
+                    continue
                 try:
                     pmid = self.get_pmid_by_doi(r['doi'])
                     if pmid:
@@ -392,6 +401,9 @@ class PaperSearchAPI:
                         without_abstract_pmid.append(r)
                     else:
                         filtered_result.append(r)
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    print(f"请求超时或连接错误: {e}")
+                    filtered_result.append(r)
                 except Exception as e:
                     print(f"Error: {e}")
                     filtered_result.append(r)
@@ -463,10 +475,10 @@ class LiteratureSearchTool(BuiltinTool):
 
         wos_num = tool_parameters.get('wos_num')
         if not wos_num:
-            wos_num = 80
+            wos_num = 0
         semantic_num = tool_parameters.get('semantic_num')
         if not semantic_num:
-            semantic_num = 20
+            semantic_num = 0
 
         fields = tool_parameters.get('fields')
         if not fields:

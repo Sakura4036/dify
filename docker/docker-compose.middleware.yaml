@@ -66,7 +66,8 @@ services:
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8194/health" ]
     networks:
-      - ssrf_proxy_network
+      llm:
+        ipv4_address: 172.23.0.24
 
   # ssrf_proxy server
   # for more information, please refer to

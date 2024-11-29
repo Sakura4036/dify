@@ -125,7 +125,7 @@ class SemanticBulkSearchAPI:
               document_type: str = '',
               fields_of_study: str = '',
               fields: str = '',
-              num_results: int = 50,
+              num_results: int = 20,
               filtered: bool = False) -> dict | list[dict]:
         """
         Paper bulk search on Semantic Scholar.
