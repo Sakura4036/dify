@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 IMPORT_INFO_REDIS_KEY_PREFIX = "app_import_info:"
 IMPORT_INFO_REDIS_EXPIRY = 180  # 3 minutes
-CURRENT_DSL_VERSION = "0.1.3"
+CURRENT_DSL_VERSION = "0.1.4"
 
 
 class ImportMode(StrEnum):
@@ -340,7 +340,10 @@ class AppDslService:
     ) -> App:
         """Create a new app or update an existing one."""
         app_data = data.get("app", {})
-        app_mode = AppMode(app_data["mode"])
+        app_mode = app_data.get("mode")
+        if not app_mode:
+            raise ValueError("loss app mode")
+        app_mode = AppMode(app_mode)
 
         # Set icon type
         icon_type_value = icon_type or app_data.get("icon_type")
@@ -387,11 +390,11 @@ class AppDslService:
 
             environment_variables_list = workflow_data.get("environment_variables", [])
             environment_variables = [
-                variable_factory.build_variable_from_mapping(obj) for obj in environment_variables_list
+                variable_factory.build_environment_variable_from_mapping(obj) for obj in environment_variables_list
             ]
             conversation_variables_list = workflow_data.get("conversation_variables", [])
             conversation_variables = [
-                variable_factory.build_variable_from_mapping(obj) for obj in conversation_variables_list
+                variable_factory.build_conversation_variable_from_mapping(obj) for obj in conversation_variables_list
             ]
 
             workflow_service = WorkflowService()
