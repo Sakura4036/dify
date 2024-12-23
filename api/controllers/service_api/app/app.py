@@ -5,6 +5,7 @@ from controllers.common import helpers as controller_helpers
 from controllers.service_api import api
 from controllers.service_api.app.error import AppUnavailableError
 from controllers.service_api.wraps import validate_app_token
+from fields.app_fields import app_detail_kernel_fields, app_detail_fields
 from models.model import App, AppMode
 from services.app_service import AppService
 
@@ -46,9 +47,10 @@ class AppMetaApi(Resource):
 
 class AppInfoApi(Resource):
     @validate_app_token
+    @marshal_with(app_detail_fields)
     def get(self, app_model: App):
         """Get app information"""
-        return {"name": app_model.name, "description": app_model.description}
+        return app_model
 
 
 api.add_resource(AppParameterApi, "/parameters")
