@@ -408,6 +408,9 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
       <Property name='user' type='string' key='user'>
         ユーザー識別子、開発者のルールで定義され、アプリケーション内で一意でなければなりません。
       </Property>
+      <Property name='content' type='string' key='content'>
+        メッセージのフィードバックです。
+      </Property>
     </Properties>
 
     ### 応答
@@ -415,7 +418,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
   </Col>
   <Col sticky>
 
-    <CodeGroup title="リクエスト" tag="POST" label="/messages/:message_id/feedbacks" targetCode={`curl -X POST '${props.appDetail.api_base_url}/messages/:message_id/feedbacks \\\n --header 'Authorization: Bearer {api_key}' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n    "rating": "like",\n    "user": "abc-123"\n}'`}>
+    <CodeGroup title="リクエスト" tag="POST" label="/messages/:message_id/feedbacks" targetCode={`curl -X POST '${props.appDetail.api_base_url}/messages/:message_id/feedbacks \\\n --header 'Authorization: Bearer {api_key}' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n    "rating": "like",\n    "user": "abc-123",\n    "content": "message feedback information"\n}'`}>
 
     ```bash {{ title: 'cURL' }}
     curl -X POST '${props.appDetail.api_base_url}/messages/:message_id/feedbacks' \
@@ -423,7 +426,8 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
     --header 'Content-Type: application/json' \
     --data-raw '{
         "rating": "like",
-        "user": "abc-123"
+        "user": "abc-123",
+        "content": "message feedback information"
     }'
     ```
 
@@ -528,7 +532,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
     - `data` (array[object]) メッセージリスト
     - `id` (string) メッセージID
     - `conversation_id` (string) 会話ID
-    - `inputs` (array[object]) ユーザー入力パラメータ。
+    - `inputs` (object) ユーザー入力パラメータ。
     - `query` (string) ユーザー入力/質問内容。
     - `message_files` (array[object]) メッセージファイル
       - `id` (string) ID
@@ -698,7 +702,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
     - `data` (array[object]) 会話のリスト
       - `id` (string) 会話ID
       - `name` (string) 会話名、デフォルトでは、ユーザーが会話で最初に尋ねた質問のスニペットです。
-      - `inputs` (array[object]) ユーザー入力パラメータ。
+      - `inputs` (object) ユーザー入力パラメータ。
       - `introduction` (string) 紹介
       - `created_at` (timestamp) 作成タイムスタンプ、例：1705395332
       - `updated_at` (timestamp) 更新タイムスタンプ、例：1705395332
@@ -708,7 +712,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
   </Col>
   <Col sticky>
 
-    <CodeGroup title="リクエスト" tag="GET" label="/conversations" targetCode={`curl -X GET '${props.appDetail.api_base_url}/conversations?user=abc-123&last_id=&limit=20'`}>
+    <CodeGroup title="リクエスト" tag="GET" label="/conversations" targetCode={`curl -X GET '${props.appDetail.api_base_url}/conversations?user=abc-123&last_id=&limit=20' \\\n --header 'Authorization: Bearer {api_key}'`}>
 
     ```bash {{ title: 'cURL' }}
     curl -X GET '${props.appDetail.api_base_url}/conversations?user=abc-123&last_id=&limit=20' \
@@ -827,7 +831,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
     ### 応答
     - `id` (string) 会話ID
     - `name` (string) 会話名
-    - `inputs` array[object] ユーザー入力パラメータ
+    - `inputs` (object) ユーザー入力パラメータ
     - `status` (string) 会話状態
     - `introduction` (string) 紹介
     - `created_at` (timestamp) 作成タイムスタンプ、例：1705395332
@@ -963,13 +967,57 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
     </CodeGroup>
   </Col>
 </Row>
+---
+
+<Heading
+  url='/info'
+  method='GET'
+  title='アプリケーションの基本情報を取得'
+  name='#info'
+/>
+<Row>
+  <Col>
+  このアプリケーションの基本情報を取得するために使用されます
+  ### Query
+    <Properties>
+
+   <Property name='user' type='string' key='user'>
+        ユーザー識別子、開発者のルールによって定義され、アプリケーション内で一意でなければなりません。
+    </Property>
+      </Properties>
+  ### Response
+  - `name` (string) アプリケーションの名前
+  - `description` (string) アプリケーションの説明
+  - `tags` (array[string]) アプリケーションのタグ
+  </Col>
+  <Col>
+    <CodeGroup title="Request" tag="GET" label="/info" targetCode={`curl -X GET '${props.appDetail.api_base_url}/info?user=abc-123' \\\n-H 'Authorization: Bearer {api_key}'`}>
+      ```bash {{ title: 'cURL' }}
+      curl -X GET '${props.appDetail.api_base_url}/info?user=abc-123' \
+      -H 'Authorization: Bearer {api_key}'
+      ```
+    </CodeGroup>
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+      "name": "My App",
+      "description": "This is my app.",
+      "tags": [
+        "tag1",
+        "tag2"
+      ]
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
 
 ---
 
 <Heading
   url='/parameters'
   method='GET'
-  title='アプリケーション情報を取得'
+  title='アプリケーションのパラメータ情報を取得'
   name='#parameters'
 />
 <Row>
@@ -1089,7 +1137,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
 <Heading
   url='/meta'
   method='GET'
-  title='アプリケーションメタ情報を取得'
+  title='アプリケーションのメタ情報を取得'
   name='#meta'
 />
 <Row>
@@ -1123,14 +1171,14 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
     <CodeGroup title="応答">
     ```json {{ title: '応答' }}
     {
-    "tool_icons": {
+      "tool_icons": {
         "dalle2": "https://cloud.dify.ai/console/api/workspaces/current/tool-provider/builtin/dalle/icon",
         "api_tool": {
-            "background": "#252525",
-            "content": "\ud83d\ude01"
+          "background": "#252525",
+          "content": "\ud83d\ude01"
         }
+      }
     }
-  }
     ```
     </CodeGroup>
   </Col>
