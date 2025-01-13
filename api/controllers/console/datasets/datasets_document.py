@@ -27,6 +27,7 @@ from controllers.console.datasets.error import (
 )
 from controllers.console.wraps import (
     account_initialization_required,
+    cloud_edition_billing_rate_limit_check,
     cloud_edition_billing_resource_check,
     setup_required,
 )
@@ -230,6 +231,7 @@ class DatasetDocumentListApi(Resource):
     @account_initialization_required
     @marshal_with(documents_and_batch_fields)
     @cloud_edition_billing_resource_check("vector_space")
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def post(self, dataset_id):
         dataset_id = str(dataset_id)
 
@@ -257,7 +259,8 @@ class DatasetDocumentListApi(Resource):
         parser.add_argument("original_document_id", type=str, required=False, location="json")
         parser.add_argument("doc_form", type=str, default="text_model", required=False, nullable=False, location="json")
         parser.add_argument("retrieval_model", type=dict, required=False, nullable=False, location="json")
-
+        parser.add_argument("embedding_model", type=str, required=False, nullable=True, location="json")
+        parser.add_argument("embedding_model_provider", type=str, required=False, nullable=True, location="json")
         parser.add_argument(
             "doc_language", type=str, default="English", required=False, nullable=False, location="json"
         )
@@ -284,6 +287,7 @@ class DatasetDocumentListApi(Resource):
     @setup_required
     @login_required
     @account_initialization_required
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def delete(self, dataset_id):
         dataset_id = str(dataset_id)
         dataset = DatasetService.get_dataset(dataset_id)
@@ -307,6 +311,7 @@ class DatasetInitApi(Resource):
     @account_initialization_required
     @marshal_with(dataset_and_document_fields)
     @cloud_edition_billing_resource_check("vector_space")
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def post(self):
         # The role of the current user in the ta table must be admin, owner, or editor
         if not current_user.is_editor:
@@ -679,6 +684,7 @@ class DocumentProcessingApi(DocumentResource):
     @setup_required
     @login_required
     @account_initialization_required
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def patch(self, dataset_id, document_id, action):
         dataset_id = str(dataset_id)
         document_id = str(document_id)
@@ -715,6 +721,7 @@ class DocumentDeleteApi(DocumentResource):
     @setup_required
     @login_required
     @account_initialization_required
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def delete(self, dataset_id, document_id):
         dataset_id = str(dataset_id)
         document_id = str(document_id)
@@ -783,6 +790,7 @@ class DocumentStatusApi(DocumentResource):
     @login_required
     @account_initialization_required
     @cloud_edition_billing_resource_check("vector_space")
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def patch(self, dataset_id, action):
         dataset_id = str(dataset_id)
         dataset = DatasetService.get_dataset(dataset_id)
@@ -878,6 +886,7 @@ class DocumentPauseApi(DocumentResource):
     @setup_required
     @login_required
     @account_initialization_required
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def patch(self, dataset_id, document_id):
         """pause document."""
         dataset_id = str(dataset_id)
@@ -910,6 +919,7 @@ class DocumentRecoverApi(DocumentResource):
     @setup_required
     @login_required
     @account_initialization_required
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def patch(self, dataset_id, document_id):
         """recover document."""
         dataset_id = str(dataset_id)
@@ -939,6 +949,7 @@ class DocumentRetryApi(DocumentResource):
     @setup_required
     @login_required
     @account_initialization_required
+    @cloud_edition_billing_rate_limit_check("knowledge")
     def post(self, dataset_id):
         """retry document."""
 
