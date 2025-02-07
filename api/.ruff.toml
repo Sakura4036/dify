@@ -53,10 +53,12 @@ ignore = [
     "FURB152", # math-constant
     "UP007", # non-pep604-annotation
     "UP032", # f-string
+    "UP045", # non-pep604-annotation-optional
     "B005", # strip-with-multi-characters
     "B006", # mutable-argument-default
     "B007", # unused-loop-control-variable
     "B026", # star-arg-unpacking-after-keyword-arg
+    "B903", # class-as-data-structure
     "B904", # raise-without-from-inside-except
     "B905", # zip-without-explicit-strict
     "N806", # non-lowercase-variable-in-function
@@ -69,6 +71,7 @@ ignore = [
     "SIM108", # if-else-block-instead-of-if-exp
     "SIM113", # enumerate-for-loop
     "SIM117", # multiple-with-statements
+    "SIM210", # if-expr-with-true-false
 ]
 
 [lint.per-file-ignores]
