@@ -16,6 +16,10 @@ services:
       TEXT_GENERATION_TIMEOUT_MS: ${TEXT_GENERATION_TIMEOUT_MS:-1000000}
       CSP_WHITELIST: ${CSP_WHITELIST:-}
       TOP_K_MAX_VALUE: ${TOP_K_MAX_VALUE:-}
+      MARKETPLACE_API_URL: ${MARKETPLACE_API_URL:-https://marketplace.dify.ai}
+      MARKETPLACE_URL: ${MARKETPLACE_URL:-https://marketplace.dify.ai}
+      INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH: ${INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH:-}
+      PM2_INSTANCES: ${PM2_INSTANCES:-2}
     # uncomment to expose dify-web port to host
     ports:
       - "3000:3000"
