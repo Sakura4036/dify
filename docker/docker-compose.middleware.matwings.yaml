@@ -101,7 +101,7 @@ services:
 
   # plugin daemon
   plugin_daemon:
-    image: langgenius/dify-plugin-daemon:0.0.3-local
+    image: langgenius/dify-plugin-daemon:main-local
     restart: always
     environment:
       # Use the shared environment variables.
@@ -123,11 +123,7 @@ services:
       PLUGIN_REMOTE_INSTALLING_PORT: ${PLUGIN_DEBUGGING_PORT:-5003}
       PLUGIN_WORKING_PATH: ${PLUGIN_WORKING_PATH:-/app/storage/cwd}
       FORCE_VERIFYING_SIGNATURE: ${FORCE_VERIFYING_SIGNATURE:-true}
-      # Add proxy configurations
-      HTTP_PROXY: "http://172.23.0.31:7890"
-      HTTPS_PROXY: "http://172.23.0.31:7890"
-      http_proxy: "http://172.23.0.31:7890"
-      https_proxy: "http://172.23.0.31:7890"
+      PIP_MIRROR_URL: ${PIP_MIRROR_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
     ports:
       - "${EXPOSE_PLUGIN_DAEMON_PORT:-5002}:${PLUGIN_DAEMON_PORT:-5002}"
       - "${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}:${PLUGIN_DEBUGGING_PORT:-5003}"
