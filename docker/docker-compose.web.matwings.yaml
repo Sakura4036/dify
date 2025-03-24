@@ -1,7 +1,7 @@
 version: '3'
 services:
   web:
-    image: langgenius/dify-web:1.1.0
+    image: langgenius/dify-web:1.1.2
     restart: always
     environment:
       CONSOLE_API_URL: ${CONSOLE_API_URL:-http://192.168.1.5:5001}
