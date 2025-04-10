@@ -41,11 +41,12 @@ class RetrievalService:
         reranking_model: Optional[dict] = None,
         reranking_mode: str = "reranking_model",
         weights: Optional[dict] = None,
+        document_ids_filter: Optional[list[str]] = None,
     ):
         if not query:
             return []
         dataset = cls._get_dataset(dataset_id)
-        if not dataset or dataset.available_document_count == 0 or dataset.available_segment_count == 0:
+        if not dataset:
             return []
 
         all_documents: list[Document] = []
@@ -64,6 +65,7 @@ class RetrievalService:
                         top_k=top_k,
                         all_documents=all_documents,
                         exceptions=exceptions,
+                        document_ids_filter=document_ids_filter,
                     )
                 )
             if RetrievalMethod.is_support_semantic_search(retrieval_method):
@@ -79,6 +81,7 @@ class RetrievalService:
                         all_documents=all_documents,
                         retrieval_method=retrieval_method,
                         exceptions=exceptions,
+                        document_ids_filter=document_ids_filter,
                     )
                 )
             if RetrievalMethod.is_support_fulltext_search(retrieval_method):
@@ -94,6 +97,7 @@ class RetrievalService:
                         all_documents=all_documents,
                         retrieval_method=retrieval_method,
                         exceptions=exceptions,
+                        document_ids_filter=document_ids_filter,
                     )
                 )
             concurrent.futures.wait(futures, timeout=30, return_when=concurrent.futures.ALL_COMPLETED)
@@ -130,7 +134,14 @@ class RetrievalService:
 
     @classmethod
     def keyword_search(
-        cls, flask_app: Flask, dataset_id: str, query: str, top_k: int, all_documents: list, exceptions: list
+        cls,
+        flask_app: Flask,
+        dataset_id: str,
+        query: str,
+        top_k: int,
+        all_documents: list,
+        exceptions: list,
+        document_ids_filter: Optional[list[str]] = None,
     ):
         with flask_app.app_context():
             try:
@@ -139,7 +150,10 @@ class RetrievalService:
                     raise ValueError("dataset not found")
 
                 keyword = Keyword(dataset=dataset)
-                documents = keyword.search(cls.escape_query_for_search(query), top_k=top_k)
+
+                documents = keyword.search(
+                    cls.escape_query_for_search(query), top_k=top_k, document_ids_filter=document_ids_filter
+                )
                 all_documents.extend(documents)
             except Exception as e:
                 exceptions.append(str(e))
@@ -156,6 +170,7 @@ class RetrievalService:
         all_documents: list,
         retrieval_method: str,
         exceptions: list,
+        document_ids_filter: Optional[list[str]] = None,
     ):
         with flask_app.app_context():
             try:
@@ -170,6 +185,7 @@ class RetrievalService:
                     top_k=top_k,
                     score_threshold=score_threshold,
                     filter={"group_id": [dataset.id]},
+                    document_ids_filter=document_ids_filter,
                 )
 
                 if documents:
@@ -207,6 +223,7 @@ class RetrievalService:
         all_documents: list,
         retrieval_method: str,
         exceptions: list,
+        document_ids_filter: Optional[list[str]] = None,
     ):
         with flask_app.app_context():
             try:
@@ -216,7 +233,9 @@ class RetrievalService:
 
                 vector_processor = Vector(dataset=dataset)
 
-                documents = vector_processor.search_by_full_text(cls.escape_query_for_search(query), top_k=top_k)
+                documents = vector_processor.search_by_full_text(
+                    cls.escape_query_for_search(query), top_k=top_k, document_ids_filter=document_ids_filter
+                )
                 if documents:
                     if (
                         reranking_model
@@ -276,6 +295,8 @@ class RetrievalService:
                     continue
 
                 dataset_document = dataset_documents[document_id]
+                if not dataset_document:
+                    continue
 
                 if dataset_document.doc_form == IndexType.PARENT_CHILD_INDEX:
                     # Handle parent-child documents

@@ -248,6 +248,7 @@ const translation = {
     'agent': 'Agent',
     'loop-start': 'Loop Start',
     'loop': 'Loop',
+    'loop-end': 'Exit Loop',
   },
   blocksAbout: {
     'start': 'Define the initial parameters for launching a workflow',
@@ -265,6 +266,7 @@ const translation = {
     'variable-aggregator': 'Aggregate multi-branch variables into a single variable for unified configuration of downstream nodes.',
     'iteration': 'Perform multiple steps on a list object until all results are outputted.',
     'loop': 'Execute a loop of logic until the termination condition is met or the maximum loop count is reached.',
+    'loop-end': 'Equivalent to "break". This node has no configuration items. When the loop body reaches this node, the loop terminates.',
     'parameter-extractor': 'Use LLM to extract structured parameters from natural language for tool invocations or HTTP requests.',
     'document-extractor': 'Used to parse uploaded documents into text content that is easily understandable by LLM.',
     'list-operator': 'Used to filter or sort array content.',
@@ -429,6 +431,34 @@ const translation = {
         url: 'Segmented URL',
         metadata: 'Other metadata',
       },
+      metadata: {
+        title: 'Metadata Filtering',
+        tip: 'Metadata filtering is the process of using metadata attributes (such as tags, categories, or access permissions) to refine and control the retrieval of relevant information within a system.',
+        options: {
+          disabled: {
+            title: 'Disabled',
+            subTitle: 'Not enabling metadata filtering',
+          },
+          automatic: {
+            title: 'Automatic',
+            subTitle: 'Automatically generate metadata filtering conditions based on user query',
+            desc: 'Automatically generate metadata filtering conditions based on Query Variable',
+          },
+          manual: {
+            title: 'Manual',
+            subTitle: 'Manually add metadata filtering conditions',
+          },
+        },
+        panel: {
+          title: 'Metadata Filter Conditions',
+          conditions: 'Conditions',
+          add: 'Add Condition',
+          search: 'Search metadata',
+          placeholder: 'Enter value',
+          datePlaceholder: 'Choose a time...',
+          select: 'Select variable...',
+        },
+      },
     },
     http: {
       inputVars: 'Input Variables',
@@ -517,6 +547,8 @@ const translation = {
         'all of': 'all of',
         'exists': 'exists',
         'not exists': 'not exists',
+        'before': 'before',
+        'after': 'after',
       },
       optionName: {
         image: 'Image',
@@ -682,6 +714,16 @@ const translation = {
         continueOnError: 'Continue on Error',
         removeAbnormalOutput: 'Remove Abnormal Output',
       },
+      loopVariables: 'Loop Variables',
+      initialLoopVariables: 'Initial Loop Variables',
+      finalLoopVariables: 'Final Loop Variables',
+      setLoopVariables: 'Set variables within the loop scope',
+      variableName: 'Variable Name',
+      inputMode: 'Input Mode',
+      exitConditionTip: 'A loop node needs at least one exit condition',
+      loopNode: 'Loop Node',
+      currentLoopCount: 'Current loop count: {{count}}',
+      totalLoopCount: 'Total loop count: {{count}}',
     },
     note: {
       addNote: 'Add Note',
