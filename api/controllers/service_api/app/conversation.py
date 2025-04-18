@@ -14,6 +14,7 @@ from fields.conversation_fields import (
     build_conversation_delete_model,
     build_conversation_infinite_scroll_pagination_model,
     build_simple_conversation_model,
+    build_simple_conversation_with_summary_fields
 )
 from fields.conversation_variable_fields import (
     build_conversation_variable_infinite_scroll_pagination_model,
@@ -47,7 +48,8 @@ conversation_list_parser.add_argument(
 )
 
 conversation_rename_parser = reqparse.RequestParser()
-conversation_rename_parser.add_argument("name", type=str, required=False, location="json", help="New conversation name")
+conversation_rename_parser.add_argument(
+    "name", type=str, required=False, location="json", help="New conversation name")
 conversation_rename_parser.add_argument(
     "auto_generate", type=bool, required=False, default=False, location="json", help="Auto-generate conversation name"
 )
@@ -121,6 +123,20 @@ class ConversationDetailApi(Resource):
             404: "Conversation not found",
         }
     )
+    @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON))
+    @service_api_ns.marshal_with(build_simple_conversation_with_summary_fields)
+    def get(self, app_model: App, end_user: EndUser, c_id):
+        app_mode = AppMode.value_of(app_model.mode)
+        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
+            raise NotChatAppError()
+
+        conversation_id = str(c_id)
+
+        try:
+            return ConversationService.get_conversation(app_model, conversation_id, end_user)
+        except services.errors.conversation.ConversationNotExistsError:
+            raise NotFound("Conversation Not Exists.")
+
     @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON))
     @service_api_ns.marshal_with(build_conversation_delete_model(service_api_ns), code=HTTPStatus.NO_CONTENT)
     def delete(self, app_model: App, end_user: EndUser, c_id):

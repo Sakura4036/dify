@@ -5,6 +5,7 @@ from controllers.service_api import service_api_ns
 from controllers.service_api.app.error import AppUnavailableError
 from controllers.service_api.wraps import validate_app_token
 from core.app.app_config.common.parameters_mapping import get_parameters_from_feature_dict
+from fields.app_fields import app_detail_fields
 from models.model import App, AppMode
 from services.app_service import AppService
 
@@ -80,6 +81,7 @@ class AppInfoApi(Resource):
         }
     )
     @validate_app_token
+    @service_api_ns.marshal_with(app_detail_fields)
     def get(self, app_model: App):
         """Get app information.
 
@@ -93,3 +95,10 @@ class AppInfoApi(Resource):
             "mode": app_model.mode,
             "author_name": app_model.author_name,
         }
+        """Get app information"""
+        return app_model
+
+
+api.add_resource(AppParameterApi, "/parameters")
+api.add_resource(AppMetaApi, "/meta")
+api.add_resource(AppInfoApi, "/info")

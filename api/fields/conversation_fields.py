@@ -92,7 +92,8 @@ message_detail_fields = {
 }
 
 feedback_stat_fields = {"like": fields.Integer, "dislike": fields.Integer}
-status_count_fields = {"success": fields.Integer, "failed": fields.Integer, "partial_success": fields.Integer}
+status_count_fields = {"success": fields.Integer,
+                       "failed": fields.Integer, "partial_success": fields.Integer}
 model_config_fields = {
     "opening_statement": fields.String,
     "suggested_questions": fields.Raw,
@@ -149,6 +150,17 @@ conversation_message_detail_fields = {
     "created_at": TimestampField,
     "model_config": fields.Nested(model_config_fields),
     "message": fields.Nested(message_detail_fields, attribute="first_message"),
+}
+
+simple_conversation_with_summary_fields = {
+    "id": fields.String,
+    "name": fields.String,
+    "inputs": FilesContainedField,
+    "status": fields.String,
+    "introduction": fields.String,
+    "created_at": TimestampField,
+    "updated_at": TimestampField,
+    "summary": fields.String(attribute="summary_or_query"),
 }
 
 conversation_with_summary_fields = {
@@ -222,7 +234,8 @@ def build_conversation_infinite_scroll_pagination_model(api_or_ns: Api | Namespa
     simple_conversation_model = build_simple_conversation_model(api_or_ns)
 
     copied_fields = conversation_infinite_scroll_pagination_fields.copy()
-    copied_fields["data"] = fields.List(fields.Nested(simple_conversation_model))
+    copied_fields["data"] = fields.List(
+        fields.Nested(simple_conversation_model))
     return api_or_ns.model("ConversationInfiniteScrollPagination", copied_fields)
 
 
@@ -234,3 +247,8 @@ def build_conversation_delete_model(api_or_ns: Api | Namespace):
 def build_simple_conversation_model(api_or_ns: Api | Namespace):
     """Build the simple conversation model for the API or Namespace."""
     return api_or_ns.model("SimpleConversation", simple_conversation_fields)
+
+
+def build_simple_conversation_with_summary_fields(api_or_ns: Api | Namespace):
+    """Build the simple conversation with summary model for the API or Namespace."""
+    return api_or_ns.model("SimpleConversationWithSummary", simple_conversation_with_summary_fields)
