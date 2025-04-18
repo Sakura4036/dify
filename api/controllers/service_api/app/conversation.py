@@ -12,7 +12,7 @@ from extensions.ext_database import db
 from fields.conversation_fields import (
     conversation_delete_fields,
     conversation_infinite_scroll_pagination_fields,
-    simple_conversation_fields,
+    simple_conversation_fields, simple_conversation_with_summary_fields,
 )
 from libs.helper import uuid_value
 from models.model import App, AppMode, EndUser
@@ -56,6 +56,20 @@ class ConversationApi(Resource):
 
 
 class ConversationDetailApi(Resource):
+    @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON))
+    @marshal_with(simple_conversation_with_summary_fields)
+    def get(self, app_model: App, end_user: EndUser, c_id):
+        app_mode = AppMode.value_of(app_model.mode)
+        if app_mode not in {AppMode.CHAT, AppMode.AGENT_CHAT, AppMode.ADVANCED_CHAT}:
+            raise NotChatAppError()
+
+        conversation_id = str(c_id)
+
+        try:
+            return ConversationService.get_conversation(app_model, conversation_id, end_user)
+        except services.errors.conversation.ConversationNotExistsError:
+            raise NotFound("Conversation Not Exists.")
+
     @validate_app_token(fetch_user_arg=FetchUserArg(fetch_from=WhereisUserArg.JSON))
     @marshal_with(conversation_delete_fields)
     def delete(self, app_model: App, end_user: EndUser, c_id):
