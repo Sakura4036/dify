@@ -5,6 +5,7 @@ from controllers.service_api import api
 from controllers.service_api.app.error import AppUnavailableError
 from controllers.service_api.wraps import validate_app_token
 from core.app.app_config.common.parameters_mapping import get_parameters_from_feature_dict
+from fields.app_fields import app_detail_fields
 from models.model import App, AppMode
 from services.app_service import AppService
 
@@ -44,10 +45,10 @@ class AppMetaApi(Resource):
 
 class AppInfoApi(Resource):
     @validate_app_token
+    @marshal_with(app_detail_fields)
     def get(self, app_model: App):
         """Get app information"""
-        tags = [tag.name for tag in app_model.tags]
-        return {"name": app_model.name, "description": app_model.description, "tags": tags}
+        return app_model
 
 
 api.add_resource(AppParameterApi, "/parameters")
