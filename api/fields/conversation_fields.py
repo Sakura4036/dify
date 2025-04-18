@@ -145,6 +145,17 @@ conversation_message_detail_fields = {
     "message": fields.Nested(message_detail_fields, attribute="first_message"),
 }
 
+simple_conversation_with_summary_fields = {
+    "id": fields.String,
+    "name": fields.String,
+    "inputs": FilesContainedField,
+    "status": fields.String,
+    "introduction": fields.String,
+    "created_at": TimestampField,
+    "updated_at": TimestampField,
+    "summary": fields.String(attribute="summary_or_query"),
+}
+
 conversation_with_summary_fields = {
     "id": fields.String,
     "status": fields.String,
