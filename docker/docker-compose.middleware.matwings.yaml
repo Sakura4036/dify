@@ -1,3 +1,9 @@
+x-proxy-env: &proxy-env
+  HTTP_PROXY:  http://192.168.1.5:7890
+  HTTPS_PROXY: http://192.168.1.5:7890
+  NO_PROXY: localhost,127.0.0.1,::1,db,redis,ssrf_proxy,sandbox, 192.168.0.1/16
+
+
 services:
   # The postgres database.
   db:
@@ -68,6 +74,7 @@ services:
       HTTP_PROXY: ${SANDBOX_HTTP_PROXY:-http://ssrf_proxy:3128}
       HTTPS_PROXY: ${SANDBOX_HTTPS_PROXY:-http://ssrf_proxy:3128}
       SANDBOX_PORT: ${SANDBOX_PORT:-8194}
+      <<: *proxy-env
     volumes:
       - ./volumes/sandbox/dependencies:/dependencies
       - ./volumes/sandbox/conf:/conf
@@ -86,6 +93,7 @@ services:
       - ./middleware.env
     environment:
       # Use the shared environment variables.
+      <<: *proxy-env
       DB_HOST: ${DB_HOST:-db}
       DB_PORT: ${DB_PORT:-5432}
       DB_USERNAME: ${DB_USER:-postgres}
