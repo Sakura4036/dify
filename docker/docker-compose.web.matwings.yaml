@@ -1,7 +1,7 @@
 version: '3'
 services:
   web:
-    image: langgenius/dify-web:1.4.0
+    image: langgenius/dify-web:1.5.1
     restart: always
     env_file:
       - ./middleware.env
