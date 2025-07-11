@@ -13,7 +13,7 @@ from core.workflow.nodes.iteration import IterationNode, IterationStartNode
 from core.workflow.nodes.knowledge_retrieval import KnowledgeRetrievalNode
 from core.workflow.nodes.list_operator import ListOperatorNode
 from core.workflow.nodes.llm import LLMNode
-from core.workflow.nodes.loop import LoopNode, LoopStartNode
+from core.workflow.nodes.loop import LoopEndNode, LoopNode, LoopStartNode
 from core.workflow.nodes.parameter_extractor import ParameterExtractorNode
 from core.workflow.nodes.question_classifier import QuestionClassifierNode
 from core.workflow.nodes.start import StartNode
@@ -25,6 +25,11 @@ from core.workflow.nodes.variable_assigner.v2 import VariableAssignerNode as Var
 
 LATEST_VERSION = "latest"
 
+# NOTE(QuantumGhost): This should be in sync with subclasses of BaseNode.
+# Specifically, if you have introduced new node types, you should add them here.
+#
+# TODO(QuantumGhost): This could be automated with either metaclass or `__init_subclass__`
+# hook. Try to avoid duplication of node information.
 NODE_TYPE_CLASSES_MAPPING: Mapping[NodeType, Mapping[str, type[BaseNode]]] = {
     NodeType.START: {
         LATEST_VERSION: StartNode,
@@ -68,6 +73,7 @@ NODE_TYPE_CLASSES_MAPPING: Mapping[NodeType, Mapping[str, type[BaseNode]]] = {
     },
     NodeType.TOOL: {
         LATEST_VERSION: ToolNode,
+        "2": ToolNode,
         "1": ToolNode,
     },
     NodeType.VARIABLE_AGGREGATOR: {
@@ -94,6 +100,10 @@ NODE_TYPE_CLASSES_MAPPING: Mapping[NodeType, Mapping[str, type[BaseNode]]] = {
         LATEST_VERSION: LoopStartNode,
         "1": LoopStartNode,
     },
+    NodeType.LOOP_END: {
+        LATEST_VERSION: LoopEndNode,
+        "1": LoopEndNode,
+    },
     NodeType.PARAMETER_EXTRACTOR: {
         LATEST_VERSION: ParameterExtractorNode,
         "1": ParameterExtractorNode,
@@ -113,6 +123,7 @@ NODE_TYPE_CLASSES_MAPPING: Mapping[NodeType, Mapping[str, type[BaseNode]]] = {
     },
     NodeType.AGENT: {
         LATEST_VERSION: AgentNode,
+        "2": AgentNode,
         "1": AgentNode,
     },
 }

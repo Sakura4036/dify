@@ -9,10 +9,11 @@ import {
 import { useBoolean } from 'ahooks'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import TabHeader from '../../base/tab-header'
-import { checkOrSetAccessToken } from '../utils'
+import { checkOrSetAccessToken, removeAccessToken } from '../utils'
 import MenuDropdown from './menu-dropdown'
 import RunBatch from './run-batch'
 import ResDownload from './run-batch/res-download'
+import AppUnavailable from '../../base/app-unavailable'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
 import RunOnce from '@/app/components/share/text-generation/run-once'
 import { fetchSavedMessage as doFetchSavedMessage, fetchAppInfo, fetchAppParams, removeMessage, saveMessage } from '@/service/share'
@@ -36,8 +37,12 @@ import Toast from '@/app/components/base/toast'
 import type { VisionFile, VisionSettings } from '@/types/app'
 import { Resolution, TransferMethod } from '@/types/app'
 import { useAppFavicon } from '@/hooks/use-app-favicon'
-import LogoSite from '@/app/components/base/logo/logo-site'
+import DifyLogo from '@/app/components/base/logo/dify-logo'
 import cn from '@/utils/classnames'
+import { useGetAppAccessMode, useGetUserCanAccessApp } from '@/service/access-control'
+import { AccessMode } from '@/models/access-control'
+import { useGlobalPublicStore } from '@/context/global-public-context'
+import useDocumentTitle from '@/hooks/use-document-title'
 
 const GROUP_SIZE = 5 // to avoid RPM(Request per minute) limit. The group task finished then the next group.
 enum TaskStatus {
@@ -80,14 +85,6 @@ const TextGeneration: FC<IMainProps> = ({
 
   const router = useRouter()
   const pathname = usePathname()
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams)
-    if (params.has('mode')) {
-      params.delete('mode')
-      router.replace(`${pathname}?${params.toString()}`)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // Notice this situation isCallBatchAPI but not in batch tab
   const [isCallBatchAPI, setIsCallBatchAPI] = useState(false)
@@ -98,13 +95,24 @@ const TextGeneration: FC<IMainProps> = ({
     doSetInputs(newInputs)
     inputsRef.current = newInputs
   }, [])
+  const systemFeatures = useGlobalPublicStore(s => s.systemFeatures)
   const [appId, setAppId] = useState<string>('')
   const [siteInfo, setSiteInfo] = useState<SiteInfo | null>(null)
-  const [canReplaceLogo, setCanReplaceLogo] = useState<boolean>(false)
   const [customConfig, setCustomConfig] = useState<Record<string, any> | null>(null)
   const [promptConfig, setPromptConfig] = useState<PromptConfig | null>(null)
   const [moreLikeThisConfig, setMoreLikeThisConfig] = useState<MoreLikeThisConfig | null>(null)
   const [textToSpeechConfig, setTextToSpeechConfig] = useState<TextToSpeechConfig | null>(null)
+
+  const { isPending: isGettingAccessMode, data: appAccessMode } = useGetAppAccessMode({
+    appId,
+    isInstalledApp,
+    enabled: systemFeatures.webapp_auth.enabled,
+  })
+  const { isPending: isCheckingPermission, data: userCanAccessResult } = useGetUserCanAccessApp({
+    appId,
+    isInstalledApp,
+    enabled: systemFeatures.webapp_auth.enabled,
+  })
 
   // save message
   const [savedMessages, setSavedMessages] = useState<SavedMessage[]>([])
@@ -302,10 +310,17 @@ const TextGeneration: FC<IMainProps> = ({
     const varLen = promptConfig?.prompt_variables.length || 0
     setIsCallBatchAPI(true)
     const allTaskList: Task[] = payloadData.map((item, i) => {
-      const inputs: Record<string, string> = {}
+      const inputs: Record<string, any> = {}
       if (varLen > 0) {
         item.slice(0, varLen).forEach((input, index) => {
-          inputs[promptConfig?.prompt_variables[index].key as string] = input
+          const varSchema = promptConfig?.prompt_variables[index]
+          inputs[varSchema?.key as string] = input
+          if (!input) {
+            if (varSchema?.type === 'string' || varSchema?.type === 'paragraph')
+              inputs[varSchema?.key as string] = ''
+            else
+              inputs[varSchema?.key as string] = undefined
+          }
         })
       }
       return {
@@ -388,10 +403,9 @@ const TextGeneration: FC<IMainProps> = ({
   useEffect(() => {
     (async () => {
       const [appData, appParams]: any = await fetchInitData()
-      const { app_id: appId, site: siteInfo, can_replace_logo, custom_config } = appData
+      const { app_id: appId, site: siteInfo, custom_config } = appData
       setAppId(appId)
       setSiteInfo(siteInfo as SiteInfo)
-      setCanReplaceLogo(can_replace_logo)
       setCustomConfig(custom_config)
       changeLanguage(siteInfo.default_language)
 
@@ -415,14 +429,7 @@ const TextGeneration: FC<IMainProps> = ({
   }, [])
 
   // Can Use metadata(https://beta.nextjs.org/docs/api-reference/metadata) to set title. But it only works in server side client.
-  useEffect(() => {
-    if (siteInfo?.title) {
-      if (canReplaceLogo)
-        document.title = `${siteInfo.title}`
-      else
-        document.title = `${siteInfo.title} - Powered by Dify`
-    }
-  }, [siteInfo?.title, canReplaceLogo])
+  useDocumentTitle(siteInfo?.title || t('share.generation.title'))
 
   useAppFavicon({
     enable: !isInstalledApp,
@@ -474,21 +481,21 @@ const TextGeneration: FC<IMainProps> = ({
   const renderResWrap = (
     <div
       className={cn(
-        'relative flex flex-col h-full',
+        'relative flex h-full flex-col',
         !isPC && 'h-[calc(100vh_-_36px)] rounded-t-2xl shadow-lg backdrop-blur-sm',
         !isPC
           ? isShowResultPanel
             ? 'bg-background-default-burn'
-            : 'bg-components-panel-bg border-t-[0.5px] border-divider-regular'
+            : 'border-t-[0.5px] border-divider-regular bg-components-panel-bg'
           : 'bg-chatbot-bg',
       )}
     >
       {isCallBatchAPI && (
         <div className={cn(
-          'shrink-0 px-14 pt-9 pb-2 flex items-center justify-between',
-          !isPC && 'px-4 pt-3 pb-1',
+          'flex shrink-0 items-center justify-between px-14 pb-2 pt-9',
+          !isPC && 'px-4 pb-1 pt-3',
         )}>
-          <div className='text-text-primary system-md-semibold-uppercase'>{t('share.generation.executions', { num: allTaskList.length })}</div>
+          <div className='system-md-semibold-uppercase text-text-primary'>{t('share.generation.executions', { num: allTaskList.length })}</div>
           {allSuccessTaskList.length > 0 && (
             <ResDownload
               isMobile={!isPC}
@@ -498,7 +505,7 @@ const TextGeneration: FC<IMainProps> = ({
         </div>
       )}
       <div className={cn(
-        'grow flex flex-col h-0 overflow-y-auto',
+        'flex h-0 grow flex-col overflow-y-auto',
         isPC && 'px-14 py-8',
         isPC && isCallBatchAPI && 'pt-0',
         !isPC && 'p-0 pb-2',
@@ -511,21 +518,40 @@ const TextGeneration: FC<IMainProps> = ({
         )}
       </div>
       {isCallBatchAPI && allFailedTaskList.length > 0 && (
-        <div className='z-10 absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 p-3 rounded-xl bg-components-panel-bg-blur backdrop-blur-sm border border-components-panel-border shadow-lg'>
-          <RiErrorWarningFill className='w-4 h-4 text-text-destructive' />
-          <div className='text-text-secondary system-sm-medium'>{t('share.generation.batchFailed.info', { num: allFailedTaskList.length })}</div>
-          <div className='w-px h-3.5 bg-divider-regular'></div>
-          <div onClick={handleRetryAllFailedTask} className='text-text-accent system-sm-semibold-uppercase cursor-pointer'>{t('share.generation.batchFailed.retry')}</div>
+        <div className='absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-components-panel-border bg-components-panel-bg-blur p-3 shadow-lg backdrop-blur-sm'>
+          <RiErrorWarningFill className='h-4 w-4 text-text-destructive' />
+          <div className='system-sm-medium text-text-secondary'>{t('share.generation.batchFailed.info', { num: allFailedTaskList.length })}</div>
+          <div className='h-3.5 w-px bg-divider-regular'></div>
+          <div onClick={handleRetryAllFailedTask} className='system-sm-semibold-uppercase cursor-pointer text-text-accent'>{t('share.generation.batchFailed.retry')}</div>
         </div>
       )}
     </div>
   )
 
-  if (!appId || !siteInfo || !promptConfig) {
+  const getSigninUrl = useCallback(() => {
+    const params = new URLSearchParams(searchParams)
+    params.delete('message')
+    params.set('redirect_url', pathname)
+    return `/webapp-signin?${params.toString()}`
+  }, [searchParams, pathname])
+
+  const backToHome = useCallback(() => {
+    removeAccessToken()
+    const url = getSigninUrl()
+    router.replace(url)
+  }, [getSigninUrl, router])
+
+  if (!appId || !siteInfo || !promptConfig || (systemFeatures.webapp_auth.enabled && (isGettingAccessMode || isCheckingPermission))) {
     return (
-      <div className='flex items-center h-screen'>
+      <div className='flex h-screen items-center'>
         <Loading type='app' />
       </div>)
+  }
+  if (systemFeatures.webapp_auth.enabled && !userCanAccessResult?.result) {
+    return <div className='flex h-full flex-col items-center justify-center gap-y-2'>
+      <AppUnavailable className='h-auto w-auto' code={403} unknownReason='no permission.' />
+      {!isInstalledApp && <span className='system-sm-regular cursor-pointer text-text-tertiary' onClick={backToHome}>{t('common.userProfile.logout')}</span>}
+    </div>
   }
 
   return (
@@ -537,12 +563,12 @@ const TextGeneration: FC<IMainProps> = ({
     )}>
       {/* Left */}
       <div className={cn(
-        'shrink-0 relative flex flex-col h-full',
+        'relative flex h-full shrink-0 flex-col',
         isPC ? 'w-[600px] max-w-[50%]' : resultExisted ? 'h-[calc(100%_-_64px)]' : '',
         isInstalledApp && 'rounded-l-2xl',
       )}>
         {/* header */}
-        <div className={cn('shrink-0 space-y-4 border-b border-divider-subtle', isPC ? 'p-8 pb-0 bg-components-panel-bg' : 'p-4 pb-0')}>
+        <div className={cn('shrink-0 space-y-4 border-b border-divider-subtle', isPC ? 'bg-components-panel-bg p-8 pb-0' : 'p-4 pb-0')}>
           <div className='flex items-center gap-3'>
             <AppIcon
               size={isPC ? 'large' : 'small'}
@@ -551,8 +577,8 @@ const TextGeneration: FC<IMainProps> = ({
               background={siteInfo.icon_background || appDefaultIconBackground}
               imageUrl={siteInfo.icon_url}
             />
-            <div className='grow text-text-secondary system-md-semibold truncate'>{siteInfo.title}</div>
-            <MenuDropdown data={siteInfo} />
+            <div className='system-md-semibold grow truncate text-text-secondary'>{siteInfo.title}</div>
+            <MenuDropdown hideLogout={isInstalledApp || appAccessMode?.accessMode === AccessMode.PUBLIC} data={siteInfo} />
           </div>
           {siteInfo.description && (
             <div className='system-xs-regular text-text-tertiary'>{siteInfo.description}</div>
@@ -566,7 +592,7 @@ const TextGeneration: FC<IMainProps> = ({
                   id: 'saved',
                   name: t('share.generation.tabs.saved'),
                   isRight: true,
-                  icon: <RiBookmark3Line className='w-4 h-4' />,
+                  icon: <RiBookmark3Line className='h-4 w-4' />,
                   extra: savedMessages.length > 0
                     ? (
                       <Badge className='ml-1'>
@@ -583,7 +609,7 @@ const TextGeneration: FC<IMainProps> = ({
         </div>
         {/* form */}
         <div className={cn(
-          'grow h-0 bg-components-panel-bg overflow-y-auto',
+          'h-0 grow overflow-y-auto bg-components-panel-bg',
           isPC ? 'px-8' : 'px-4',
           !isPC && resultExisted && customConfig?.remove_webapp_brand && 'rounded-b-2xl border-b-[0.5px] border-divider-regular',
         )}>
@@ -619,36 +645,37 @@ const TextGeneration: FC<IMainProps> = ({
         {/* powered by */}
         {!customConfig?.remove_webapp_brand && (
           <div className={cn(
-            'shrink-0 py-3 flex items-center gap-1.5 bg-components-panel-bg',
+            'flex shrink-0 items-center gap-1.5 bg-components-panel-bg py-3',
             isPC ? 'px-8' : 'px-4',
             !isPC && resultExisted && 'rounded-b-2xl border-b-[0.5px] border-divider-regular',
           )}>
-            <div className='text-text-tertiary system-2xs-medium-uppercase'>{t('share.chat.poweredBy')}</div>
-            {customConfig?.replace_webapp_logo && (
-              <img src={customConfig?.replace_webapp_logo} alt='logo' className='block w-auto h-5' />
-            )}
-            {!customConfig?.replace_webapp_logo && (
-              <LogoSite className='!h-5' />
-            )}
+            <div className='system-2xs-medium-uppercase text-text-tertiary'>{t('share.chat.poweredBy')}</div>
+            {
+              systemFeatures.branding.enabled && systemFeatures.branding.workspace_logo
+                ? <img src={systemFeatures.branding.workspace_logo} alt='logo' className='block h-5 w-auto' />
+                : customConfig?.replace_webapp_logo
+                  ? <img src={`${customConfig?.replace_webapp_logo}`} alt='logo' className='block h-5 w-auto' />
+                  : <DifyLogo size='small' />
+            }
           </div>
         )}
       </div>
       {/* Result */}
       <div className={cn(
         isPC
-          ? 'grow h-full'
+          ? 'h-full w-0 grow'
           : isShowResultPanel
-            ? 'fixed z-50 inset-0 bg-background-overlay backdrop-blur-sm'
+            ? 'fixed inset-0 z-50 bg-background-overlay backdrop-blur-sm'
             : resultExisted
-              ? 'relative shrink-0 h-16 pt-2.5 bg-background-default-burn overflow-hidden'
+              ? 'relative h-16 shrink-0 overflow-hidden bg-background-default-burn pt-2.5'
               : '',
       )}>
         {!isPC && (
           <div
             className={cn(
               isShowResultPanel
-                ? 'p-2 pt-6 flex items-center justify-center'
-                : 'z-10 absolute top-0 left-0 w-full px-2 pt-[3px] pb-[57px] flex items-center justify-center',
+                ? 'flex items-center justify-center p-2 pt-6'
+                : 'absolute left-0 top-0 z-10 flex w-full items-center justify-center px-2 pb-[57px] pt-[3px]',
             )}
             onClick={() => {
               if (isShowResultPanel)
@@ -657,7 +684,7 @@ const TextGeneration: FC<IMainProps> = ({
                 showResultPanel()
             }}
           >
-            <div className='w-8 h-1 rounded bg-divider-solid cursor-grab'/>
+            <div className='h-1 w-8 cursor-grab rounded bg-divider-solid' />
           </div>
         )}
         {renderResWrap}

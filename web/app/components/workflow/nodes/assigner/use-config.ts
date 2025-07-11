@@ -5,6 +5,7 @@ import { VarType } from '../../types'
 import type { ValueSelector, Var } from '../../types'
 import { WriteMode } from './types'
 import type { AssignerNodeOperation, AssignerNodeType } from './types'
+import { writeModeTypesNum } from './types'
 import { useGetAvailableVars } from './hooks'
 import { convertV1ToV2 } from './utils'
 import useNodeCrud from '@/app/components/workflow/nodes/_base/hooks/use-node-crud'
@@ -31,7 +32,7 @@ const useConfig = (id: string, rawPayload: AssignerNodeType) => {
   }
 
   const store = useStoreApi()
-  const { getBeforeNodesInSameBranch } = useWorkflow()
+  const { getBeforeNodesInSameBranchIncludeParent } = useWorkflow()
 
   const {
     getNodes,
@@ -39,11 +40,9 @@ const useConfig = (id: string, rawPayload: AssignerNodeType) => {
   const currentNode = getNodes().find(n => n.id === id)
   const isInIteration = payload.isInIteration
   const iterationNode = isInIteration ? getNodes().find(n => n.id === currentNode!.parentId) : null
-  const isInLoop = payload.isInLoop
-  const loopNode = isInLoop ? getNodes().find(n => n.id === currentNode!.parentId) : null
   const availableNodes = useMemo(() => {
-    return getBeforeNodesInSameBranch(id)
-  }, [getBeforeNodesInSameBranch, id])
+    return getBeforeNodesInSameBranchIncludeParent(id)
+  }, [getBeforeNodesInSameBranchIncludeParent, id])
   const { inputs, setInputs } = useNodeCrud<AssignerNodeType>(id, payload)
   const newSetInputs = useCallback((newInputs: AssignerNodeType) => {
     const finalInputs = produce(newInputs, (draft) => {
@@ -56,13 +55,13 @@ const useConfig = (id: string, rawPayload: AssignerNodeType) => {
   const { getCurrentVariableType } = useWorkflowVariables()
   const getAssignedVarType = useCallback((valueSelector: ValueSelector) => {
     return getCurrentVariableType({
-      parentNode: isInIteration ? iterationNode : loopNode,
+      parentNode: isInIteration ? iterationNode : null,
       valueSelector: valueSelector || [],
       availableNodes,
       isChatMode,
       isConstant: false,
     })
-  }, [getCurrentVariableType, isInIteration, iterationNode, loopNode, availableNodes, isChatMode])
+  }, [getCurrentVariableType, isInIteration, iterationNode, availableNodes, isChatMode])
 
   const handleOperationListChanges = useCallback((items: AssignerNodeOperation[]) => {
     const newInputs = produce(inputs, (draft) => {
@@ -71,9 +70,8 @@ const useConfig = (id: string, rawPayload: AssignerNodeType) => {
     newSetInputs(newInputs)
   }, [inputs, newSetInputs])
 
-  const writeModeTypesArr = [WriteMode.overwrite, WriteMode.clear, WriteMode.append, WriteMode.extend]
+  const writeModeTypesArr = [WriteMode.overwrite, WriteMode.clear, WriteMode.append, WriteMode.extend, WriteMode.removeFirst, WriteMode.removeLast]
   const writeModeTypes = [WriteMode.overwrite, WriteMode.clear, WriteMode.set]
-  const writeModeTypesNum = [WriteMode.increment, WriteMode.decrement, WriteMode.multiply, WriteMode.divide]
 
   const getToAssignedVarType = useCallback((assignedVarType: VarType, write_mode: WriteMode) => {
     if (write_mode === WriteMode.overwrite || write_mode === WriteMode.increment || write_mode === WriteMode.decrement
@@ -91,6 +89,8 @@ const useConfig = (id: string, rawPayload: AssignerNodeType) => {
   }, [])
 
   const filterAssignedVar = useCallback((varPayload: Var, selector: ValueSelector) => {
+    if (varPayload.isLoopVariable)
+      return true
     return selector.join('.').startsWith('conversation')
   }, [])
 

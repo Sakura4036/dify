@@ -17,11 +17,16 @@ import {
 } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import type { Model, ModelProvider } from '@/app/components/header/account-setting/model-provider-page/declarations'
 import type { RETRIEVE_METHOD } from '@/types/app'
+import type { BasicPlan } from '@/app/components/billing/type'
 import { Plan, type UsagePlanInfo } from '@/app/components/billing/type'
 import { fetchCurrentPlanInfo } from '@/service/billing'
 import { parseCurrentPlan } from '@/app/components/billing/utils'
 import { defaultPlan } from '@/app/components/billing/config'
 import Toast from '@/app/components/base/toast'
+import {
+  useEducationStatus,
+} from '@/service/use-education'
+import { noop } from 'lodash-es'
 
 type ProviderContextState = {
   modelProviders: ModelProvider[]
@@ -30,7 +35,7 @@ type ProviderContextState = {
   supportRetrievalMethods: RETRIEVE_METHOD[]
   isAPIKeySet: boolean
   plan: {
-    type: Plan
+    type: BasicPlan
     usage: UsagePlanInfo
     total: UsagePlanInfo
   }
@@ -40,10 +45,21 @@ type ProviderContextState = {
   enableReplaceWebAppLogo: boolean
   modelLoadBalancingEnabled: boolean
   datasetOperatorEnabled: boolean
+  enableEducationPlan: boolean
+  isEducationWorkspace: boolean
+  isEducationAccount: boolean
+  webappCopyrightEnabled: boolean
+  licenseLimit: {
+    workspace_members: {
+      size: number
+      limit: number
+    }
+  },
+  refreshLicenseLimit: () => void
 }
 const ProviderContext = createContext<ProviderContextState>({
   modelProviders: [],
-  refreshModelProviders: () => { },
+  refreshModelProviders: noop,
   textGenerationModelList: [],
   supportRetrievalMethods: [],
   isAPIKeySet: true,
@@ -66,10 +82,21 @@ const ProviderContext = createContext<ProviderContextState>({
   },
   isFetchedPlan: false,
   enableBilling: false,
-  onPlanInfoChanged: () => { },
+  onPlanInfoChanged: noop,
   enableReplaceWebAppLogo: false,
   modelLoadBalancingEnabled: false,
   datasetOperatorEnabled: false,
+  enableEducationPlan: false,
+  isEducationWorkspace: false,
+  isEducationAccount: false,
+  webappCopyrightEnabled: false,
+  licenseLimit: {
+    workspace_members: {
+      size: 0,
+      limit: 0,
+    },
+  },
+  refreshLicenseLimit: noop,
 })
 
 export const useProviderContext = () => useContext(ProviderContext)
@@ -96,20 +123,54 @@ export const ProviderContextProvider = ({
   const [enableReplaceWebAppLogo, setEnableReplaceWebAppLogo] = useState(false)
   const [modelLoadBalancingEnabled, setModelLoadBalancingEnabled] = useState(false)
   const [datasetOperatorEnabled, setDatasetOperatorEnabled] = useState(false)
+  const [webappCopyrightEnabled, setWebappCopyrightEnabled] = useState(false)
+  const [licenseLimit, setLicenseLimit] = useState({
+    workspace_members: {
+      size: 0,
+      limit: 0,
+    },
+  })
+
+  const [enableEducationPlan, setEnableEducationPlan] = useState(false)
+  const [isEducationWorkspace, setIsEducationWorkspace] = useState(false)
+  const { data: isEducationAccount } = useEducationStatus(!enableEducationPlan)
 
   const fetchPlan = async () => {
-    const data = await fetchCurrentPlanInfo()
-    const enabled = data.billing.enabled
-    setEnableBilling(enabled)
-    setEnableReplaceWebAppLogo(data.can_replace_logo)
-    if (enabled) {
-      setPlan(parseCurrentPlan(data))
-      setIsFetchedPlan(true)
+    try {
+      const data = await fetchCurrentPlanInfo()
+      if (!data) {
+        console.error('Failed to fetch plan info: data is undefined')
+        return
+      }
+
+      // set default value to avoid undefined error
+      setEnableBilling(data.billing?.enabled ?? false)
+      setEnableEducationPlan(data.education?.enabled ?? false)
+      setIsEducationWorkspace(data.education?.activated ?? false)
+      setEnableReplaceWebAppLogo(data.can_replace_logo ?? false)
+
+      if (data.billing?.enabled) {
+        setPlan(parseCurrentPlan(data) as any)
+        setIsFetchedPlan(true)
+      }
+
+      if (data.model_load_balancing_enabled)
+        setModelLoadBalancingEnabled(true)
+      if (data.dataset_operator_enabled)
+        setDatasetOperatorEnabled(true)
+      if (data.webapp_copyright_enabled)
+        setWebappCopyrightEnabled(true)
+      if (data.workspace_members)
+        setLicenseLimit({ workspace_members: data.workspace_members })
     }
-    if (data.model_load_balancing_enabled)
-      setModelLoadBalancingEnabled(true)
-    if (data.dataset_operator_enabled)
-      setDatasetOperatorEnabled(true)
+    catch (error) {
+      console.error('Failed to fetch plan info:', error)
+      // set default value to avoid undefined error
+      setEnableBilling(false)
+      setEnableEducationPlan(false)
+      setIsEducationWorkspace(false)
+      setEnableReplaceWebAppLogo(false)
+    }
   }
   useEffect(() => {
     fetchPlan()
@@ -155,6 +216,12 @@ export const ProviderContextProvider = ({
       enableReplaceWebAppLogo,
       modelLoadBalancingEnabled,
       datasetOperatorEnabled,
+      enableEducationPlan,
+      isEducationWorkspace,
+      isEducationAccount: isEducationAccount?.result || false,
+      webappCopyrightEnabled,
+      licenseLimit,
+      refreshLicenseLimit: fetchPlan,
     }}>
       {children}
     </ProviderContext.Provider>

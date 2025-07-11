@@ -12,7 +12,10 @@ type Props = {
   toolList: ToolWithProvider[]
   hasSearchText: boolean
   onSelect: (type: BlockEnum, tool?: ToolDefaultValue) => void
+  canNotSelectMultiple?: boolean
+  onSelectMultiple?: (type: BlockEnum, tools: ToolDefaultValue[]) => void
   selectedTools?: ToolValue[]
+  canChooseMCPTool?: boolean
 }
 
 const Item: FC<Props> = ({
@@ -20,11 +23,14 @@ const Item: FC<Props> = ({
   toolList,
   hasSearchText,
   onSelect,
+  canNotSelectMultiple,
+  onSelectMultiple,
   selectedTools,
+  canChooseMCPTool,
 }) => {
   return (
     <div>
-      <div className='flex items-center px-3 h-[22px] text-xs font-medium text-text-tertiary'>
+      <div className='flex h-[22px] items-center px-3 text-xs font-medium text-text-tertiary'>
         {groupName}
       </div>
       <div>
@@ -36,7 +42,10 @@ const Item: FC<Props> = ({
             isShowLetterIndex={false}
             hasSearchText={hasSearchText}
             onSelect={onSelect}
+            canNotSelectMultiple={canNotSelectMultiple}
+            onSelectMultiple={onSelectMultiple}
             selectedTools={selectedTools}
+            canChooseMCPTool={canChooseMCPTool}
           />
         ))}
       </div>

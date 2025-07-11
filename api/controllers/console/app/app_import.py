@@ -1,13 +1,14 @@
 from typing import cast
 
-from flask_login import current_user  # type: ignore
-from flask_restful import Resource, marshal_with, reqparse  # type: ignore
+from flask_login import current_user
+from flask_restful import Resource, marshal_with, reqparse
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import Forbidden
 
 from controllers.console.app.wraps import get_app_model
 from controllers.console.wraps import (
     account_initialization_required,
+    cloud_edition_billing_resource_check,
     setup_required,
 )
 from extensions.ext_database import db
@@ -16,6 +17,8 @@ from libs.login import login_required
 from models import Account
 from models.model import App
 from services.app_dsl_service import AppDslService, ImportStatus
+from services.enterprise.enterprise_service import EnterpriseService
+from services.feature_service import FeatureService
 
 
 class AppImportApi(Resource):
@@ -23,6 +26,7 @@ class AppImportApi(Resource):
     @login_required
     @account_initialization_required
     @marshal_with(app_import_fields)
+    @cloud_edition_billing_resource_check("apps")
     def post(self):
         # Check user role first
         if not current_user.is_editor:
@@ -58,7 +62,9 @@ class AppImportApi(Resource):
                 app_id=args.get("app_id"),
             )
             session.commit()
-
+        if result.app_id and FeatureService.get_system_features().webapp_auth.enabled:
+            # update web app setting as private
+            EnterpriseService.WebAppAuth.update_app_access_mode(result.app_id, "private")
         # Return appropriate status code based on result
         status = result.status
         if status == ImportStatus.FAILED.value:

@@ -1,3 +1,4 @@
+import logging
 import time
 from collections.abc import Generator, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Optional, Union
@@ -17,7 +18,11 @@ from core.external_data_tool.external_data_fetch import ExternalDataFetch
 from core.memory.token_buffer_memory import TokenBufferMemory
 from core.model_manager import ModelInstance
 from core.model_runtime.entities.llm_entities import LLMResult, LLMResultChunk, LLMResultChunkDelta, LLMUsage
-from core.model_runtime.entities.message_entities import AssistantPromptMessage, PromptMessage
+from core.model_runtime.entities.message_entities import (
+    AssistantPromptMessage,
+    ImagePromptMessageContent,
+    PromptMessage,
+)
 from core.model_runtime.entities.model_entities import ModelPropertyKey
 from core.model_runtime.errors.invoke import InvokeBadRequestError
 from core.moderation.input_moderation import InputModeration
@@ -28,6 +33,8 @@ from models.model import App, AppMode, Message, MessageAnnotation
 
 if TYPE_CHECKING:
     from core.file.models import File
+
+_logger = logging.getLogger(__name__)
 
 
 class AppRunner:
@@ -141,6 +148,7 @@ class AppRunner:
         query: Optional[str] = None,
         context: Optional[str] = None,
         memory: Optional[TokenBufferMemory] = None,
+        image_detail_config: Optional[ImagePromptMessageContent.DETAIL] = None,
     ) -> tuple[list[PromptMessage], Optional[list[str]]]:
         """
         Organize prompt messages
@@ -152,6 +160,7 @@ class AppRunner:
         :param files: files
         :param query: query
         :param memory: memory
+        :param image_detail_config: the image quality config
         :return:
         """
         # get prompt without memory and context
@@ -167,6 +176,7 @@ class AppRunner:
                 context=context,
                 memory=memory,
                 model_config=model_config,
+                image_detail_config=image_detail_config,
             )
         else:
             memory_config = MemoryConfig(window=MemoryConfig.WindowConfig(enabled=False))
@@ -201,6 +211,7 @@ class AppRunner:
                 memory_config=memory_config,
                 memory=memory,
                 model_config=model_config,
+                image_detail_config=image_detail_config,
             )
             stop = model_config.stop
 
@@ -290,7 +301,7 @@ class AppRunner:
         )
 
     def _handle_invoke_result_stream(
-        self, invoke_result: Generator, queue_manager: AppQueueManager, agent: bool
+        self, invoke_result: Generator[LLMResultChunk, None, None], queue_manager: AppQueueManager, agent: bool
     ) -> None:
         """
         Handle invoke result
@@ -309,18 +320,28 @@ class AppRunner:
             else:
                 queue_manager.publish(QueueAgentMessageEvent(chunk=result), PublishFrom.APPLICATION_MANAGER)
 
-            text += result.delta.message.content
+            message = result.delta.message
+            if isinstance(message.content, str):
+                text += message.content
+            elif isinstance(message.content, list):
+                for content in message.content:
+                    if not isinstance(content, str):
+                        # TODO(QuantumGhost): Add multimodal output support for easy ui.
+                        _logger.warning("received multimodal output, type=%s", type(content))
+                        text += content.data
+                    else:
+                        text += content  # failback to str
 
             if not model:
                 model = result.model
 
             if not prompt_messages:
-                prompt_messages = result.prompt_messages
+                prompt_messages = list(result.prompt_messages)
 
             if result.delta.usage:
                 usage = result.delta.usage
 
-        if not usage:
+        if usage is None:
             usage = LLMUsage.empty_usage()
 
         llm_result = LLMResult(

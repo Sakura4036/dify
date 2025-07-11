@@ -31,15 +31,15 @@ class ToolFileMessageTransformer:
                 # try to download image
                 try:
                     assert isinstance(message.message, ToolInvokeMessage.TextMessage)
-
-                    file = ToolFileManager.create_file_by_url(
+                    tool_file_manager = ToolFileManager()
+                    tool_file = tool_file_manager.create_file_by_url(
                         user_id=user_id,
                         tenant_id=tenant_id,
                         file_url=message.message.text,
                         conversation_id=conversation_id,
                     )
 
-                    url = f"/files/tools/{file.id}{guess_extension(file.mimetype) or '.png'}"
+                    url = f"/files/tools/{tool_file.id}{guess_extension(tool_file.mimetype) or '.png'}"
 
                     yield ToolInvokeMessage(
                         type=ToolInvokeMessage.MessageType.IMAGE_LINK,
@@ -59,22 +59,25 @@ class ToolFileMessageTransformer:
                 meta = message.meta or {}
 
                 mimetype = meta.get("mime_type", "application/octet-stream")
+                # get filename from meta
+                filename = meta.get("filename", None)
                 # if message is str, encode it to bytes
 
                 if not isinstance(message.message, ToolInvokeMessage.BlobMessage):
                     raise ValueError("unexpected message type")
 
-                # FIXME: should do a type check here.
                 assert isinstance(message.message.blob, bytes)
-                file = ToolFileManager.create_file_by_raw(
+                tool_file_manager = ToolFileManager()
+                tool_file = tool_file_manager.create_file_by_raw(
                     user_id=user_id,
                     tenant_id=tenant_id,
                     conversation_id=conversation_id,
                     file_binary=message.message.blob,
                     mimetype=mimetype,
+                    filename=filename,
                 )
 
-                url = cls.get_tool_file_url(tool_file_id=file.id, extension=guess_extension(file.mimetype))
+                url = cls.get_tool_file_url(tool_file_id=tool_file.id, extension=guess_extension(tool_file.mimetype))
 
                 # check if file is image
                 if "image" in mimetype:

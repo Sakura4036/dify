@@ -16,7 +16,6 @@ class ModelConfigConverter:
         """
         Convert app model config dict to entity.
         :param app_config: app config
-        :param skip_check: skip check
         :raises ProviderTokenNotInitError: provider token not init error
         :return: app orchestration config entity
         """
@@ -71,7 +70,7 @@ class ModelConfigConverter:
         if not model_mode:
             model_mode = LLMMode.CHAT.value
             if model_schema and model_schema.model_properties.get(ModelPropertyKey.MODE):
-                model_mode = LLMMode.value_of(model_schema.model_properties[ModelPropertyKey.MODE]).value
+                model_mode = LLMMode(model_schema.model_properties[ModelPropertyKey.MODE]).value
 
         if not model_schema:
             raise ValueError(f"Model {model_name} not exist.")

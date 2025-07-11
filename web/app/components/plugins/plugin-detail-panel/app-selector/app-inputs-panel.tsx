@@ -62,7 +62,7 @@ const AppInputsPanel = ({
       return []
     let inputFormSchema = []
     if (isBasicApp) {
-      inputFormSchema = currentApp.model_config.user_input_form.filter((item: any) => !item.external_data_tool).map((item: any) => {
+      inputFormSchema = currentApp.model_config?.user_input_form?.filter((item: any) => !item.external_data_tool).map((item: any) => {
         if (item.paragraph) {
           return {
             ...item.paragraph,
@@ -108,10 +108,10 @@ const AppInputsPanel = ({
           type: 'text-input',
           required: false,
         }
-      })
+      }) || []
     }
     else {
-      const startNode = currentWorkflow?.graph.nodes.find(node => node.data.type === BlockEnum.Start) as any
+      const startNode = currentWorkflow?.graph?.nodes.find(node => node.data.type === BlockEnum.Start) as any
       inputFormSchema = startNode?.data.variables.map((variable: any) => {
         if (variable.type === InputVarType.multiFiles) {
           return {
@@ -132,7 +132,7 @@ const AppInputsPanel = ({
           ...variable,
           required: false,
         }
-      })
+      }) || []
     }
     if ((currentApp.mode === 'completion' || currentApp.mode === 'workflow') && basicAppFileConfig.enabled) {
       inputFormSchema.push({
@@ -144,7 +144,7 @@ const AppInputsPanel = ({
         fileUploadConfig,
       })
     }
-    return inputFormSchema
+    return inputFormSchema || []
   }, [basicAppFileConfig, currentApp, currentWorkflow, fileUploadConfig, isBasicApp])
 
   const handleFormChange = (value: Record<string, any>) => {
@@ -153,14 +153,14 @@ const AppInputsPanel = ({
   }
 
   return (
-    <div className={cn('max-h-[240px] flex flex-col pb-4 rounded-b-2xl border-t border-divider-subtle')}>
+    <div className={cn('flex max-h-[240px] flex-col rounded-b-2xl border-t border-divider-subtle pb-4')}>
       {isLoading && <div className='pt-3'><Loading type='app' /></div>}
       {!isLoading && (
-        <div className='shrink-0 mt-3 mb-2 px-4 h-6 flex items-center system-sm-semibold text-text-secondary'>{t('app.appSelector.params')}</div>
+        <div className='system-sm-semibold mb-2 mt-3 flex h-6 shrink-0 items-center px-4 text-text-secondary'>{t('app.appSelector.params')}</div>
       )}
       {!isLoading && !inputFormSchema.length && (
-        <div className='h-16 flex flex-col justify-center items-center'>
-          <div className='text-text-tertiary system-sm-regular'>{t('app.appSelector.noParams')}</div>
+        <div className='flex h-16 flex-col items-center justify-center'>
+          <div className='system-sm-regular text-text-tertiary'>{t('app.appSelector.noParams')}</div>
         </div>
       )}
       {!isLoading && !!inputFormSchema.length && (

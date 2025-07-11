@@ -96,7 +96,7 @@ const AppNav = () => {
           link,
         }
       })
-      setNavItems(navItems)
+      setNavItems(navItems as any)
     }
   }, [appsData, isCurrentWorkspaceEditor, setNavItems])
 
@@ -117,12 +117,12 @@ const AppNav = () => {
     <>
       <Nav
         isApp
-        icon={<RiRobot2Line className='w-4 h-4' />}
-        activeIcon={<RiRobot2Fill className='w-4 h-4' />}
+        icon={<RiRobot2Line className='h-4 w-4' />}
+        activeIcon={<RiRobot2Fill className='h-4 w-4' />}
         text={t('common.menus.apps')}
         activeSegment={['apps', 'app']}
         link='/apps'
-        curNav={appDetail}
+        curNav={appDetail as any}
         navs={navItems}
         createText={t('common.menus.newApp')}
         onCreate={openModal}

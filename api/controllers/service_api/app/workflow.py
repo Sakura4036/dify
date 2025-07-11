@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime
 
-from flask_restful import Resource, fields, marshal_with, reqparse  # type: ignore
-from flask_restful.inputs import int_range  # type: ignore
+from dateutil.parser import isoparse
+from flask_restful import Resource, fields, marshal_with, reqparse
+from flask_restful.inputs import int_range
 from sqlalchemy.orm import Session
 from werkzeug.exceptions import InternalServerError
 
@@ -15,6 +15,7 @@ from controllers.service_api.app.error import (
     ProviderQuotaExceededError,
 )
 from controllers.service_api.wraps import FetchUserArg, WhereisUserArg, validate_app_token
+from controllers.web.error import InvokeRateLimitError as InvokeRateLimitHttpError
 from core.app.apps.base_app_queue_manager import AppQueueManager
 from core.app.entities.app_invoke_entities import InvokeFrom
 from core.errors.error import (
@@ -23,12 +24,15 @@ from core.errors.error import (
     QuotaExceededError,
 )
 from core.model_runtime.errors.invoke import InvokeError
+from core.workflow.entities.workflow_execution import WorkflowExecutionStatus
 from extensions.ext_database import db
 from fields.workflow_app_log_fields import workflow_app_log_pagination_fields
 from libs import helper
+from libs.helper import TimestampField
 from models.model import App, AppMode, EndUser
-from models.workflow import WorkflowRun, WorkflowRunStatus
+from models.workflow import WorkflowRun
 from services.app_generate_service import AppGenerateService
+from services.errors.llm import InvokeRateLimitError
 from services.workflow_app_service import WorkflowAppService
 
 logger = logging.getLogger(__name__)
@@ -42,8 +46,8 @@ workflow_run_fields = {
     "error": fields.String,
     "total_steps": fields.Integer,
     "total_tokens": fields.Integer,
-    "created_at": fields.DateTime,
-    "finished_at": fields.DateTime,
+    "created_at": TimestampField,
+    "finished_at": TimestampField,
     "elapsed_time": fields.Float,
 }
 
@@ -51,15 +55,15 @@ workflow_run_fields = {
 class WorkflowRunDetailApi(Resource):
     @validate_app_token
     @marshal_with(workflow_run_fields)
-    def get(self, app_model: App, workflow_id: str):
+    def get(self, app_model: App, workflow_run_id: str):
         """
         Get a workflow task running detail
         """
         app_mode = AppMode.value_of(app_model.mode)
-        if app_mode != AppMode.WORKFLOW:
+        if app_mode not in [AppMode.WORKFLOW, AppMode.ADVANCED_CHAT]:
             raise NotWorkflowAppError()
 
-        workflow_run = db.session.query(WorkflowRun).filter(WorkflowRun.id == workflow_id).first()
+        workflow_run = db.session.query(WorkflowRun).filter(WorkflowRun.id == workflow_run_id).first()
         return workflow_run
 
 
@@ -93,11 +97,13 @@ class WorkflowRunApi(Resource):
             raise ProviderQuotaExceededError()
         except ModelCurrentlyNotSupportError:
             raise ProviderModelCurrentlyNotSupportError()
+        except InvokeRateLimitError as ex:
+            raise InvokeRateLimitHttpError(ex.description)
         except InvokeError as e:
             raise CompletionRequestError(e.description)
         except ValueError as e:
             raise e
-        except Exception as e:
+        except Exception:
             logging.exception("internal server error.")
             raise InternalServerError()
 
@@ -129,16 +135,30 @@ class WorkflowAppLogApi(Resource):
         parser.add_argument("status", type=str, choices=["succeeded", "failed", "stopped"], location="args")
         parser.add_argument("created_at__before", type=str, location="args")
         parser.add_argument("created_at__after", type=str, location="args")
+        parser.add_argument(
+            "created_by_end_user_session_id",
+            type=str,
+            location="args",
+            required=False,
+            default=None,
+        )
+        parser.add_argument(
+            "created_by_account",
+            type=str,
+            location="args",
+            required=False,
+            default=None,
+        )
         parser.add_argument("page", type=int_range(1, 99999), default=1, location="args")
         parser.add_argument("limit", type=int_range(1, 100), default=20, location="args")
         args = parser.parse_args()
 
-        args.status = WorkflowRunStatus(args.status) if args.status else None
+        args.status = WorkflowExecutionStatus(args.status) if args.status else None
         if args.created_at__before:
-            args.created_at__before = datetime.fromisoformat(args.created_at__before.replace("Z", "+00:00"))
+            args.created_at__before = isoparse(args.created_at__before)
 
         if args.created_at__after:
-            args.created_at__after = datetime.fromisoformat(args.created_at__after.replace("Z", "+00:00"))
+            args.created_at__after = isoparse(args.created_at__after)
 
         # get paginate workflow app logs
         workflow_app_service = WorkflowAppService()
@@ -152,12 +172,14 @@ class WorkflowAppLogApi(Resource):
                 created_at_after=args.created_at__after,
                 page=args.page,
                 limit=args.limit,
+                created_by_end_user_session_id=args.created_by_end_user_session_id,
+                created_by_account=args.created_by_account,
             )
 
             return workflow_app_log_pagination
 
 
 api.add_resource(WorkflowRunApi, "/workflows/run")
-api.add_resource(WorkflowRunDetailApi, "/workflows/run/<string:workflow_id>")
+api.add_resource(WorkflowRunDetailApi, "/workflows/run/<string:workflow_run_id>")
 api.add_resource(WorkflowTaskStopApi, "/workflows/tasks/<string:task_id>/stop")
 api.add_resource(WorkflowAppLogApi, "/workflows/logs")

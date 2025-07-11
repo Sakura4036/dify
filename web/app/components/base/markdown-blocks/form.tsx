@@ -28,6 +28,7 @@ enum SUPPORTED_TYPES {
   DATETIME = 'datetime',
   CHECKBOX = 'checkbox',
   SELECT = 'select',
+  HIDDEN = 'hidden',
 }
 const MarkdownForm = ({ node }: any) => {
   const { onSend } = useChatContext()
@@ -37,8 +38,12 @@ const MarkdownForm = ({ node }: any) => {
   useEffect(() => {
     const initialValues: { [key: string]: any } = {}
     node.children.forEach((child: any) => {
-      if ([SUPPORTED_TAGS.INPUT, SUPPORTED_TAGS.TEXTAREA].includes(child.tagName))
-        initialValues[child.properties.name] = child.properties.value
+      if ([SUPPORTED_TAGS.INPUT, SUPPORTED_TAGS.TEXTAREA].includes(child.tagName)) {
+        initialValues[child.properties.name]
+          = (child.tagName === SUPPORTED_TAGS.INPUT && child.properties.type === SUPPORTED_TYPES.HIDDEN)
+            ? (child.properties.value || '')
+            : child.properties.value
+      }
     })
     setFormValues(initialValues)
   }, [node.children])
@@ -82,7 +87,7 @@ const MarkdownForm = ({ node }: any) => {
             <label
               key={index}
               htmlFor={child.properties.for}
-              className="my-2 system-md-semibold text-text-secondary"
+              className="system-md-semibold my-2 text-text-secondary"
             >
               {child.children[0]?.value || ''}
             </label>
@@ -132,7 +137,7 @@ const MarkdownForm = ({ node }: any) => {
           }
           if (child.properties.type === SUPPORTED_TYPES.CHECKBOX) {
             return (
-              <div className='mt-2 flex items-center h-6 space-x-2' key={index}>
+              <div className='mt-2 flex h-6 items-center space-x-2' key={index}>
                 <Checkbox
                   key={index}
                   checked={formValues[child.properties.name]}
@@ -176,6 +181,17 @@ const MarkdownForm = ({ node }: any) => {
                     [child.properties.name]: item.value,
                   }))
                 }}
+              />
+            )
+          }
+
+          if (child.properties.type === SUPPORTED_TYPES.HIDDEN) {
+            return (
+              <input
+                key={index}
+                type="hidden"
+                name={child.properties.name}
+                value={formValues[child.properties.name] || child.properties.value || ''}
               />
             )
           }

@@ -32,7 +32,7 @@ class RequestInvokeTool(BaseModel):
     Request to invoke a tool
     """
 
-    tool_type: Literal["builtin", "workflow", "api"]
+    tool_type: Literal["builtin", "workflow", "api", "mcp"]
     provider: str
     tool: str
     tool_parameters: dict
@@ -55,8 +55,8 @@ class RequestInvokeLLM(BaseRequestInvokeModel):
     mode: str
     completion_params: dict[str, Any] = Field(default_factory=dict)
     prompt_messages: list[PromptMessage] = Field(default_factory=list)
-    tools: Optional[list[PromptMessageTool]] = Field(default_factory=list)
-    stop: Optional[list[str]] = Field(default_factory=list)
+    tools: Optional[list[PromptMessageTool]] = Field(default_factory=list[PromptMessageTool])
+    stop: Optional[list[str]] = Field(default_factory=list[str])
     stream: Optional[bool] = False
 
     model_config = ConfigDict(protected_namespaces=())
@@ -80,6 +80,16 @@ class RequestInvokeLLM(BaseRequestInvokeModel):
                 v[i] = PromptMessage(**v[i])
 
         return v
+
+
+class RequestInvokeLLMWithStructuredOutput(RequestInvokeLLM):
+    """
+    Request to invoke LLM with structured output
+    """
+
+    structured_output_schema: dict[str, Any] = Field(
+        default_factory=dict, description="The schema of the structured output in JSON schema format"
+    )
 
 
 class RequestInvokeTextEmbedding(BaseRequestInvokeModel):
@@ -204,3 +214,11 @@ class RequestRequestUploadFile(BaseModel):
 
     filename: str
     mimetype: str
+
+
+class RequestFetchAppInfo(BaseModel):
+    """
+    Request to fetch app info
+    """
+
+    app_id: str

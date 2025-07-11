@@ -31,8 +31,8 @@ const PluginsNav = ({
     )}>
       <div
         className={classNames(
-          'relative flex flex-row h-8 p-1.5 gap-0.5 border border-transparent items-center justify-center rounded-xl system-sm-medium-uppercase',
-          activated && 'border-components-main-nav-nav-button-border bg-components-main-nav-nav-button-bg-active shadow-md text-components-main-nav-nav-button-text',
+          'system-sm-medium relative flex h-8 flex-row items-center justify-center gap-0.5 rounded-xl border border-transparent p-1.5',
+          activated && 'border-components-main-nav-nav-button-border bg-components-main-nav-nav-button-bg-active text-components-main-nav-nav-button-text shadow-md',
           !activated && 'text-text-tertiary hover:bg-state-base-hover hover:text-text-secondary',
           (isInstallingWithError || isFailed) && !activated && 'border-components-panel-border-subtle',
         )}
@@ -41,14 +41,14 @@ const PluginsNav = ({
           (isFailed || isInstallingWithError) && !activated && (
             <Indicator
               color='red'
-              className='absolute top-[-1px] left-[-1px]'
+              className='absolute left-[-1px] top-[-1px]'
             />
           )
         }
-        <div className='flex mr-0.5 w-5 h-5 justify-center items-center'>
+        <div className='mr-0.5 flex h-5 w-5 items-center justify-center'>
           {
             (!(isInstalling || isInstallingWithError) || activated) && (
-              <Group className='w-4 h-4' />
+              <Group className='h-4 w-4' />
             )
           }
           {

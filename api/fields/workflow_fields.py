@@ -1,4 +1,4 @@
-from flask_restful import fields  # type: ignore
+from flask_restful import fields
 
 from core.helper import encrypter
 from core.variables import SecretVariable, SegmentType, Variable
@@ -17,6 +17,7 @@ class EnvironmentVariableField(fields.Raw):
                 "name": value.name,
                 "value": encrypter.obfuscated_token(value.value),
                 "value_type": value.value_type.value,
+                "description": value.description,
             }
         if isinstance(value, Variable):
             return {
@@ -24,6 +25,7 @@ class EnvironmentVariableField(fields.Raw):
                 "name": value.name,
                 "value": value.value,
                 "value_type": value.value_type.value,
+                "description": value.description,
             }
         if isinstance(value, dict):
             value_type = value.get("value_type")

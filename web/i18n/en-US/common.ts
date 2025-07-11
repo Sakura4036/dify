@@ -1,4 +1,10 @@
 const translation = {
+  theme: {
+    theme: 'Theme',
+    light: 'light',
+    dark: 'dark',
+    auto: 'system',
+  },
   api: {
     success: 'Success',
     actionSuccess: 'Action succeeded',
@@ -56,6 +62,10 @@ const translation = {
     regenerate: 'Regenerate',
     submit: 'Submit',
     skip: 'Skip',
+    format: 'Format',
+    more: 'More',
+    selectAll: 'Select All',
+    deSelectAll: 'Deselect All',
   },
   errorMsg: {
     fieldRequired: '{{field}} is required',
@@ -139,6 +149,8 @@ const translation = {
     status: 'beta',
     explore: 'Explore',
     apps: 'Studio',
+    appDetail: 'App Detail',
+    account: 'Account',
     plugins: 'Plugins',
     exploreMarketplace: 'Explore Marketplace',
     pluginsTips: 'Integrate third-party plugins or create ChatGPT-compatible AI-Plugins.',
@@ -188,7 +200,7 @@ const translation = {
   account: {
     account: 'Account',
     myAccount: 'My Account',
-    studio: 'Dify Studio',
+    studio: 'Studio',
     avatar: 'Avatar',
     name: 'Name',
     email: 'Email',
@@ -200,8 +212,8 @@ const translation = {
     newPassword: 'New password',
     confirmPassword: 'Confirm password',
     notEqual: 'Two passwords are different.',
-    langGeniusAccount: 'Dify account',
-    langGeniusAccountTip: 'Your Dify account and associated user data.',
+    langGeniusAccount: 'Account\'s data',
+    langGeniusAccountTip: 'The user data of your account.',
     editName: 'Edit Name',
     showAppLength: 'Show {{length}} apps',
     delete: 'Delete Account',
@@ -218,6 +230,9 @@ const translation = {
     feedbackTitle: 'Feedback',
     feedbackLabel: 'Tell us why you deleted your account?',
     feedbackPlaceholder: 'Optional',
+    editWorkspaceInfo: 'Edit Workspace Info',
+    workspaceName: 'Workspace Name',
+    workspaceIcon: 'Workspace Icon',
   },
   members: {
     team: 'Team',
@@ -441,6 +456,7 @@ const translation = {
       connected: 'Connected',
       disconnected: 'Disconnected',
       changeAuthorizedPages: 'Change authorized pages',
+      integratedAlert: 'Notion is integrated via internal credential, no need to re-authorize.',
       pagesAuthorized: 'Pages authorized',
       sync: 'Sync',
       remove: 'Remove',
@@ -471,7 +487,6 @@ const translation = {
   apiBasedExtension: {
     title: 'API extensions provide centralized API management, simplifying configuration for easy use across Dify\'s applications.',
     link: 'Learn how to develop your own API Extension.',
-    linkUrl: 'https://docs.dify.ai/features/extension/api_based_extension',
     add: 'Add API Extension',
     selector: {
       title: 'API Extension',
@@ -556,9 +571,10 @@ const translation = {
       vectorHash: 'Vector hash:',
       hitScore: 'Retrieval Score:',
     },
-    inputPlaceholder: 'Talk to Bot',
+    inputPlaceholder: 'Talk to {{botName}}',
     thinking: 'Thinking...',
     thought: 'Thought',
+    resend: 'Resend',
   },
   promptEditor: {
     placeholder: 'Write your prompt word here, enter \'{\' to insert a variable, enter \'/\' to insert a prompt content block',
@@ -645,10 +661,17 @@ const translation = {
   license: {
     expiring: 'Expiring in one day',
     expiring_plural: 'Expiring in {{count}} days',
+    unlimited: 'Unlimited',
   },
   pagination: {
     perPage: 'Items per page',
   },
+  imageInput: {
+    dropImageHere: 'Drop your image here, or',
+    browse: 'browse',
+    supportedFormats: 'Supports PNG, JPG, JPEG, WEBP and GIF',
+  },
+  you: 'You',
 }
 
 export default translation

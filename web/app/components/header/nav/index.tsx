@@ -46,31 +46,33 @@ const Nav = ({
 
   return (
     <div className={`
-      flex items-center h-8 mr-0 sm:mr-3 px-0.5 rounded-xl text-sm shrink-0 font-medium
-      ${isActivated && 'bg-components-main-nav-nav-button-bg-active shadow-md font-semibold'}
+      flex h-8 max-w-[670px] shrink-0 items-center rounded-xl px-0.5 text-sm font-medium max-[1024px]:max-w-[400px]
+      ${isActivated && 'bg-components-main-nav-nav-button-bg-active font-semibold shadow-md'}
       ${!curNav && !isActivated && 'hover:bg-components-main-nav-nav-button-bg-hover'}
     `}>
       <Link href={link + (linkLastSearchParams && `?${linkLastSearchParams}`)}>
         <div
           onClick={() => setAppDetail()}
           className={classNames(`
-            flex items-center h-7 px-2.5 cursor-pointer rounded-[10px]
+            flex h-7 cursor-pointer items-center rounded-[10px] px-2.5
             ${isActivated ? 'text-components-main-nav-nav-button-text-active' : 'text-components-main-nav-nav-button-text'}
             ${curNav && isActivated && 'hover:bg-components-main-nav-nav-button-bg-active-hover'}
           `)}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         >
-          <div className='mr-2'>
+          <div>
             {
               (hovered && curNav)
-                ? <ArrowNarrowLeft className='w-4 h-4' />
+                ? <ArrowNarrowLeft className='h-4 w-4' />
                 : isActivated
                   ? activeIcon
                   : icon
             }
           </div>
-          {text}
+          <div className='ml-2 max-[1024px]:hidden'>
+            {text}
+          </div>
         </div>
       </Link>
       {

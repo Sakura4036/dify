@@ -2,7 +2,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   RiAddLine,
-  RiArrowDropDownLine,
   RiQuestionLine,
 } from '@remixicon/react'
 import ToolSelector from '@/app/components/plugins/plugin-detail-panel/tool-selector'
@@ -13,6 +12,8 @@ import type { ToolValue } from '@/app/components/workflow/block-selector/types'
 import type { Node } from 'reactflow'
 import type { NodeOutPutVar } from '@/app/components/workflow/types'
 import cn from '@/utils/classnames'
+import { ArrowDownRoundFill } from '@/app/components/base/icons/src/vender/solid/general'
+import { useAllMCPTools } from '@/service/use-tools'
 
 type Props = {
   disabled?: boolean
@@ -26,6 +27,7 @@ type Props = {
   nodeOutputVars: NodeOutPutVar[],
   availableNodes: Node[],
   nodeId?: string
+  canChooseMCPTool?: boolean
 }
 
 const MultipleToolSelector = ({
@@ -40,9 +42,16 @@ const MultipleToolSelector = ({
   nodeOutputVars,
   availableNodes,
   nodeId,
+  canChooseMCPTool,
 }: Props) => {
   const { t } = useTranslation()
-  const enabledCount = value.filter(item => item.enabled).length
+    const { data: mcpTools } = useAllMCPTools()
+  const enabledCount = value.filter((item) => {
+    const isMCPTool = mcpTools?.find(tool => tool.id === item.provider_name)
+    if(isMCPTool)
+      return item.enabled && canChooseMCPTool
+    return item.enabled
+  }).length
   // collapse control
   const [collapse, setCollapse] = React.useState(false)
   const handleCollapse = () => {
@@ -55,6 +64,19 @@ const MultipleToolSelector = ({
   const [panelShowState, setPanelShowState] = React.useState(true)
   const handleAdd = (val: ToolValue) => {
     const newValue = [...value, val]
+    // deduplication
+    const deduplication = newValue.reduce((acc, cur) => {
+      if (!acc.find(item => item.provider_name === cur.provider_name && item.tool_name === cur.tool_name))
+        acc.push(cur)
+      return acc
+    }, [] as ToolValue[])
+    // update value
+    onChange(deduplication)
+    setOpen(false)
+  }
+
+  const handleAddMultiple = (val: ToolValue[]) => {
+    const newValue = [...value, ...val]
     // deduplication
     const deduplication = newValue.reduce((acc, cur) => {
       if (!acc.find(item => item.provider_name === cur.provider_name && item.tool_name === cur.tool_name))
@@ -82,35 +104,33 @@ const MultipleToolSelector = ({
 
   return (
     <>
-      <div className='flex items-center mb-1'>
+      <div className='mb-1 flex items-center'>
         <div
-          className={cn('relative grow flex items-center gap-0.5', supportCollapse && 'cursor-pointer')}
+          className={cn('relative flex grow items-center gap-0.5', supportCollapse && 'cursor-pointer')}
           onClick={handleCollapse}
         >
-          <div className='h-6 flex items-center text-text-secondary system-sm-semibold-uppercase'>{label}</div>
+          <div className='system-sm-semibold-uppercase flex h-6 items-center text-text-secondary'>{label}</div>
           {required && <div className='text-red-500'>*</div>}
           {tooltip && (
             <Tooltip
               popupContent={tooltip}
               needsDelay
             >
-              <div><RiQuestionLine className='w-3.5 h-3.5 text-text-quaternary hover:text-text-tertiary' /></div>
+              <div><RiQuestionLine className='h-3.5 w-3.5 text-text-quaternary hover:text-text-tertiary' /></div>
             </Tooltip>
           )}
           {supportCollapse && (
-            <div className='absolute -left-4 top-1'>
-              <RiArrowDropDownLine
-                className={cn(
-                  'w-4 h-4 text-text-tertiary',
-                  collapse && 'transform -rotate-90',
-                )}
-              />
-            </div>
+            <ArrowDownRoundFill
+              className={cn(
+                'h-4 w-4 cursor-pointer text-text-quaternary group-hover/collapse:text-text-secondary',
+                collapse && 'rotate-[270deg]',
+              )}
+            />
           )}
         </div>
         {value.length > 0 && (
           <>
-            <div className='flex items-center gap-1 text-text-tertiary system-xs-medium'>
+            <div className='system-xs-medium flex items-center gap-1 text-text-tertiary'>
               <span>{`${enabledCount}/${value.length}`}</span>
               <span>{t('appDebug.agent.tools.enabled')}</span>
             </div>
@@ -119,34 +139,18 @@ const MultipleToolSelector = ({
         )}
         {!disabled && (
           <ActionButton className='mx-1' onClick={() => {
+            setCollapse(false)
             setOpen(!open)
             setPanelShowState(true)
           }}>
-            <RiAddLine className='w-4 h-4' />
+            <RiAddLine className='h-4 w-4' />
           </ActionButton>
         )}
       </div>
       {!collapse && (
         <>
-          <ToolSelector
-            nodeId={nodeId}
-            nodeOutputVars={nodeOutputVars}
-            availableNodes={availableNodes}
-            scope={scope}
-            value={undefined}
-            selectedTools={value}
-            onSelect={handleAdd}
-            controlledState={open}
-            onControlledStateChange={setOpen}
-            trigger={
-              <div className=''></div>
-            }
-            panelShowState={panelShowState}
-            onPanelShowStateChange={setPanelShowState}
-
-          />
           {value.length === 0 && (
-            <div className='p-3 flex justify-center rounded-[10px] bg-background-section text-text-tertiary system-xs-regular'>{t('plugin.detailPanel.toolSelector.empty')}</div>
+            <div className='system-xs-regular flex justify-center rounded-[10px] bg-background-section p-3 text-text-tertiary'>{t('plugin.detailPanel.toolSelector.empty')}</div>
           )}
           {value.length > 0 && value.map((item, index) => (
             <div className='mb-1' key={index}>
@@ -158,13 +162,35 @@ const MultipleToolSelector = ({
                 value={item}
                 selectedTools={value}
                 onSelect={item => handleConfigure(item, index)}
+                onSelectMultiple={handleAddMultiple}
                 onDelete={() => handleDelete(index)}
                 supportEnableSwitch
+                canChooseMCPTool={canChooseMCPTool}
+                isEdit
               />
             </div>
           ))}
         </>
       )}
+      <ToolSelector
+        nodeId={nodeId}
+        nodeOutputVars={nodeOutputVars}
+        availableNodes={availableNodes}
+        scope={scope}
+        value={undefined}
+        selectedTools={value}
+        onSelect={handleAdd}
+        controlledState={open}
+        onControlledStateChange={setOpen}
+        trigger={
+          <div className=''></div>
+        }
+        panelShowState={panelShowState}
+        onPanelShowStateChange={setPanelShowState}
+        isEdit={false}
+        canChooseMCPTool={canChooseMCPTool}
+        onSelectMultiple={handleAddMultiple}
+      />
     </>
   )
 }

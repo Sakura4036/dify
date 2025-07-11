@@ -19,6 +19,9 @@ import { useWorkflowStore } from '../../../store'
 import { useRenderI18nObject } from '@/hooks/use-i18n'
 import type { NodeOutPutVar } from '../../../types'
 import type { Node } from 'reactflow'
+import type { PluginMeta } from '@/app/components/plugins/types'
+import { noop } from 'lodash'
+import { useDocLink } from '@/context/i18n'
 
 export type Strategy = {
   agent_strategy_provider_name: string
@@ -26,6 +29,7 @@ export type Strategy = {
   agent_strategy_label: string
   agent_output_schema: Record<string, any>
   plugin_unique_identifier: string
+  meta?: PluginMeta
 }
 
 export type AgentStrategyProps = {
@@ -37,6 +41,7 @@ export type AgentStrategyProps = {
   nodeOutputVars?: NodeOutPutVar[],
   availableNodes?: Node[],
   nodeId?: string
+  canChooseMCPTool: boolean
 }
 
 type CustomSchema<Type, Field = {}> = Omit<CredentialFormSchema, 'type'> & { type: Type } & Field
@@ -47,21 +52,24 @@ type MultipleToolSelectorSchema = CustomSchema<'array[tools]'>
 type CustomField = ToolSelectorSchema | MultipleToolSelectorSchema
 
 export const AgentStrategy = memo((props: AgentStrategyProps) => {
-  const { strategy, onStrategyChange, formSchema, formValue, onFormValueChange, nodeOutputVars, availableNodes, nodeId } = props
+  const { strategy, onStrategyChange, formSchema, formValue, onFormValueChange, nodeOutputVars, availableNodes, nodeId, canChooseMCPTool } = props
   const { t } = useTranslation()
+  const docLink = useDocLink()
   const defaultModel = useDefaultModel(ModelTypeEnum.textGeneration)
   const renderI18nObject = useRenderI18nObject()
   const workflowStore = useWorkflowStore()
   const {
     setControlPromptEditorRerenderKey,
   } = workflowStore.getState()
+
   const override: ComponentProps<typeof Form<CustomField>>['override'] = [
     [FormTypeEnum.textNumber, FormTypeEnum.textInput],
     (schema, props) => {
       switch (schema.type) {
         case FormTypeEnum.textInput: {
           const def = schema as CredentialFormSchemaTextInput
-          const value = props.value[schema.variable]
+          const value = props.value[schema.variable] || schema.default
+          const instanceId = schema.variable
           const onChange = (value: string) => {
             props.onChange({ ...props.value, [schema.variable]: value })
           }
@@ -73,6 +81,8 @@ export const AgentStrategy = memo((props: AgentStrategyProps) => {
             value={value}
             onChange={onChange}
             onGenerated={handleGenerated}
+            instanceId={instanceId}
+            key={instanceId}
             title={renderI18nObject(schema.label)}
             headerClassName='bg-transparent px-0 text-text-secondary system-sm-semibold-uppercase'
             containerBackgroundClassName='bg-transparent'
@@ -113,6 +123,7 @@ export const AgentStrategy = memo((props: AgentStrategyProps) => {
             title={<>
               {renderI18nObject(def.label)} {def.required && <span className='text-red-500'>*</span>}
             </>}
+            key={def.variable}
             tooltip={def.tooltip && renderI18nObject(def.tooltip)}
             inline
           >
@@ -129,7 +140,7 @@ export const AgentStrategy = memo((props: AgentStrategyProps) => {
                 // TODO: maybe empty, handle this
                 onChange={onChange as any}
                 defaultValue={defaultValue}
-                size='sm'
+                size='regular'
                 min={def.min}
                 max={def.max}
                 className='w-12'
@@ -162,6 +173,8 @@ export const AgentStrategy = memo((props: AgentStrategyProps) => {
               value={value}
               onSelect={item => onChange(item)}
               onDelete={() => onChange(null)}
+              canChooseMCPTool={canChooseMCPTool}
+              onSelectMultiple={noop}
             />
           </Field>
         )
@@ -183,13 +196,14 @@ export const AgentStrategy = memo((props: AgentStrategyProps) => {
             onChange={onChange}
             supportCollapse
             required={schema.required}
+            canChooseMCPTool={canChooseMCPTool}
           />
         )
       }
     }
   }
   return <div className='space-y-2'>
-    <AgentStrategySelector value={strategy} onChange={onStrategyChange} />
+    <AgentStrategySelector value={strategy} onChange={onStrategyChange} canChooseMCPTool={canChooseMCPTool} />
     {
       strategy
         ? <div>
@@ -209,14 +223,19 @@ export const AgentStrategy = memo((props: AgentStrategyProps) => {
             nodeId={nodeId}
             nodeOutputVars={nodeOutputVars || []}
             availableNodes={availableNodes || []}
+            canChooseMCPTool={canChooseMCPTool}
           />
         </div>
         : <ListEmpty
-          icon={<Agent className='w-5 h-5 shrink-0 text-text-accent' />}
+          icon={<Agent className='h-5 w-5 shrink-0 text-text-accent' />}
           title={t('workflow.nodes.agent.strategy.configureTip')}
-          description={<div className='text-text-tertiary text-xs'>
+          description={<div className='text-xs text-text-tertiary'>
             {t('workflow.nodes.agent.strategy.configureTipDesc')} <br />
-            <Link href={'/'} className='text-text-accent-secondary'>
+            <Link href={docLink('/guides/workflow/node/agent#select-an-agent-strategy', {
+              'zh-Hans': '/guides/workflow/node/agent#选择-agent-策略',
+              'ja-JP': '/guides/workflow/node/agent#エージェント戦略の選択',
+            })}
+              className='text-text-accent-secondary' target='_blank'>
               {t('workflow.nodes.agent.learnMore')}
             </Link>
           </div>}

@@ -1,12 +1,16 @@
 import json
 from datetime import datetime
-from typing import Any, Optional, cast
+from typing import Any, cast
+from urllib.parse import urlparse
 
 import sqlalchemy as sa
 from deprecated import deprecated
 from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from core.file import helpers as file_helpers
+from core.helper import encrypter
+from core.mcp.types import Tool
 from core.tools.entities.common_entities import I18nObject
 from core.tools.entities.tool_bundle import ApiToolBundle
 from core.tools.entities.tool_entities import ApiProviderSchemaType, WorkflowToolParameterConfiguration
@@ -102,6 +106,8 @@ class ApiToolProvider(Base):
 
     @property
     def user(self) -> Account | None:
+        if not self.user_id:
+            return None
         return db.session.query(Account).filter(Account.id == self.user_id).first()
 
     @property
@@ -171,10 +177,6 @@ class WorkflowToolProvider(Base):
     )
 
     @property
-    def schema_type(self) -> ApiProviderSchemaType:
-        return ApiProviderSchemaType.value_of(self.schema_type_str)
-
-    @property
     def user(self) -> Account | None:
         return db.session.query(Account).filter(Account.id == self.user_id).first()
 
@@ -189,6 +191,108 @@ class WorkflowToolProvider(Base):
     @property
     def app(self) -> App | None:
         return db.session.query(App).filter(App.id == self.app_id).first()
+
+
+class MCPToolProvider(Base):
+    """
+    The table stores the mcp providers.
+    """
+
+    __tablename__ = "tool_mcp_providers"
+    __table_args__ = (
+        db.PrimaryKeyConstraint("id", name="tool_mcp_provider_pkey"),
+        db.UniqueConstraint("tenant_id", "server_url_hash", name="unique_mcp_provider_server_url"),
+        db.UniqueConstraint("tenant_id", "name", name="unique_mcp_provider_name"),
+        db.UniqueConstraint("tenant_id", "server_identifier", name="unique_mcp_provider_server_identifier"),
+    )
+
+    id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
+    # name of the mcp provider
+    name: Mapped[str] = mapped_column(db.String(40), nullable=False)
+    # server identifier of the mcp provider
+    server_identifier: Mapped[str] = mapped_column(db.String(24), nullable=False)
+    # encrypted url of the mcp provider
+    server_url: Mapped[str] = mapped_column(db.Text, nullable=False)
+    # hash of server_url for uniqueness check
+    server_url_hash: Mapped[str] = mapped_column(db.String(64), nullable=False)
+    # icon of the mcp provider
+    icon: Mapped[str] = mapped_column(db.String(255), nullable=True)
+    # tenant id
+    tenant_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
+    # who created this tool
+    user_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
+    # encrypted credentials
+    encrypted_credentials: Mapped[str] = mapped_column(db.Text, nullable=True)
+    # authed
+    authed: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=False)
+    # tools
+    tools: Mapped[str] = mapped_column(db.Text, nullable=False, default="[]")
+    created_at: Mapped[datetime] = mapped_column(
+        db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        db.DateTime, nullable=False, server_default=db.text("CURRENT_TIMESTAMP(0)")
+    )
+
+    def load_user(self) -> Account | None:
+        return db.session.query(Account).filter(Account.id == self.user_id).first()
+
+    @property
+    def tenant(self) -> Tenant | None:
+        return db.session.query(Tenant).filter(Tenant.id == self.tenant_id).first()
+
+    @property
+    def credentials(self) -> dict:
+        try:
+            return cast(dict, json.loads(self.encrypted_credentials)) or {}
+        except Exception:
+            return {}
+
+    @property
+    def mcp_tools(self) -> list[Tool]:
+        return [Tool(**tool) for tool in json.loads(self.tools)]
+
+    @property
+    def provider_icon(self) -> dict[str, str] | str:
+        try:
+            return cast(dict[str, str], json.loads(self.icon))
+        except json.JSONDecodeError:
+            return file_helpers.get_signed_file_url(self.icon)
+
+    @property
+    def decrypted_server_url(self) -> str:
+        return cast(str, encrypter.decrypt_token(self.tenant_id, self.server_url))
+
+    @property
+    def masked_server_url(self) -> str:
+        def mask_url(url: str, mask_char: str = "*") -> str:
+            """
+            mask the url to a simple string
+            """
+            parsed = urlparse(url)
+            base_url = f"{parsed.scheme}://{parsed.netloc}"
+
+            if parsed.path and parsed.path != "/":
+                return f"{base_url}/{mask_char * 6}"
+            else:
+                return base_url
+
+        return mask_url(self.decrypted_server_url)
+
+    @property
+    def decrypted_credentials(self) -> dict:
+        from core.tools.mcp_tool.provider import MCPToolProviderController
+        from core.tools.utils.configuration import ProviderConfigEncrypter
+
+        provider_controller = MCPToolProviderController._from_db(self)
+
+        tool_configuration = ProviderConfigEncrypter(
+            tenant_id=self.tenant_id,
+            config=list(provider_controller.get_credentials_schema()),
+            provider_type=provider_controller.provider_type.value,
+            provider_identity=provider_controller.provider_id,
+        )
+        return tool_configuration.decrypt(self.credentials, use_cache=False)
 
 
 class ToolModelInvoke(Base):
@@ -261,8 +365,8 @@ class ToolConversationVariables(Base):
 
 
 class ToolFile(Base):
-    """
-    store the file created by agent
+    """This table stores file metadata generated in workflows,
+    not only files created by agent.
     """
 
     __tablename__ = "tool_files"
@@ -302,8 +406,11 @@ class DeprecatedPublishedAppTool(Base):
         db.UniqueConstraint("app_id", "user_id", name="unique_published_app_tool"),
     )
 
+    id = db.Column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     # id of the app
     app_id = db.Column(StringUUID, ForeignKey("apps.id"), nullable=False)
+
+    user_id: Mapped[str] = db.Column(StringUUID, nullable=False)
     # who published this tool
     description = db.Column(db.Text, nullable=False)
     # llm_description of the tool, for LLM
@@ -323,34 +430,3 @@ class DeprecatedPublishedAppTool(Base):
     @property
     def description_i18n(self) -> I18nObject:
         return I18nObject(**json.loads(self.description))
-
-    id = db.Column(StringUUID, server_default=db.text("uuid_generate_v4()"))
-    user_id: Mapped[str] = db.Column(StringUUID, nullable=False)
-    tenant_id: Mapped[str] = db.Column(StringUUID, nullable=False)
-    conversation_id: Mapped[Optional[str]] = db.Column(StringUUID, nullable=True)
-    file_key: Mapped[str] = db.Column(db.String(255), nullable=False)
-    mimetype: Mapped[str] = db.Column(db.String(255), nullable=False)
-    original_url: Mapped[Optional[str]] = db.Column(db.String(2048), nullable=True)
-    name: Mapped[str] = mapped_column(default="")
-    size: Mapped[int] = mapped_column(default=-1)
-
-    def __init__(
-        self,
-        *,
-        user_id: str,
-        tenant_id: str,
-        conversation_id: Optional[str] = None,
-        file_key: str,
-        mimetype: str,
-        original_url: Optional[str] = None,
-        name: str,
-        size: int,
-    ):
-        self.user_id = user_id
-        self.tenant_id = tenant_id
-        self.conversation_id = conversation_id
-        self.file_key = file_key
-        self.mimetype = mimetype
-        self.original_url = original_url
-        self.name = name
-        self.size = size

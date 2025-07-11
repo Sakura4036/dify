@@ -1,7 +1,20 @@
-from flask_restful import fields  # type: ignore
+import json
+
+from flask_restful import fields
 
 from fields.workflow_fields import workflow_partial_fields
 from libs.helper import AppIconUrlField, TimestampField
+
+
+class JsonStringField(fields.Raw):
+    def format(self, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                return value
+        return value
+
 
 app_detail_kernel_fields = {
     "id": fields.String,
@@ -63,6 +76,7 @@ app_detail_fields = {
     "created_at": TimestampField,
     "updated_by": fields.String,
     "updated_at": TimestampField,
+    "access_mode": fields.String,
 }
 
 prompt_config_fields = {
@@ -98,6 +112,9 @@ app_partial_fields = {
     "updated_by": fields.String,
     "updated_at": TimestampField,
     "tags": fields.List(fields.Nested(tag_fields)),
+    "access_mode": fields.String,
+    "create_user_name": fields.String,
+    "author_name": fields.String,
 }
 
 
@@ -176,6 +193,7 @@ app_detail_fields_with_site = {
     "updated_by": fields.String,
     "updated_at": TimestampField,
     "deleted_tools": fields.List(fields.Nested(deleted_tool_fields)),
+    "access_mode": fields.String,
 }
 
 
@@ -204,6 +222,7 @@ app_import_fields = {
     "id": fields.String,
     "status": fields.String,
     "app_id": fields.String,
+    "app_mode": fields.String,
     "current_dsl_version": fields.String,
     "imported_dsl_version": fields.String,
     "error": fields.String,
@@ -211,4 +230,15 @@ app_import_fields = {
 
 app_import_check_dependencies_fields = {
     "leaked_dependencies": fields.List(fields.Nested(leaked_dependency_fields)),
+}
+
+app_server_fields = {
+    "id": fields.String,
+    "name": fields.String,
+    "server_code": fields.String,
+    "description": fields.String,
+    "status": fields.String,
+    "parameters": JsonStringField,
+    "created_at": TimestampField,
+    "updated_at": TimestampField,
 }

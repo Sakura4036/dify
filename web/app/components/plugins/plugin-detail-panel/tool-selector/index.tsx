@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import {
   RiArrowLeftLine,
-  RiArrowRightUpLine,
 } from '@remixicon/react'
 import {
   PortalToFollowElem,
@@ -15,6 +14,7 @@ import {
 import ToolTrigger from '@/app/components/plugins/plugin-detail-panel/tool-selector/tool-trigger'
 import ToolItem from '@/app/components/plugins/plugin-detail-panel/tool-selector/tool-item'
 import ToolPicker from '@/app/components/workflow/block-selector/tool-picker'
+import ToolForm from '@/app/components/workflow/nodes/tool/components/tool-form'
 import Button from '@/app/components/base/button'
 import Indicator from '@/app/components/header/indicator'
 import ToolCredentialForm from '@/app/components/plugins/plugin-detail-panel/tool-selector/tool-credentials-form'
@@ -23,13 +23,13 @@ import Textarea from '@/app/components/base/textarea'
 import Divider from '@/app/components/base/divider'
 import TabSlider from '@/app/components/base/tab-slider-plain'
 import ReasoningConfigForm from '@/app/components/plugins/plugin-detail-panel/tool-selector/reasoning-config-form'
-import Form from '@/app/components/header/account-setting/model-provider-page/model-modal/Form'
 import { generateFormValue, getPlainValue, getStructureValue, toolParametersToFormSchemas } from '@/app/components/tools/utils/to-form-schema'
 
 import { useAppContext } from '@/context/app-context'
 import {
   useAllBuiltInTools,
   useAllCustomTools,
+  useAllMCPTools,
   useAllWorkflowTools,
   useInvalidateAllBuiltInTools,
   useUpdateProviderCredentials,
@@ -54,14 +54,9 @@ type Props = {
   scope?: string
   value?: ToolValue
   selectedTools?: ToolValue[]
-  onSelect: (tool: {
-    provider_name: string
-    tool_name: string
-    tool_label: string
-    settings?: Record<string, any>
-    parameters?: Record<string, any>
-    extra?: Record<string, any>
-  }) => void
+  onSelect: (tool: ToolValue) => void
+  onSelectMultiple: (tool: ToolValue[]) => void
+  isEdit?: boolean
   onDelete?: () => void
   supportEnableSwitch?: boolean
   supportAddCustomTool?: boolean
@@ -73,14 +68,17 @@ type Props = {
   nodeOutputVars: NodeOutPutVar[],
   availableNodes: Node[],
   nodeId?: string,
+  canChooseMCPTool?: boolean,
 }
 const ToolSelector: FC<Props> = ({
   value,
   selectedTools,
+  isEdit,
   disabled,
   placement = 'left',
   offset = 4,
   onSelect,
+  onSelectMultiple,
   onDelete,
   scope,
   supportEnableSwitch,
@@ -92,6 +90,7 @@ const ToolSelector: FC<Props> = ({
   nodeOutputVars,
   availableNodes,
   nodeId = '',
+  canChooseMCPTool,
 }) => {
   const { t } = useTranslation()
   const [isShow, onShowChange] = useState(false)
@@ -103,6 +102,7 @@ const ToolSelector: FC<Props> = ({
   const { data: buildInTools } = useAllBuiltInTools()
   const { data: customTools } = useAllCustomTools()
   const { data: workflowTools } = useAllWorkflowTools()
+  const { data: mcpTools } = useAllMCPTools()
   const invalidateAllBuiltinTools = useInvalidateAllBuiltInTools()
   const invalidateInstalledPluginList = useInvalidateInstalledPluginList()
 
@@ -110,31 +110,40 @@ const ToolSelector: FC<Props> = ({
   const { inMarketPlace, manifest } = usePluginInstalledCheck(value?.provider_name)
 
   const currentProvider = useMemo(() => {
-    const mergedTools = [...(buildInTools || []), ...(customTools || []), ...(workflowTools || [])]
+    const mergedTools = [...(buildInTools || []), ...(customTools || []), ...(workflowTools || []), ...(mcpTools || [])]
     return mergedTools.find((toolWithProvider) => {
       return toolWithProvider.id === value?.provider_name
     })
-  }, [value, buildInTools, customTools, workflowTools])
+  }, [value, buildInTools, customTools, workflowTools, mcpTools])
 
   const [isShowChooseTool, setIsShowChooseTool] = useState(false)
-  const handleSelectTool = (tool: ToolDefaultValue) => {
+  const getToolValue = (tool: ToolDefaultValue) => {
     const settingValues = generateFormValue(tool.params, toolParametersToFormSchemas(tool.paramSchemas.filter(param => param.form !== 'llm') as any))
     const paramValues = generateFormValue(tool.params, toolParametersToFormSchemas(tool.paramSchemas.filter(param => param.form === 'llm') as any), true)
-    const toolValue = {
+    return {
       provider_name: tool.provider_id,
+      provider_show_name: tool.provider_name,
       type: tool.provider_type,
       tool_name: tool.tool_name,
       tool_label: tool.tool_label,
+      tool_description: tool.tool_description,
       settings: settingValues,
       parameters: paramValues,
       enabled: tool.is_team_authorization,
       extra: {
-        description: '',
+        description: tool.tool_description,
       },
       schemas: tool.paramSchemas,
     }
+  }
+  const handleSelectTool = (tool: ToolDefaultValue) => {
+    const toolValue = getToolValue(tool)
     onSelect(toolValue)
     // setIsShowChooseTool(false)
+  }
+  const handleSelectMultipleTool = (tool: ToolDefaultValue[]) => {
+    const toolValues = tool.map(item => getToolValue(item))
+    onSelectMultiple(toolValues)
   }
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -166,7 +175,6 @@ const ToolSelector: FC<Props> = ({
 
   const handleSettingsFormChange = (v: Record<string, any>) => {
     const newValue = getStructureValue(v)
-
     const toolValue = {
       ...value,
       settings: newValue,
@@ -247,7 +255,9 @@ const ToolSelector: FC<Props> = ({
             <ToolItem
               open={isShow}
               icon={currentProvider?.icon || manifestIcon}
+              isMCPTool={currentProvider?.type === CollectionType.mcp}
               providerName={value.provider_name}
+              providerShowName={value.provider_show_name}
               toolLabel={value.tool_label || value.tool_name}
               showSwitch={supportEnableSwitch}
               switchValue={value.enabled}
@@ -261,28 +271,28 @@ const ToolSelector: FC<Props> = ({
               onInstall={() => handleInstall()}
               isError={(!currentProvider || !currentTool) && !inMarketPlace}
               errorTip={
-                <div className='space-y-1 max-w-[240px] text-xs'>
-                  <h3 className='text-text-primary font-semibold'>{currentTool ? t('plugin.detailPanel.toolSelector.uninstalledTitle') : t('plugin.detailPanel.toolSelector.unsupportedTitle')}</h3>
-                  <p className='text-text-secondary tracking-tight'>{currentTool ? t('plugin.detailPanel.toolSelector.uninstalledContent') : t('plugin.detailPanel.toolSelector.unsupportedContent')}</p>
+                <div className='max-w-[240px] space-y-1 text-xs'>
+                  <h3 className='font-semibold text-text-primary'>{currentTool ? t('plugin.detailPanel.toolSelector.uninstalledTitle') : t('plugin.detailPanel.toolSelector.unsupportedTitle')}</h3>
+                  <p className='tracking-tight text-text-secondary'>{currentTool ? t('plugin.detailPanel.toolSelector.uninstalledContent') : t('plugin.detailPanel.toolSelector.unsupportedContent')}</p>
                   <p>
-                    <Link href={'/plugins'} className='text-text-accent tracking-tight'>{t('plugin.detailPanel.toolSelector.uninstalledLink')}</Link>
+                    <Link href={'/plugins'} className='tracking-tight text-text-accent'>{t('plugin.detailPanel.toolSelector.uninstalledLink')}</Link>
                   </p>
                 </div>
               }
+              canChooseMCPTool={canChooseMCPTool}
             />
           )}
         </PortalToFollowElemTrigger>
-        <PortalToFollowElemContent className='z-[1000]'>
-          <div className={cn('relative w-[361px] min-h-20 max-h-[642px] pb-4 rounded-xl backdrop-blur-sm bg-components-panel-bg-blur border-[0.5px] border-components-panel-border shadow-lg', !isShowSettingAuth && 'overflow-y-auto pb-2')}>
+        <PortalToFollowElemContent>
+          <div className={cn('relative max-h-[642px] min-h-20 w-[361px] rounded-xl border-[0.5px] border-components-panel-border bg-components-panel-bg-blur pb-4 shadow-lg backdrop-blur-sm', !isShowSettingAuth && 'overflow-y-auto pb-2')}>
             {!isShowSettingAuth && (
               <>
-                <div className='px-4 pt-3.5 pb-1 text-text-primary system-xl-semibold'>{t('plugin.detailPanel.toolSelector.title')}</div>
+                <div className='system-xl-semibold px-4 pb-1 pt-3.5 text-text-primary'>{t(`plugin.detailPanel.toolSelector.${isEdit ? 'toolSetting' : 'title'}`)}</div>
                 {/* base form */}
-                <div className='px-4 py-2 flex flex-col gap-3'>
+                <div className='flex flex-col gap-3 px-4 py-2'>
                   <div className='flex flex-col gap-1'>
-                    <div className='h-6 flex items-center system-sm-semibold text-text-secondary'>{t('plugin.detailPanel.toolSelector.toolLabel')}</div>
+                    <div className='system-sm-semibold flex h-6 items-center text-text-secondary'>{t('plugin.detailPanel.toolSelector.toolLabel')}</div>
                     <ToolPicker
-                      panelClassName='w-[328px]'
                       placement='bottom'
                       offset={offset}
                       trigger={
@@ -297,12 +307,14 @@ const ToolSelector: FC<Props> = ({
                       disabled={false}
                       supportAddCustomTool
                       onSelect={handleSelectTool}
+                      onSelectMultiple={handleSelectMultipleTool}
                       scope={scope}
                       selectedTools={selectedTools}
+                      canChooseMCPTool={canChooseMCPTool}
                     />
                   </div>
                   <div className='flex flex-col gap-1'>
-                    <div className='h-6 flex items-center system-sm-semibold text-text-secondary'>{t('plugin.detailPanel.toolSelector.descriptionLabel')}</div>
+                    <div className='system-sm-semibold flex h-6 items-center text-text-secondary'>{t('plugin.detailPanel.toolSelector.descriptionLabel')}</div>
                     <Textarea
                       className='resize-none'
                       placeholder={t('plugin.detailPanel.toolSelector.descriptionPlaceholder')}
@@ -320,7 +332,7 @@ const ToolSelector: FC<Props> = ({
                       {!currentProvider.is_team_authorization && (
                         <Button
                           variant='primary'
-                          className={cn('shrink-0 w-full')}
+                          className={cn('w-full shrink-0')}
                           onClick={() => setShowSettingAuth(true)}
                           disabled={!isCurrentWorkspaceManager}
                         >
@@ -330,7 +342,7 @@ const ToolSelector: FC<Props> = ({
                       {currentProvider.is_team_authorization && (
                         <Button
                           variant='secondary'
-                          className={cn('shrink-0 w-full')}
+                          className={cn('w-full shrink-0')}
                           onClick={() => setShowSettingAuth(true)}
                           disabled={!isCurrentWorkspaceManager}
                         >
@@ -348,7 +360,7 @@ const ToolSelector: FC<Props> = ({
                     {/* tabs */}
                     {nodeId && showTabSlider && (
                       <TabSlider
-                        className='shrink-0 mt-1 px-4'
+                        className='mt-1 shrink-0 px-4'
                         itemClassName='py-3'
                         noBorderBottom
                         smallItem
@@ -364,47 +376,36 @@ const ToolSelector: FC<Props> = ({
                     )}
                     {nodeId && showTabSlider && currType === 'params' && (
                       <div className='px-4 py-2'>
-                        <div className='text-text-tertiary system-xs-regular'>{t('plugin.detailPanel.toolSelector.paramsTip1')}</div>
-                        <div className='text-text-tertiary system-xs-regular'>{t('plugin.detailPanel.toolSelector.paramsTip2')}</div>
+                        <div className='system-xs-regular text-text-tertiary'>{t('plugin.detailPanel.toolSelector.paramsTip1')}</div>
+                        <div className='system-xs-regular text-text-tertiary'>{t('plugin.detailPanel.toolSelector.paramsTip2')}</div>
                       </div>
                     )}
                     {/* user settings only */}
                     {userSettingsOnly && (
                       <div className='p-4 pb-1'>
-                        <div className='text-text-primary system-sm-semibold-uppercase'>{t('plugin.detailPanel.toolSelector.settings')}</div>
+                        <div className='system-sm-semibold-uppercase text-text-primary'>{t('plugin.detailPanel.toolSelector.settings')}</div>
                       </div>
                     )}
                     {/* reasoning config only */}
                     {nodeId && reasoningConfigOnly && (
                       <div className='mb-1 p-4 pb-1'>
-                        <div className='text-text-primary system-sm-semibold-uppercase'>{t('plugin.detailPanel.toolSelector.params')}</div>
+                        <div className='system-sm-semibold-uppercase text-text-primary'>{t('plugin.detailPanel.toolSelector.params')}</div>
                         <div className='pb-1'>
-                          <div className='text-text-tertiary system-xs-regular'>{t('plugin.detailPanel.toolSelector.paramsTip1')}</div>
-                          <div className='text-text-tertiary system-xs-regular'>{t('plugin.detailPanel.toolSelector.paramsTip2')}</div>
+                          <div className='system-xs-regular text-text-tertiary'>{t('plugin.detailPanel.toolSelector.paramsTip1')}</div>
+                          <div className='system-xs-regular text-text-tertiary'>{t('plugin.detailPanel.toolSelector.paramsTip2')}</div>
                         </div>
                       </div>
                     )}
                     {/* user settings form */}
                     {(currType === 'settings' || userSettingsOnly) && (
                       <div className='px-4 py-2'>
-                        <Form
+                        <ToolForm
+                          inPanel
+                          readOnly={false}
+                          nodeId={nodeId}
+                          schema={settingsFormSchemas as any}
                           value={getPlainValue(value?.settings || {})}
                           onChange={handleSettingsFormChange}
-                          formSchemas={settingsFormSchemas as any}
-                          isEditMode={true}
-                          showOnVariableMap={{}}
-                          validating={false}
-                          inputClassName='bg-components-input-bg-normal hover:bg-components-input-bg-hover'
-                          fieldMoreInfo={item => item.url
-                            ? (<a
-                              href={item.url}
-                              target='_blank' rel='noopener noreferrer'
-                              className='inline-flex items-center text-xs text-text-accent'
-                            >
-                              {t('tools.howToGet')}
-                              <RiArrowRightUpLine className='ml-1 w-3 h-3' />
-                            </a>)
-                            : null}
                         />
                       </div>
                     )}
@@ -426,17 +427,17 @@ const ToolSelector: FC<Props> = ({
             {/* authorization panel */}
             {isShowSettingAuth && currentProvider && (
               <>
-                <div className='relative pt-3.5 flex flex-col gap-1'>
-                  <div className='absolute -top-2 left-2 w-[345px] pt-2 rounded-t-xl backdrop-blur-sm bg-components-panel-bg-blur border-[0.5px] border-components-panel-border'></div>
+                <div className='relative flex flex-col gap-1 pt-3.5'>
+                  <div className='absolute -top-2 left-2 w-[345px] rounded-t-xl border-[0.5px] border-components-panel-border bg-components-panel-bg-blur pt-2 backdrop-blur-sm'></div>
                   <div
-                    className='px-3 h-6 flex items-center gap-1 text-text-accent-secondary system-xs-semibold-uppercase cursor-pointer'
+                    className='system-xs-semibold-uppercase flex h-6 cursor-pointer items-center gap-1 px-3 text-text-accent-secondary'
                     onClick={() => setShowSettingAuth(false)}
                   >
-                    <RiArrowLeftLine className='w-4 h-4' />
+                    <RiArrowLeftLine className='h-4 w-4' />
                     BACK
                   </div>
-                  <div className='px-4 text-text-primary system-xl-semibold'>{t('tools.auth.setupModalTitle')}</div>
-                  <div className='px-4 text-text-tertiary system-xs-regular'>{t('tools.auth.setupModalTitleDescription')}</div>
+                  <div className='system-xl-semibold px-4 text-text-primary'>{t('tools.auth.setupModalTitle')}</div>
+                  <div className='system-xs-regular px-4 text-text-tertiary'>{t('tools.auth.setupModalTitleDescription')}</div>
                 </div>
                 <ToolCredentialForm
                   collection={currentProvider}

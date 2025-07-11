@@ -61,10 +61,14 @@ const Form: FC<Props> = ({
     }
   }, [valuesRef, onChange, mapKeysWithSameValueSelector])
   const isArrayLikeType = [InputVarType.contexts, InputVarType.iterator].includes(inputs[0]?.type)
+  const isIteratorItemFile = inputs[0]?.type === InputVarType.iterator && inputs[0]?.isFileItem
+
   const isContext = inputs[0]?.type === InputVarType.contexts
   const handleAddContext = useCallback(() => {
     const newValues = produce(values, (draft: any) => {
       const key = inputs[0].variable
+      if (!draft[key])
+        draft[key] = []
       draft[key].push(isContext ? RETRIEVAL_OUTPUT_STRUCT : '')
     })
     onChange(newValues)
@@ -74,8 +78,8 @@ const Form: FC<Props> = ({
     <div className={cn(className, 'space-y-2')}>
       {label && (
         <div className='mb-1 flex items-center justify-between'>
-          <div className='flex items-center h-6 system-xs-medium-uppercase text-text-tertiary'>{label}</div>
-          {isArrayLikeType && (
+          <div className='system-xs-medium-uppercase flex h-6 items-center text-text-tertiary'>{label}</div>
+          {isArrayLikeType && !isIteratorItemFile && (
             <AddButton onClick={handleAddContext} />
           )}
         </div>

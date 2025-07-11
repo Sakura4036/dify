@@ -2,12 +2,16 @@ export enum Plan {
   sandbox = 'sandbox',
   professional = 'professional',
   team = 'team',
+  enterprise = 'enterprise',
 }
 export enum Priority {
   standard = 'standard',
   priority = 'priority',
   topPriority = 'top-priority',
 }
+
+export type BasicPlan = Plan.sandbox | Plan.professional | Plan.team
+
 export type PlanInfo = {
   level: number
   price: number
@@ -19,6 +23,7 @@ export type PlanInfo = {
   vectorSpace: string
   documentsUploadQuota: number
   documentsRequestQuota: number
+  apiRateLimit: number
   documentProcessingPriority: Priority
   logHistory: number
   messageRequest: number
@@ -59,7 +64,7 @@ export type CurrentPlanInfoBackend = {
   billing: {
     enabled: boolean
     subscription: {
-      plan: Plan
+      plan: BasicPlan
     }
   }
   members: {
@@ -86,6 +91,15 @@ export type CurrentPlanInfoBackend = {
   can_replace_logo: boolean
   model_load_balancing_enabled: boolean
   dataset_operator_enabled: boolean
+  education: {
+    enabled: boolean
+    activated: boolean
+  },
+  webapp_copyright_enabled: boolean
+  workspace_members: {
+    size: number
+    limit: number
+  }
 }
 
 export type SubscriptionItem = {

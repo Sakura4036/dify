@@ -10,13 +10,12 @@ import { useGetLanguage } from '@/context/i18n'
 import BlockIcon from '../../block-icon'
 import cn from '@/utils/classnames'
 import { useTranslation } from 'react-i18next'
-import { RiCheckLine } from '@remixicon/react'
-import Badge from '@/app/components/base/badge'
 
 type Props = {
   provider: ToolWithProvider
   payload: Tool
   disabled?: boolean
+  isAdded?: boolean
   onSelect: (type: BlockEnum, tool?: ToolDefaultValue) => void
 }
 
@@ -25,6 +24,7 @@ const ToolItem: FC<Props> = ({
   payload,
   onSelect,
   disabled,
+  isAdded,
 }) => {
   const { t } = useTranslation()
 
@@ -44,13 +44,13 @@ const ToolItem: FC<Props> = ({
             toolIcon={provider.icon}
           />
           <div className='mb-1 text-sm leading-5 text-text-primary'>{payload.label[language]}</div>
-          <div className='text-xs text-text-secondary leading-[18px]'>{payload.description[language]}</div>
+          <div className='text-xs leading-[18px] text-text-secondary'>{payload.description[language]}</div>
         </div>
       )}
     >
       <div
         key={payload.name}
-        className='flex justify-between items-center pr-1 rounded-lg pl-[21px] hover:bg-state-base-hover cursor-pointer'
+        className='flex cursor-pointer items-center justify-between rounded-lg pl-[21px] pr-1 hover:bg-state-base-hover'
         onClick={() => {
           if (disabled) return
           const params: Record<string, string> = {}
@@ -65,23 +65,22 @@ const ToolItem: FC<Props> = ({
             provider_name: provider.name,
             tool_name: payload.name,
             tool_label: payload.label[language],
+            tool_description: payload.description[language],
             title: payload.label[language],
             is_team_authorization: provider.is_team_authorization,
             output_schema: payload.output_schema,
             paramSchemas: payload.parameters,
             params,
+            meta: provider.meta,
           })
         }}
       >
-        <div className={cn('h-8 leading-8 border-l-2 border-divider-subtle pl-4 truncate text-text-secondary system-sm-medium', disabled && 'opacity-30')}>{payload.label[language]}</div>
-        {disabled && <Badge
-          className='flex items-center h-5 text-text-tertiary space-x-0.5'
-          uppercase
-        >
-          <RiCheckLine className='w-3 h-3 ' />
-          <div>{t('tools.addToolModal.added')}</div>
-        </Badge>
-        }
+        <div className={cn('system-sm-medium h-8 truncate border-l-2 border-divider-subtle pl-4 leading-8 text-text-secondary')}>
+          <span className={cn(disabled && 'opacity-30')}>{payload.label[language]}</span>
+        </div>
+        {isAdded && (
+          <div className='system-xs-regular mr-4 text-text-tertiary'>{t('tools.addToolModal.added')}</div>
+        )}
       </div>
     </Tooltip >
   )

@@ -35,9 +35,7 @@ class ApiTool(Tool):
 
     def fork_tool_runtime(self, runtime: ToolRuntime):
         """
-        fork a new tool with meta data
-
-        :param meta: the meta data of a tool call processing, tenant_id is required
+        fork a new tool with metadata
         :return: the new tool
         """
         if self.api_bundle is None:
@@ -80,8 +78,8 @@ class ApiTool(Tool):
         if "auth_type" not in credentials:
             raise ToolProviderCredentialValidationError("Missing auth_type")
 
-        if credentials["auth_type"] == "api_key":
-            api_key_header = "api_key"
+        if credentials["auth_type"] in ("api_key_header", "api_key"):  # backward compatibility:
+            api_key_header = "Authorization"
 
             if "api_key_header" in credentials:
                 api_key_header = credentials["api_key_header"]
@@ -101,6 +99,11 @@ class ApiTool(Tool):
                     pass
 
             headers[api_key_header] = credentials["api_key_value"]
+
+        elif credentials["auth_type"] == "api_key_query":
+            # For query parameter authentication, we don't add anything to headers
+            # The query parameter will be added in do_http_request method
+            pass
 
         needed_parameters = [parameter for parameter in (self.api_bundle.parameters or []) if parameter.required]
         for parameter in needed_parameters:
@@ -156,6 +159,15 @@ class ApiTool(Tool):
         cookies = {}
         files = []
 
+        # Add API key to query parameters if auth_type is api_key_query
+        if self.runtime and self.runtime.credentials:
+            credentials = self.runtime.credentials
+            if credentials.get("auth_type") == "api_key_query":
+                api_key_query_param = credentials.get("api_key_query_param", "key")
+                api_key_value = credentials.get("api_key_value")
+                if api_key_value:
+                    params[api_key_query_param] = api_key_value
+
         # check parameters
         for parameter in self.api_bundle.openapi.get("parameters", []):
             value = self.get_parameter_value(parameter, parameters)
@@ -170,7 +182,7 @@ class ApiTool(Tool):
                 cookies[parameter["name"]] = value
 
             elif parameter["in"] == "header":
-                headers[parameter["name"]] = value
+                headers[parameter["name"]] = str(value)
 
         # check if there is a request body and handle it
         if "requestBody" in self.api_bundle.openapi and self.api_bundle.openapi["requestBody"] is not None:
@@ -179,13 +191,32 @@ class ApiTool(Tool):
                 for content_type in self.api_bundle.openapi["requestBody"]["content"]:
                     headers["Content-Type"] = content_type
                     body_schema = self.api_bundle.openapi["requestBody"]["content"][content_type]["schema"]
+
+                    # handle ref schema
+                    if "$ref" in body_schema:
+                        ref_path = body_schema["$ref"].split("/")
+                        ref_name = ref_path[-1]
+                        if (
+                            "components" in self.api_bundle.openapi
+                            and "schemas" in self.api_bundle.openapi["components"]
+                        ):
+                            if ref_name in self.api_bundle.openapi["components"]["schemas"]:
+                                body_schema = self.api_bundle.openapi["components"]["schemas"][ref_name]
+
                     required = body_schema.get("required", [])
                     properties = body_schema.get("properties", {})
                     for name, property in properties.items():
                         if name in parameters:
-                            if property.get("format") == "binary":
+                            # multiple file upload: if the type is array and the items have format as binary
+                            if property.get("type") == "array" and property.get("items", {}).get("format") == "binary":
+                                # parameters[name] should be a list of file objects.
+                                for f in parameters[name]:
+                                    files.append((name, (f.filename, download(f), f.mime_type)))
+                            elif property.get("format") == "binary":
                                 f = parameters[name]
                                 files.append((name, (f.filename, download(f), f.mime_type)))
+                            elif "$ref" in property:
+                                body[name] = parameters[name]
                             else:
                                 # convert type
                                 body[name] = self._convert_body_property_type(property, parameters[name])
@@ -196,7 +227,8 @@ class ApiTool(Tool):
                         elif "default" in property:
                             body[name] = property["default"]
                         else:
-                            body[name] = None
+                            # omit optional parameters that weren't provided, instead of setting them to None
+                            pass
                     break
 
         # replace path parameters
@@ -211,6 +243,13 @@ class ApiTool(Tool):
                 body = urlencode(body)
             else:
                 body = body
+
+        # if there is a file upload, remove the Content-Type header
+        # so that httpx can automatically generate the boundary header required for multipart/form-data.
+        # issue: https://github.com/langgenius/dify/issues/13684
+        # reference: https://stackoverflow.com/questions/39280438/fetch-missing-boundary-in-multipart-form-data-post
+        if files:
+            headers.pop("Content-Type", None)
 
         if method in {
             "get",

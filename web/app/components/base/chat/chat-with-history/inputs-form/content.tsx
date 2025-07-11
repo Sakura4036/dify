@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useChatWithHistoryContext } from '../context'
 import Input from '@/app/components/base/input'
@@ -17,29 +17,35 @@ const InputsFormContent = ({ showTip }: Props) => {
     appParams,
     inputsForms,
     currentConversationId,
-    currentConversationItem,
+    currentConversationInputs,
+    setCurrentConversationInputs,
     newConversationInputs,
     newConversationInputsRef,
     handleNewConversationInputsChange,
   } = useChatWithHistoryContext()
-  const inputsFormValue = currentConversationId ? currentConversationItem?.inputs : newConversationInputs
-  const readonly = !!currentConversationId
+  const inputsFormValue = currentConversationId ? currentConversationInputs : newConversationInputs
 
   const handleFormChange = useCallback((variable: string, value: any) => {
+    setCurrentConversationInputs({
+      ...currentConversationInputs,
+      [variable]: value,
+    })
     handleNewConversationInputsChange({
       ...newConversationInputsRef.current,
       [variable]: value,
     })
-  }, [newConversationInputsRef, handleNewConversationInputsChange])
+  }, [newConversationInputsRef, handleNewConversationInputsChange, currentConversationInputs, setCurrentConversationInputs])
+
+  const visibleInputsForms = inputsForms.filter(form => form.hide !== true)
 
   return (
     <div className='space-y-4'>
-      {inputsForms.map(form => (
+      {visibleInputsForms.map(form => (
         <div key={form.variable} className='space-y-1'>
-          <div className='h-6 flex items-center gap-1'>
-            <div className='text-text-secondary system-md-semibold'>{form.label}</div>
+          <div className='flex h-6 items-center gap-1'>
+            <div className='system-md-semibold text-text-secondary'>{form.label}</div>
             {!form.required && (
-              <div className='text-text-tertiary system-xs-regular'>{t('appDebug.variableTable.optional')}</div>
+              <div className='system-xs-regular text-text-tertiary'>{t('appDebug.variableTable.optional')}</div>
             )}
           </div>
           {form.type === InputVarType.textInput && (
@@ -47,8 +53,6 @@ const InputsFormContent = ({ showTip }: Props) => {
               value={inputsFormValue?.[form.variable] || ''}
               onChange={e => handleFormChange(form.variable, e.target.value)}
               placeholder={form.label}
-              readOnly={readonly}
-              disabled={readonly}
             />
           )}
           {form.type === InputVarType.number && (
@@ -57,8 +61,6 @@ const InputsFormContent = ({ showTip }: Props) => {
               value={inputsFormValue?.[form.variable] || ''}
               onChange={e => handleFormChange(form.variable, e.target.value)}
               placeholder={form.label}
-              readOnly={readonly}
-              disabled={readonly}
             />
           )}
           {form.type === InputVarType.paragraph && (
@@ -66,8 +68,6 @@ const InputsFormContent = ({ showTip }: Props) => {
               value={inputsFormValue?.[form.variable] || ''}
               onChange={e => handleFormChange(form.variable, e.target.value)}
               placeholder={form.label}
-              readOnly={readonly}
-              disabled={readonly}
             />
           )}
           {form.type === InputVarType.select && (
@@ -77,7 +77,6 @@ const InputsFormContent = ({ showTip }: Props) => {
               items={form.options.map((option: string) => ({ value: option, name: option }))}
               onSelect={item => handleFormChange(form.variable, item.value as string)}
               placeholder={form.label}
-              readonly={readonly}
             />
           )}
           {form.type === InputVarType.singleFile && (
@@ -109,10 +108,10 @@ const InputsFormContent = ({ showTip }: Props) => {
         </div>
       ))}
       {showTip && (
-        <div className='text-text-tertiary system-xs-regular'>{t('share.chat.chatFormTip')}</div>
+        <div className='system-xs-regular text-text-tertiary'>{t('share.chat.chatFormTip')}</div>
       )}
     </div>
   )
 }
 
-export default InputsFormContent
+export default memo(InputsFormContent)

@@ -1,12 +1,20 @@
 import json
 import logging
 from collections.abc import Generator
-from typing import Any, Optional, Union, cast
+from typing import Any, Optional, cast
+
+from flask_login import current_user
 
 from core.file import FILE_MODEL_IDENTITY, File, FileTransferMethod
 from core.tools.__base.tool import Tool
 from core.tools.__base.tool_runtime import ToolRuntime
-from core.tools.entities.tool_entities import ToolEntity, ToolInvokeMessage, ToolParameter, ToolProviderType
+from core.tools.entities.tool_entities import (
+    ToolEntity,
+    ToolInvokeMessage,
+    ToolParameter,
+    ToolProviderType,
+)
+from core.tools.errors import ToolInvokeError
 from extensions.ext_database import db
 from factories.file_factory import build_from_mapping
 from models.account import Account
@@ -86,7 +94,7 @@ class WorkflowTool(Tool):
         result = generator.generate(
             app_model=app,
             workflow=workflow,
-            user=self._get_user(user_id),
+            user=cast("Account | EndUser", current_user),
             args={"inputs": tool_parameters, "files": files},
             invoke_from=self.runtime.invoke_from,
             streaming=False,
@@ -96,11 +104,8 @@ class WorkflowTool(Tool):
         assert isinstance(result, dict)
         data = result.get("data", {})
 
-        if data.get("error"):
-            raise Exception(data.get("error"))
-
-        if data.get("error"):
-            raise Exception(data.get("error"))
+        if err := data.get("error"):
+            raise ToolInvokeError(err)
 
         outputs = data.get("outputs")
         if outputs is None:
@@ -113,25 +118,10 @@ class WorkflowTool(Tool):
         yield self.create_text_message(json.dumps(outputs, ensure_ascii=False))
         yield self.create_json_message(outputs)
 
-    def _get_user(self, user_id: str) -> Union[EndUser, Account]:
-        """
-        get the user by user id
-        """
-
-        user = db.session.query(EndUser).filter(EndUser.id == user_id).first()
-        if not user:
-            user = db.session.query(Account).filter(Account.id == user_id).first()
-
-        if not user:
-            raise ValueError("user not found")
-
-        return user
-
     def fork_tool_runtime(self, runtime: ToolRuntime) -> "WorkflowTool":
         """
-        fork a new tool with meta data
+        fork a new tool with metadata
 
-        :param meta: the meta data of a tool call processing, tenant_id is required
         :return: the new tool
         """
         return self.__class__(
@@ -214,7 +204,6 @@ class WorkflowTool(Tool):
         """
         extract files from the result
 
-        :param result: the result
         :return: the result, files
         """
         files: list[File] = []

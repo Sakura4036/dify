@@ -27,7 +27,6 @@ import SearchBox from '@/app/components/plugins/marketplace/search-box'
 import {
   Plus02,
 } from '@/app/components/base/icons/src/vender/line/general'
-import classNames from '@/utils/classnames'
 
 type NodeSelectorProps = {
   open?: boolean
@@ -117,46 +116,48 @@ const NodeSelector: FC<NodeSelectorProps> = ({
             : (
               <div
                 className={`
-                  flex items-center justify-center 
-                  w-4 h-4 rounded-full bg-components-button-primary-bg text-text-primary-on-surface hover:bg-components-button-primary-bg-hover cursor-pointer z-10
+                  z-10 flex h-4
+                  w-4 cursor-pointer items-center justify-center rounded-full bg-components-button-primary-bg text-text-primary-on-surface hover:bg-components-button-primary-bg-hover
                   ${triggerClassName?.(open)}
                 `}
                 style={triggerStyle}
               >
-                <Plus02 className='w-2.5 h-2.5' />
+                <Plus02 className='h-2.5 w-2.5' />
               </div>
             )
         }
       </PortalToFollowElemTrigger>
       <PortalToFollowElemContent className='z-[1000]'>
-        <div className={`rounded-lg border-[0.5px] border-gray-200 bg-white shadow-lg ${popupClassName}`}>
-          <div className='px-2 pt-2' onClick={e => e.stopPropagation()}>
-            {activeTab === TabsEnum.Blocks && (
-              <Input
-                showLeftIcon
-                showClearIcon
-                autoFocus
-                value={searchText}
-                placeholder={searchPlaceholder}
-                onChange={e => setSearchText(e.target.value)}
-                onClear={() => setSearchText('')}
-              />
-            )}
-            {activeTab === TabsEnum.Tools && (
-              <SearchBox
-                search={searchText}
-                onSearchChange={setSearchText}
-                tags={tags}
-                onTagsChange={setTags}
-                size='small'
-                placeholder={t('plugin.searchTools')!}
-              />
-            )}
-
-          </div>
+        <div className={`rounded-lg border-[0.5px] border-components-panel-border bg-components-panel-bg shadow-lg ${popupClassName}`}>
           <Tabs
             activeTab={activeTab}
             onActiveTabChange={handleActiveTabChange}
+            filterElem={
+              <div className='relative m-2' onClick={e => e.stopPropagation()}>
+                {activeTab === TabsEnum.Blocks && (
+                  <Input
+                    showLeftIcon
+                    showClearIcon
+                    autoFocus
+                    value={searchText}
+                    placeholder={searchPlaceholder}
+                    onChange={e => setSearchText(e.target.value)}
+                    onClear={() => setSearchText('')}
+                  />
+                )}
+                {activeTab === TabsEnum.Tools && (
+                  <SearchBox
+                    search={searchText}
+                    onSearchChange={setSearchText}
+                    tags={tags}
+                    onTagsChange={setTags}
+                    size='small'
+                    placeholder={t('plugin.searchTools')!}
+                    inputClassName='grow'
+                  />
+                )}
+              </div>
+            }
             onSelect={handleSelect}
             searchText={searchText}
             tags={tags}
