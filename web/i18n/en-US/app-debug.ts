@@ -404,6 +404,9 @@ const translation = {
       atLeastOneOption: 'At least one option is required',
       optionRepeat: 'Has repeat options',
     },
+    'defaultValue': 'Default value',
+    'noDefaultValue': 'No default value',
+    'selectDefaultValue': 'Select default value',
   },
   vision: {
     name: 'Vision',
@@ -446,6 +449,7 @@ const translation = {
     writeOpener: 'Edit opener',
     placeholder: 'Write your opener message here, you can use variables, try type {{variable}}.',
     openingQuestion: 'Opening Questions',
+    openingQuestionPlaceholder: 'You can use variables, try typing {{variable}}.',
     noDataPlaceHolder:
       'Starting the conversation with the user can help AI establish a closer connection with them in conversational applications.',
     varTip: 'You can use variables, try type {{variable}}',

@@ -25,7 +25,7 @@ const translation = {
     debugConfig: '除錯',
     addFeature: '新增功能',
     automatic: '產生',
-    stopResponding: '停止響應',
+    stopResponding: '停止回應',
     agree: '贊同',
     disagree: '反對',
     cancelAgree: '取消贊同',
@@ -198,6 +198,33 @@ const translation = {
         },
       },
     },
+    fileUpload: {
+      title: '檔案上傳',
+      description: '聊天輸入框支援上傳檔案。類型包括圖片、文件以及其它類型',
+      supportedTypes: '支援的檔案類型',
+      numberLimit: '最大上傳數',
+      modalTitle: '檔案上傳設定',
+    },
+    imageUpload: {
+      title: '圖片上傳',
+      description: '支援上傳圖片',
+      supportedTypes: '支援的檔案類型',
+      numberLimit: '最大上傳數',
+      modalTitle: '圖片上傳設定',
+    },
+    bar: {
+      empty: '開啟功能增強 web app 使用者體驗',
+      enableText: '功能已開啟',
+      manage: '管理',
+    },
+    documentUpload: {
+      title: '文件',
+      description: '啟用文件後，模型可以接收文件並回答關於它們的問題。',
+    },
+    audioUpload: {
+      title: '音訊',
+      description: '啟用音訊後，模型可以處理音訊檔案進行轉錄和分析。',
+    },
   },
   resetConfig: {
     title: '確認重置？',
@@ -272,6 +299,9 @@ const translation = {
       atLeastOneOption: '至少需要一個選項',
       optionRepeat: '選項不能重複',
     },
+    'defaultValue': '預設值',
+    'noDefaultValue': '無預設值',
+    'selectDefaultValue': '選擇預設值',
   },
   vision: {
     name: '視覺',
@@ -313,6 +343,7 @@ const translation = {
     writeOpener: '編寫開場白',
     placeholder: '在這裡寫下你的開場白，你可以使用變數，嘗試輸入 {{variable}}。',
     openingQuestion: '開場問題',
+    openingQuestionPlaceholder: '可以使用變量，嘗試輸入 {{variable}}。',
     noDataPlaceHolder:
       '在對話型應用中，讓 AI 主動說第一段話可以拉近與使用者間的距離。',
     varTip: '你可以使用變數，試試輸入 {{variable}}',

@@ -201,6 +201,7 @@ Si vous souhaitez configurer une configuration haute disponibilité, la communau
 - [Helm Chart par @magicsong](https://github.com/magicsong/ai-charts)
 - [Fichier YAML par @Winson-030](https://github.com/Winson-030/dify-kubernetes)
 - [Fichier YAML par @wyy-holding](https://github.com/wyy-holding/dify-k8s)
+- [🚀 NOUVEAU ! Fichiers YAML (compatible avec Dify v1.6.0) par @Zhoneym](https://github.com/Zhoneym/DifyAI-Kubernetes)
 
 #### Utilisation de Terraform pour le déploiement
 
@@ -234,7 +235,7 @@ Pour ceux qui souhaitent contribuer du code, consultez notre [Guide de contribut
 Dans le même temps, veuillez envisager de soutenir Dify en le partageant sur les réseaux sociaux et lors d'événements et de conférences.
 
 
-> Nous recherchons des contributeurs pour aider à traduire Dify dans des langues autres que le mandarin ou l'anglais. Si vous êtes intéressé à aider, veuillez consulter le [README i18n](https://github.com/langgenius/dify/blob/main/web/i18n/README.md) pour plus d'informations, et laissez-nous un commentaire dans le canal `global-users` de notre [Serveur communautaire Discord](https://discord.gg/8Tpq4AcN9c).
+> Nous recherchons des contributeurs pour aider à traduire Dify dans des langues autres que le mandarin ou l'anglais. Si vous êtes intéressé à aider, veuillez consulter le [README i18n](https://github.com/langgenius/dify/blob/main/web/i18n-config/README.md) pour plus d'informations, et laissez-nous un commentaire dans le canal `global-users` de notre [Serveur communautaire Discord](https://discord.gg/8Tpq4AcN9c).
 
 **Contributeurs**
 
