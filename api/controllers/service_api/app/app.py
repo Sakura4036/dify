@@ -99,6 +99,6 @@ class AppInfoApi(Resource):
         return app_model
 
 
-api.add_resource(AppParameterApi, "/parameters")
-api.add_resource(AppMetaApi, "/meta")
-api.add_resource(AppInfoApi, "/info")
+service_api_ns.add_resource(AppParameterApi, "/parameters")
+service_api_ns.add_resource(AppMetaApi, "/meta")
+service_api_ns.add_resource(AppInfoApi, "/info")
