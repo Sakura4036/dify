@@ -86,7 +86,6 @@ const translation = {
       limit: 'Параллелизм ограничен ветвями {{num}}.',
       depthLimit: 'Ограничение на количество слоев параллельной вложенности {{num}}',
     },
-    parallelRun: 'Параллельный прогон',
     disconnect: 'Разъединять',
     jumpToNode: 'Перейти к этому узлу',
     addParallelNode: 'Добавить параллельный узел',
@@ -103,12 +102,10 @@ const translation = {
     addFailureBranch: 'Добавить ветвь Fail',
     noHistory: 'Без истории',
     loadMore: 'Загрузите больше рабочих процессов',
-    noExist: 'Такой переменной не существует',
     versionHistory: 'История версий',
     exportPNG: 'Экспортировать как PNG',
     exportImage: 'Экспортировать изображение',
     exportJPEG: 'Экспортировать как JPEG',
-    referenceVar: 'Ссылочная переменная',
     exitVersions: 'Выходные версии',
     exportSVG: 'Экспортировать как SVG',
     publishUpdate: 'Опубликовать обновление',
@@ -116,6 +113,8 @@ const translation = {
     needAnswerNode: 'В узел ответа необходимо добавить',
     needEndNode: 'Узел конца должен быть добавлен',
     tagBound: 'Количество приложений, использующих этот тег',
+    currentView: 'Текущий вид',
+    currentWorkflow: 'Текущий рабочий процесс',
   },
   env: {
     envPanelTitle: 'Переменные среды',
@@ -218,6 +217,8 @@ const translation = {
     back: 'Назад',
     iteration: 'Итерация',
     loop: 'Цикл',
+    reRun: 'Повторный запуск',
+    preparingDataSource: 'Подготовка источника данных',
   },
   tabs: {
     'searchTool': 'Поиск инструмента',
@@ -236,6 +237,8 @@ const translation = {
     'searchBlock': 'Поиск узла',
     'addAll': 'Добавить всё',
     'allAdded': 'Все добавлено',
+    'sources': 'Источников',
+    'searchDataSource': 'Поиск источника данных',
   },
   blocks: {
     'start': 'Начало',
@@ -260,6 +263,8 @@ const translation = {
     'loop': 'Цикл',
     'loop-start': 'Начало цикла',
     'loop-end': 'Выйти из цикла',
+    'knowledge-index': 'База знаний',
+    'datasource': 'Источник данных',
   },
   blocksAbout: {
     'start': 'Определите начальные параметры для запуска рабочего процесса',
@@ -282,6 +287,8 @@ const translation = {
     'agent': 'Вызов больших языковых моделей для ответа на вопросы или обработки естественного языка',
     'loop-end': 'Эквивалентно "break". Этот узел не имеет конфигурационных элементов. Когда тело цикла достигает этого узла, цикл завершается.',
     'loop': 'Выполните цикл логики до тех пор, пока не будет достигнуто условие завершения или максимальное количество итераций цикла.',
+    'knowledge-index': 'База знаний о компании',
+    'datasource': 'Источник данных О компании',
   },
   operator: {
     zoomIn: 'Увеличить',
@@ -289,6 +296,18 @@ const translation = {
     zoomTo50: 'Масштаб 50%',
     zoomTo100: 'Масштаб 100%',
     zoomToFit: 'По размеру',
+    alignTop: 'Вверх',
+    alignBottom: 'Вниз',
+    alignRight: 'Вправо',
+    distributeHorizontal: 'Распределить по горизонтали',
+    alignMiddle: 'По центру',
+    vertical: 'Вертикальный',
+    alignCenter: 'Центр',
+    alignLeft: 'Влево',
+    selectionAlignment: 'Выравнивание выделения',
+    horizontal: 'Горизонтальный',
+    alignNodes: 'Выравнивание узлов',
+    distributeVertical: 'Распределить по вертикали',
   },
   panel: {
     userInputField: 'Поле ввода пользователя',
@@ -309,6 +328,7 @@ const translation = {
     changeBlock: 'Изменить узел',
     minimize: 'Выйти из полноэкранного режима',
     maximize: 'Максимизировать холст',
+    optional_and_hidden: '(необязательно и скрыто)',
   },
   nodes: {
     common: {
@@ -370,6 +390,7 @@ const translation = {
         input: 'Входное значение',
         variable: 'Используйте переменную',
       },
+      inputVars: 'Входные переменные',
     },
     start: {
       required: 'обязательно',
@@ -424,6 +445,7 @@ const translation = {
       },
       outputVars: {
         output: 'Создать контент',
+        reasoning_content: 'Содержимое рассуждений',
         usage: 'Информация об использовании модели',
       },
       singleRun: {
@@ -457,6 +479,12 @@ const translation = {
         generationTip: 'Вы можете использовать естественный язык для быстрого создания схемы JSON.',
         generating: 'Генерация схемы JSON...',
         promptTooltip: 'Преобразуйте текстовое описание в стандартизированную структуру JSON Schema.',
+      },
+      reasoningFormat: {
+        tagged: 'Продолжайте думать о тегах',
+        title: 'Включите разделение тегов на основе логики',
+        tooltip: 'Извлечь содержимое из тегов think и сохранить его в поле reasoning_content.',
+        separated: 'Отдельные теги для мышления',
       },
     },
     knowledgeRetrieval: {
@@ -608,7 +636,6 @@ const translation = {
       },
       select: 'Выбирать',
       addSubVariable: 'Подпеременная',
-      condition: 'Условие',
     },
     variableAssigner: {
       title: 'Назначить переменные',
@@ -831,6 +858,7 @@ const translation = {
           title: 'Файлы, созданные агентом',
         },
         text: 'Контент, генерируемый агентом',
+        usage: 'Информация об использовании модели',
         json: 'JSON, сгенерированный агентом',
       },
       checkList: {
@@ -898,6 +926,30 @@ const translation = {
       breakCondition: 'Условие завершения цикла',
       loopVariables: 'Циклические переменные',
     },
+    dataSource: {
+      supportedFileFormatsPlaceholder: 'Расширение файла, e.g. doc',
+      add: 'Добавление источника данных',
+      supportedFileFormats: 'Поддерживаемые форматы файлов',
+    },
+    knowledgeBase: {
+      chunkStructureTip: {
+        learnMore: 'Подробнее',
+        title: 'Пожалуйста, выберите структуру чанка',
+        message: 'База знаний Dify поддерживает три структуры фрагментации: Общие, Родитель-дочерний и Вопросы и ответы. Каждая база знаний может иметь только одну структуру. Выходные данные предыдущего узла должны быть выровнены с выбранной структурой блоков. Обратите внимание, что выбор структуры фрагментации влияет на доступные методы индекса.',
+      },
+      chunkStructure: 'Структура чанка',
+      aboutRetrieval: 'о методе извлечения.',
+      indexMethodIsRequired: 'Метод index является обязательным',
+      chooseChunkStructure: 'Выберите структуру чанка',
+      chunkIsRequired: 'Требуется структура чанка',
+      changeChunkStructure: 'Изменение структуры чанка',
+      retrievalSettingIsRequired: 'Настройка извлечения обязательна',
+      chunksInput: 'Куски',
+      chunksInputTip: 'Входная переменная узла базы знаний - это Чанки. Тип переменной является объектом с определенной схемой JSON, которая должна соответствовать выбранной структуре чанка.',
+      chunksVariableIsRequired: 'Переменная chunks обязательна',
+      embeddingModelIsRequired: 'Требуется модель встраивания',
+      rerankingModelIsRequired: 'Требуется модель перераспределения рангов',
+    },
   },
   tracing: {
     stopBy: 'Остановлено {{user}}',
@@ -930,6 +982,7 @@ const translation = {
       deleteSuccess: 'Версия удалена',
       updateFailure: 'Не удалось обновить версию',
       restoreFailure: 'Не удалось восстановить версию',
+      copyIdSuccess: 'ID скопирован в буфер обмена',
     },
     latest: 'Последний',
     restorationTip: 'После восстановления версии текущий черновик будет перезаписан.',
@@ -940,6 +993,7 @@ const translation = {
     currentDraft: 'Текущий проект',
     releaseNotesPlaceholder: 'Опишите, что изменилось',
     defaultName: 'Без названия версия',
+    copyId: 'Копировать ID',
   },
   debug: {
     noData: {
@@ -966,9 +1020,31 @@ const translation = {
       resetConversationVar: 'Сбросить переменную разговора до значения по умолчанию',
       envNode: 'Окружающая среда',
       emptyTip: 'После прохождения через узел на холсте или выполнения узла шаг за шагом вы можете просмотреть текущее значение переменной узла в инспекторе переменных.',
+      export: 'экспорт',
+      exportToolTip: 'Экспорт переменной в файл',
+      largeData: 'Большие данные, предварительный просмотр только для чтения. Экспортируйте для просмотра всего.',
+      largeDataNoExport: 'Большие данные - только частичный предварительный просмотр',
     },
     lastRunTab: 'Последний запуск',
     settingsTab: 'Настройки',
+    relations: {
+      dependencies: 'Зависимости',
+      dependents: 'Иждивенцев',
+      noDependencies: 'Нет зависимостей',
+      dependentsDescription: 'Узлы, которые полагаются на этот узел',
+      noDependents: 'Отсутствие иждивенцев',
+      dependenciesDescription: 'Узлы, на которые опирается этот узел',
+    },
+    relationsTab: 'Отношения',
+    noLastRunFound: 'Предыдущий запуск не найден',
+    copyLastRun: 'Копировать последний запуск',
+    copyLastRunError: 'Не удалось скопировать последние входные данные выполнения',
+    noMatchingInputsFound: 'Не найдено соответствующих входных данных из последнего запуска.',
+    lastOutput: 'Последний вывод',
+  },
+  sidebar: {
+    exportWarning: 'Экспортировать текущую сохранённую версию',
+    exportWarningDesc: 'Это экспортирует текущую сохранённую версию вашего рабочего процесса. Если у вас есть несохранённые изменения в редакторе, сначала сохраните их с помощью опции экспорта на полотне рабочего процесса.',
   },
 }
 

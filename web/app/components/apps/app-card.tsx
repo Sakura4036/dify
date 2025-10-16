@@ -117,8 +117,11 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
       if (onRefresh)
         onRefresh()
     }
-    catch {
-      notify({ type: 'error', message: t('app.editFailed') })
+    catch (e: any) {
+      notify({
+        type: 'error',
+        message: e.message || t('app.editFailed'),
+      })
     }
   }, [app.id, notify, onRefresh, t])
 
@@ -156,9 +159,11 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
       })
       const a = document.createElement('a')
       const file = new Blob([data], { type: 'application/yaml' })
-      a.href = URL.createObjectURL(file)
+      const url = URL.createObjectURL(file)
+      a.href = url
       a.download = `${app.name}.yml`
       a.click()
+      URL.revokeObjectURL(url)
     }
     catch {
       notify({ type: 'error', message: t('app.exportFailed') })
@@ -254,20 +259,21 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
     }
     return (
       <div className="relative flex w-full flex-col py-1" onMouseLeave={onMouseLeave}>
-        <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickSettings}>
+        <button type="button" className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickSettings}>
           <span className='system-sm-regular text-text-secondary'>{t('app.editApp')}</span>
         </button>
         <Divider className="my-1" />
-        <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickDuplicate}>
+        <button type="button" className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickDuplicate}>
           <span className='system-sm-regular text-text-secondary'>{t('app.duplicate')}</span>
         </button>
-        <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickExport}>
+        <button type="button" className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickExport}>
           <span className='system-sm-regular text-text-secondary'>{t('app.export')}</span>
         </button>
         {(app.mode === 'completion' || app.mode === 'chat') && (
           <>
             <Divider className="my-1" />
             <button
+              type="button"
               className='mx-1 flex h-8 cursor-pointer items-center rounded-lg px-3 hover:bg-state-base-hover'
               onClick={onClickSwitch}
             >
@@ -276,23 +282,33 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
           </>
         )}
         {
-          (isGettingUserCanAccessApp || !userCanAccessApp?.result) ? null : <>
-            <Divider className="my-1" />
-            <button className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickInstalledApp}>
-              <span className='system-sm-regular text-text-secondary'>{t('app.openInExplore')}</span>
-            </button>
-          </>
+          (!systemFeatures.webapp_auth.enabled)
+            ? <>
+              <Divider className="my-1" />
+              <button type="button" className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickInstalledApp}>
+                <span className='system-sm-regular text-text-secondary'>{t('app.openInExplore')}</span>
+              </button>
+            </>
+            : !(isGettingUserCanAccessApp || !userCanAccessApp?.result) && (
+              <>
+                <Divider className="my-1" />
+                <button type="button" className='mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickInstalledApp}>
+                  <span className='system-sm-regular text-text-secondary'>{t('app.openInExplore')}</span>
+                </button>
+              </>
+            )
         }
         <Divider className="my-1" />
         {
           systemFeatures.webapp_auth.enabled && isCurrentWorkspaceEditor && <>
-            <button className='mx-1 flex h-8 cursor-pointer items-center rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickAccessControl}>
+            <button type="button" className='mx-1 flex h-8 cursor-pointer items-center rounded-lg px-3 hover:bg-state-base-hover' onClick={onClickAccessControl}>
               <span className='text-sm leading-5 text-text-secondary'>{t('app.accessControl')}</span>
             </button>
             <Divider className='my-1' />
           </>
         }
         <button
+          type="button"
           className='group mx-1 flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 py-[6px] hover:bg-state-destructive-hover'
           onClick={onClickDelete}
         >
@@ -364,26 +380,20 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
         </div>
         <div className='title-wrapper h-[90px] px-[14px] text-xs leading-normal text-text-tertiary'>
           <div
-            className={cn(tags.length ? 'line-clamp-2' : 'line-clamp-4', 'group-hover:line-clamp-2')}
+            className='line-clamp-2'
             title={app.description}
           >
             {app.description}
           </div>
         </div>
-        <div className={cn(
-          'absolute bottom-1 left-0 right-0 h-[42px] shrink-0 items-center pb-[6px] pl-[14px] pr-[6px] pt-1',
-          tags.length ? 'flex' : '!hidden group-hover:!flex',
-        )}>
+        <div className='absolute bottom-1 left-0 right-0 flex h-[42px] shrink-0 items-center pb-[6px] pl-[14px] pr-[6px] pt-1'>
           {isCurrentWorkspaceEditor && (
             <>
               <div className={cn('flex w-0 grow items-center gap-1')} onClick={(e) => {
                 e.stopPropagation()
                 e.preventDefault()
               }}>
-                <div className={cn(
-                  'mr-[41px] w-full grow group-hover:!mr-0 group-hover:!block',
-                  tags.length ? '!block' : '!hidden',
-                )}>
+                <div className='mr-[41px] w-full grow group-hover:!mr-0'>
                   <TagSelector
                     position='bl'
                     type='app'
@@ -395,7 +405,7 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
                   />
                 </div>
               </div>
-              <div className='mx-1 !hidden h-[14px] w-[1px] shrink-0 group-hover:!flex' />
+              <div className='mx-1 !hidden h-[14px] w-[1px] shrink-0 bg-divider-regular group-hover:!flex' />
               <div className='!hidden shrink-0 group-hover:!flex'>
                 <CustomPopover
                   htmlContent={<Operations />}
@@ -410,8 +420,8 @@ const AppCard = ({ app, onRefresh }: AppCardProps) => {
                   }
                   btnClassName={open =>
                     cn(
-                      open ? '!bg-black/5 !shadow-none' : '!bg-transparent',
-                      'h-8 w-8 rounded-md border-none !p-2 hover:!bg-black/5',
+                      open ? '!bg-state-base-hover !shadow-none' : '!bg-transparent',
+                      'h-8 w-8 rounded-md border-none !p-2 hover:!bg-state-base-hover',
                     )
                   }
                   popupClassName={

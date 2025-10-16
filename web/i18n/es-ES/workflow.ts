@@ -86,7 +86,6 @@ const translation = {
       limit: 'El paralelismo se limita a {{num}} ramas.',
       depthLimit: 'Límite de capa de anidamiento paralelo de capas {{num}}',
     },
-    parallelRun: 'Ejecución paralela',
     disconnect: 'Desconectar',
     jumpToNode: 'Saltar a este nodo',
     addParallelNode: 'Agregar nodo paralelo',
@@ -114,6 +113,8 @@ const translation = {
     needEndNode: 'Se debe agregar el nodo Final',
     addBlock: 'Agregar nodo',
     tagBound: 'Número de aplicaciones que utilizan esta etiqueta',
+    currentView: 'Vista actual',
+    currentWorkflow: 'Flujo de trabajo actual',
   },
   env: {
     envPanelTitle: 'Variables de Entorno',
@@ -216,6 +217,8 @@ const translation = {
     back: 'Atrás',
     iteration: 'Iteración',
     loop: 'Bucle',
+    preparingDataSource: 'Preparar el origen de datos',
+    reRun: 'Repetición',
   },
   tabs: {
     'tools': 'Herramientas',
@@ -234,6 +237,8 @@ const translation = {
     'blocks': 'Nodos',
     'addAll': 'Agregar todo',
     'allAdded': 'Todo añadido',
+    'sources': 'Fuentes',
+    'searchDataSource': 'Fuente de datos de búsqueda',
   },
   blocks: {
     'start': 'Inicio',
@@ -258,6 +263,8 @@ const translation = {
     'loop-end': 'Salir del bucle',
     'loop': 'Bucle',
     'loop-start': 'Inicio del bucle',
+    'knowledge-index': 'Knowledge base',
+    'datasource': 'Fuente de datos',
   },
   blocksAbout: {
     'start': 'Define los parámetros iniciales para iniciar un flujo de trabajo',
@@ -280,6 +287,8 @@ const translation = {
     'agent': 'Invocar modelos de lenguaje de gran tamaño para responder preguntas o procesar el lenguaje natural',
     'loop-end': 'Equivalente a "romper". Este nodo no tiene elementos de configuración. Cuando el cuerpo del bucle alcanza este nodo, el bucle termina.',
     'loop': 'Ejecuta un bucle de lógica hasta que se cumpla la condición de terminación o se alcance el conteo máximo de bucles.',
+    'knowledge-index': 'Base de conocimientos Acerca de',
+    'datasource': 'Fuente de datos Acerca de',
   },
   operator: {
     zoomIn: 'Acercar',
@@ -287,6 +296,18 @@ const translation = {
     zoomTo50: 'Zoom al 50%',
     zoomTo100: 'Zoom al 100%',
     zoomToFit: 'Ajustar al tamaño',
+    alignTop: 'Arriba',
+    alignBottom: 'Abajo',
+    alignNodes: 'Alinear nodos',
+    alignCenter: 'Centro',
+    selectionAlignment: 'Alineación de selección',
+    horizontal: 'Horizontal',
+    distributeHorizontal: 'Espaciar horizontalmente',
+    vertical: 'Vertical',
+    distributeVertical: 'Espaciar verticalmente',
+    alignMiddle: 'Centro',
+    alignLeft: 'Izquierda',
+    alignRight: 'Derecha',
   },
   panel: {
     userInputField: 'Campo de entrada del usuario',
@@ -307,6 +328,7 @@ const translation = {
     selectNextStep: 'Seleccionar siguiente paso',
     maximize: 'Maximizar Canvas',
     minimize: 'Salir de pantalla completa',
+    optional_and_hidden: '(opcional y oculto)',
   },
   nodes: {
     common: {
@@ -368,6 +390,7 @@ const translation = {
         input: 'Valor de entrada',
         variable: 'Usa la variable',
       },
+      inputVars: 'Variables de entrada',
     },
     start: {
       required: 'requerido',
@@ -422,6 +445,7 @@ const translation = {
       },
       outputVars: {
         output: 'Generar contenido',
+        reasoning_content: 'Contenido de razonamiento',
         usage: 'Información de uso del modelo',
       },
       singleRun: {
@@ -455,6 +479,12 @@ const translation = {
         generate: 'Generar',
         import: 'Importar desde JSON',
         resetDefaults: 'Restablecer',
+      },
+      reasoningFormat: {
+        tagged: 'Mantén las etiquetas de pensamiento',
+        separated: 'Separar etiquetas de pensamiento',
+        title: 'Habilitar la separación de etiquetas de razonamiento',
+        tooltip: 'Extraer contenido de las etiquetas de pensamiento y almacenarlo en el campo reasoning_content.',
       },
     },
     knowledgeRetrieval: {
@@ -829,6 +859,7 @@ const translation = {
         },
         json: 'JSON generado por el agente',
         text: 'Contenido generado por el agente',
+        usage: 'Información de uso del modelo',
       },
       checkList: {
         strategyNotSelected: 'Estrategia no seleccionada',
@@ -895,6 +926,30 @@ const translation = {
       variableName: 'Nombre de Variable',
       input: 'Entrada',
     },
+    dataSource: {
+      supportedFileFormats: 'Formatos de archivo compatibles',
+      add: 'Agregar origen de datos',
+      supportedFileFormatsPlaceholder: 'Extensión de archivo, e.g. doc',
+    },
+    knowledgeBase: {
+      chunkStructureTip: {
+        learnMore: 'Aprende más',
+        title: 'Elija una estructura de fragmentos',
+        message: 'La base de conocimientos de Dify admite tres estructuras de fragmentación: General, Padre-hijo y Preguntas y respuestas. Cada base de conocimiento solo puede tener una estructura. La salida del nodo anterior debe alinearse con la estructura de fragmentos seleccionada. Tenga en cuenta que la elección de la estructura de fragmentación afecta a los métodos de índice disponibles.',
+      },
+      chooseChunkStructure: 'Elegir una estructura de fragmentos',
+      indexMethodIsRequired: 'Se requiere el método de índice',
+      aboutRetrieval: 'sobre el método de recuperación.',
+      changeChunkStructure: 'Cambiar la estructura de fragmentos',
+      retrievalSettingIsRequired: 'Se requiere configuración de recuperación',
+      chunkStructure: 'Estructura de fragmentos',
+      chunkIsRequired: 'Se requiere una estructura de fragmentos',
+      chunksInput: 'Trozo',
+      chunksInputTip: 'La variable de entrada del nodo de la base de conocimientos es Chunks. El tipo de variable es un objeto con un esquema JSON específico que debe ser consistente con la estructura del fragmento seleccionado.',
+      embeddingModelIsRequired: 'Se requiere un modelo de incrustación',
+      rerankingModelIsRequired: 'Se requiere un modelo de reordenamiento',
+      chunksVariableIsRequired: 'La variable Chunks es obligatoria',
+    },
   },
   tracing: {
     stopBy: 'Pásate por {{user}}',
@@ -927,6 +982,7 @@ const translation = {
       deleteFailure: 'Error al eliminar la versión',
       updateFailure: 'Error al actualizar la versión',
       restoreSuccess: 'Versión restaurada',
+      copyIdSuccess: 'ID copiado en el portapapeles',
     },
     releaseNotesPlaceholder: 'Describe lo que cambió',
     restorationTip: 'Después de la restauración de la versión, el borrador actual será sobrescrito.',
@@ -937,6 +993,7 @@ const translation = {
     currentDraft: 'Borrador Actual',
     editVersionInfo: 'Editar información de la versión',
     latest: 'Último',
+    copyId: 'Copiar ID',
   },
   debug: {
     noData: {
@@ -963,9 +1020,31 @@ const translation = {
       clearNode: 'Limpiar variable en caché',
       emptyTip: 'Después de recorrer un nodo en el lienzo o ejecutar un nodo paso a paso, puedes ver el valor actual de la variable del nodo en Inspección de Variables.',
       edited: 'Editado',
+      export: 'exportar',
+      exportToolTip: 'Exportar variable como archivo',
+      largeData: 'Datos grandes, vista previa de solo lectura. Exportar para verlo todo.',
+      largeDataNoExport: 'Datos grandes: solo vista previa parcial',
     },
     lastRunTab: 'Última ejecución',
     settingsTab: 'Ajustes',
+    relations: {
+      dependents: 'Dependientes',
+      dependenciesDescription: 'Nodos en los que se basa este nodo',
+      dependentsDescription: 'Nodos que dependen de este nodo',
+      noDependencies: 'Sin dependencias',
+      noDependents: 'Sin dependientes',
+      dependencies: 'Dependencias',
+    },
+    relationsTab: 'Relaciones',
+    noLastRunFound: 'No se encontró ninguna ejecución anterior',
+    copyLastRunError: 'No se pudo copiar las entradas de la última ejecución',
+    copyLastRun: 'Copiar última ejecución',
+    noMatchingInputsFound: 'No se encontraron entradas coincidentes de la última ejecución.',
+    lastOutput: 'Última salida',
+  },
+  sidebar: {
+    exportWarning: 'Exportar la versión guardada actual',
+    exportWarningDesc: 'Esto exportará la versión guardada actual de tu flujo de trabajo. Si tienes cambios no guardados en el editor, guárdalos primero utilizando la opción de exportar en el lienzo del flujo de trabajo.',
   },
 }
 
