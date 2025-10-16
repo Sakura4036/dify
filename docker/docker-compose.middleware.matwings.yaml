@@ -88,7 +88,7 @@ services:
 
   # plugin daemon
   plugin_daemon:
-    image: langgenius/dify-plugin-daemon:0.2.0-local
+    image: langgenius/dify-plugin-daemon:0.3.0-local
     restart: always
     env_file:
       - ./middleware.env
@@ -143,6 +143,9 @@ services:
       VOLCENGINE_TOS_ACCESS_KEY: ${PLUGIN_VOLCENGINE_TOS_ACCESS_KEY:-}
       VOLCENGINE_TOS_SECRET_KEY: ${PLUGIN_VOLCENGINE_TOS_SECRET_KEY:-}
       VOLCENGINE_TOS_REGION: ${PLUGIN_VOLCENGINE_TOS_REGION:-}
+      THIRD_PARTY_SIGNATURE_VERIFICATION_ENABLED: true
+      THIRD_PARTY_SIGNATURE_VERIFICATION_PUBLIC_KEYS: /app/keys/publickey.pem
+      FORCE_VERIFYING_SIGNATURE: false
     ports:
       - "${EXPOSE_PLUGIN_DAEMON_PORT:-5002}:${PLUGIN_DAEMON_PORT:-5002}"
       - "${EXPOSE_PLUGIN_DEBUGGING_PORT:-5003}:${PLUGIN_DEBUGGING_PORT:-5003}"
@@ -183,7 +186,7 @@ services:
 
   # The Weaviate vector store.
   weaviate:
-    image: semitechnologies/weaviate:1.19.0
+    image: semitechnologies/weaviate:1.27.0
     profiles:
       - ""
       - weaviate
@@ -209,6 +212,7 @@ services:
       AUTHORIZATION_ADMINLIST_USERS: ${WEAVIATE_AUTHORIZATION_ADMINLIST_USERS:-hello@dify.ai}
     ports:
       - "${EXPOSE_WEAVIATE_PORT:-8080}:8080"
+      - "${EXPOSE_WEAVIATE_GRPC_PORT:-50051}:50051"
     networks:
       llm:
         ipv4_address: ${WEAVIATE_IP_ADDRESS:-172.23.0.23}
