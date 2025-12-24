@@ -1,6 +1,6 @@
 'use client'
 import type { FC } from 'react'
-import React from 'react'
+import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import ParamItem from '.'
 
@@ -32,7 +32,7 @@ const TopKItem: FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const handleParamChange = (key: string, value: number) => {
-    let notOutRangeValue = Number.parseFloat(value.toFixed(2))
+    let notOutRangeValue = Number.parseInt(value.toFixed(0))
     notOutRangeValue = Math.max(VALUE_LIMIT.min, notOutRangeValue)
     notOutRangeValue = Math.min(VALUE_LIMIT.max, notOutRangeValue)
     onChange(key, notOutRangeValue)
@@ -40,7 +40,7 @@ const TopKItem: FC<Props> = ({
   return (
     <ParamItem
       className={className}
-      id='top_k'
+      id="top_k"
       name={t('appDebug.datasetConfig.top_k')}
       tip={t('appDebug.datasetConfig.top_kTip') as string}
       {...VALUE_LIMIT}

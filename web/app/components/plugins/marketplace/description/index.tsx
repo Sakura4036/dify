@@ -16,14 +16,14 @@ const Description = async ({
 
   return (
     <>
-      <h1 className='title-4xl-semi-bold mb-2 shrink-0 text-center text-text-primary'>
+      <h1 className="title-4xl-semi-bold mb-2 shrink-0 text-center text-text-primary">
         {t('marketplace.empower')}
       </h1>
-      <h2 className='body-md-regular flex shrink-0 items-center justify-center text-center text-text-tertiary'>
+      <h2 className="body-md-regular flex shrink-0 items-center justify-center text-center text-text-tertiary">
         {
           isZhHans && (
             <>
-              <span className='mr-1'>{tCommon('operation.in')}</span>
+              <span className="mr-1">{tCommon('operation.in')}</span>
               {t('marketplace.difyMarketplace')}
               {t('marketplace.discover')}
             </>
@@ -37,32 +37,36 @@ const Description = async ({
           )
         }
         <span className="body-md-medium relative z-[1] ml-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
-          <span className='relative z-[2] lowercase'>{t('category.models')}</span>
+          {t('category.models')}
         </span>
         ,
         <span className="body-md-medium relative z-[1] ml-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
-          <span className='relative z-[2] lowercase'>{t('category.tools')}</span>
+          {t('category.tools')}
         </span>
         ,
         <span className="body-md-medium relative z-[1] ml-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
-          <span className='relative z-[2] lowercase'>{t('category.datasources')}</span>
+          {t('category.datasources')}
         </span>
         ,
         <span className="body-md-medium relative z-[1] ml-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
-          <span className='relative z-[2] lowercase'>{t('category.agents')}</span>
+          {t('category.triggers')}
+        </span>
+        ,
+        <span className="body-md-medium relative z-[1] ml-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
+          {t('category.agents')}
         </span>
         ,
         <span className="body-md-medium relative z-[1] ml-1 mr-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
-          <span className='relative z-[2] lowercase'>{t('category.extensions')}</span>
+          {t('category.extensions')}
         </span>
         {t('marketplace.and')}
         <span className="body-md-medium relative z-[1] ml-1 mr-1 text-text-secondary after:absolute after:bottom-[1.5px] after:left-0 after:h-2 after:w-full after:bg-text-text-selected after:content-['']">
-          <span className='relative z-[2] lowercase'>{t('category.bundles')}</span>
+          {t('category.bundles')}
         </span>
         {
           !isZhHans && (
             <>
-              <span className='mr-1'>{tCommon('operation.in')}</span>
+              <span className="mr-1">{tCommon('operation.in')}</span>
               {t('marketplace.difyMarketplace')}
             </>
           )

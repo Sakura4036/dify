@@ -1,8 +1,9 @@
-// import { RETRIEVAL_OUTPUT_STRUCT } from '../../constants'
-import { BlockEnum, EditionType } from '../../types'
-import { type NodeDefault, type PromptItem, PromptRole } from '../../types'
+import type { NodeDefault, PromptItem } from '../../types'
 import type { LLMNodeType } from './types'
 import { genNodeMetaData } from '@/app/components/workflow/utils'
+// import { RETRIEVAL_OUTPUT_STRUCT } from '../../constants'
+import { AppModeEnum } from '@/types/app'
+import { BlockEnum, EditionType, PromptRole } from '../../types'
 
 const RETRIEVAL_OUTPUT_STRUCT = `{
   "content": "",
@@ -36,7 +37,7 @@ const nodeDefault: NodeDefault<LLMNodeType> = {
     model: {
       provider: '',
       name: '',
-      mode: 'chat',
+      mode: AppModeEnum.CHAT,
       completion_params: {
         temperature: 0.7,
       },
@@ -63,28 +64,28 @@ const nodeDefault: NodeDefault<LLMNodeType> = {
       errorMessages = t(`${i18nPrefix}.fieldRequired`, { field: t(`${i18nPrefix}.fields.model`) })
 
     if (!errorMessages && !payload.memory) {
-      const isChatModel = payload.model.mode === 'chat'
+      const isChatModel = payload.model.mode === AppModeEnum.CHAT
       const isPromptEmpty = isChatModel
         ? !(payload.prompt_template as PromptItem[]).some((t) => {
-          if (t.edition_type === EditionType.jinja2)
-            return t.jinja2_text !== ''
+            if (t.edition_type === EditionType.jinja2)
+              return t.jinja2_text !== ''
 
-          return t.text !== ''
-        })
+            return t.text !== ''
+          })
         : ((payload.prompt_template as PromptItem).edition_type === EditionType.jinja2 ? (payload.prompt_template as PromptItem).jinja2_text === '' : (payload.prompt_template as PromptItem).text === '')
       if (isPromptEmpty)
         errorMessages = t(`${i18nPrefix}.fieldRequired`, { field: t('workflow.nodes.llm.prompt') })
     }
 
     if (!errorMessages && !!payload.memory) {
-      const isChatModel = payload.model.mode === 'chat'
+      const isChatModel = payload.model.mode === AppModeEnum.CHAT
       // payload.memory.query_prompt_template not pass is default: {{#sys.query#}}
       if (isChatModel && !!payload.memory.query_prompt_template && !payload.memory.query_prompt_template.includes('{{#sys.query#}}'))
         errorMessages = t('workflow.nodes.llm.sysQueryInUser')
     }
 
     if (!errorMessages) {
-      const isChatModel = payload.model.mode === 'chat'
+      const isChatModel = payload.model.mode === AppModeEnum.CHAT
       const isShowVars = (() => {
         if (isChatModel)
           return (payload.prompt_template as PromptItem[]).some(item => item.edition_type === EditionType.jinja2)

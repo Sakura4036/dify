@@ -1,6 +1,5 @@
 'use client'
-import { useTranslation } from 'react-i18next'
-import { useEffect, useRef, useState } from 'react'
+import type { AccountSettingTab } from '@/app/components/header/account-setting/constants'
 import {
   RiBrain2Fill,
   RiBrain2Line,
@@ -17,20 +16,26 @@ import {
   RiPuzzle2Line,
   RiTranslate2,
 } from '@remixicon/react'
-import Button from '../../base/button'
-import MembersPage from './members-page'
-import LanguagePage from './language-page'
-import ApiBasedExtensionPage from './api-based-extension-page'
-import DataSourcePage from './data-source-page-new'
-import ModelProviderPage from './model-provider-page'
-import cn from '@/utils/classnames'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import Input from '@/app/components/base/input'
 import BillingPage from '@/app/components/billing/billing-page'
 import CustomPage from '@/app/components/custom/custom-page'
-import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
-import { useProviderContext } from '@/context/provider-context'
-import { useAppContext } from '@/context/app-context'
+import {
+  ACCOUNT_SETTING_TAB,
+
+} from '@/app/components/header/account-setting/constants'
 import MenuDialog from '@/app/components/header/account-setting/menu-dialog'
-import Input from '@/app/components/base/input'
+import { useAppContext } from '@/context/app-context'
+import { useProviderContext } from '@/context/provider-context'
+import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
+import { cn } from '@/utils/classnames'
+import Button from '../../base/button'
+import ApiBasedExtensionPage from './api-based-extension-page'
+import DataSourcePage from './data-source-page-new'
+import LanguagePage from './language-page'
+import MembersPage from './members-page'
+import ModelProviderPage from './model-provider-page'
 
 const iconClassName = `
   w-5 h-5 mr-2
@@ -38,11 +43,12 @@ const iconClassName = `
 
 type IAccountSettingProps = {
   onCancel: () => void
-  activeTab?: string
+  activeTab?: AccountSettingTab
+  onTabChange?: (tab: AccountSettingTab) => void
 }
 
 type GroupItem = {
-  key: string
+  key: AccountSettingTab
   name: string
   description?: string
   icon: React.JSX.Element
@@ -51,56 +57,71 @@ type GroupItem = {
 
 export default function AccountSetting({
   onCancel,
-  activeTab = 'members',
+  activeTab = ACCOUNT_SETTING_TAB.MEMBERS,
+  onTabChange,
 }: IAccountSettingProps) {
-  const [activeMenu, setActiveMenu] = useState(activeTab)
+  const [activeMenu, setActiveMenu] = useState<AccountSettingTab>(activeTab)
+  useEffect(() => {
+    setActiveMenu(activeTab)
+  }, [activeTab])
   const { t } = useTranslation()
   const { enableBilling, enableReplaceWebAppLogo } = useProviderContext()
   const { isCurrentWorkspaceDatasetOperator } = useAppContext()
 
-  const workplaceGroupItems = (() => {
+  const workplaceGroupItems: GroupItem[] = (() => {
     if (isCurrentWorkspaceDatasetOperator)
       return []
-    return [
+
+    const items: GroupItem[] = [
       {
-        key: 'provider',
+        key: ACCOUNT_SETTING_TAB.PROVIDER,
         name: t('common.settings.provider'),
         icon: <RiBrain2Line className={iconClassName} />,
         activeIcon: <RiBrain2Fill className={iconClassName} />,
       },
       {
-        key: 'members',
+        key: ACCOUNT_SETTING_TAB.MEMBERS,
         name: t('common.settings.members'),
         icon: <RiGroup2Line className={iconClassName} />,
         activeIcon: <RiGroup2Fill className={iconClassName} />,
       },
-      {
-        // Use key false to hide this item
-        key: enableBilling ? 'billing' : false,
+    ]
+
+    if (enableBilling) {
+      items.push({
+        key: ACCOUNT_SETTING_TAB.BILLING,
         name: t('common.settings.billing'),
         description: t('billing.plansCommon.receiptInfo'),
         icon: <RiMoneyDollarCircleLine className={iconClassName} />,
         activeIcon: <RiMoneyDollarCircleFill className={iconClassName} />,
-      },
+      })
+    }
+
+    items.push(
       {
-        key: 'data-source',
+        key: ACCOUNT_SETTING_TAB.DATA_SOURCE,
         name: t('common.settings.dataSource'),
         icon: <RiDatabase2Line className={iconClassName} />,
         activeIcon: <RiDatabase2Fill className={iconClassName} />,
       },
       {
-        key: 'api-based-extension',
+        key: ACCOUNT_SETTING_TAB.API_BASED_EXTENSION,
         name: t('common.settings.apiBasedExtension'),
         icon: <RiPuzzle2Line className={iconClassName} />,
         activeIcon: <RiPuzzle2Fill className={iconClassName} />,
       },
-      {
-        key: (enableReplaceWebAppLogo || enableBilling) ? 'custom' : false,
+    )
+
+    if (enableReplaceWebAppLogo || enableBilling) {
+      items.push({
+        key: ACCOUNT_SETTING_TAB.CUSTOM,
         name: t('custom.custom'),
         icon: <RiColorFilterLine className={iconClassName} />,
         activeIcon: <RiColorFilterFill className={iconClassName} />,
-      },
-    ].filter(item => !!item.key) as GroupItem[]
+      })
+    }
+
+    return items
   })()
 
   const media = useBreakpoints()
@@ -117,7 +138,7 @@ export default function AccountSetting({
       name: t('common.settings.generalGroup'),
       items: [
         {
-          key: 'language',
+          key: ACCOUNT_SETTING_TAB.LANGUAGE,
           name: t('common.settings.language'),
           icon: <RiTranslate2 className={iconClassName} />,
           activeIcon: <RiTranslate2 className={iconClassName} />,
@@ -148,15 +169,15 @@ export default function AccountSetting({
       show
       onClose={onCancel}
     >
-      <div className='mx-auto flex h-[100vh] max-w-[1048px]'>
-        <div className='flex w-[44px] flex-col border-r border-divider-burn pl-4 pr-6 sm:w-[224px]'>
-          <div className='title-2xl-semi-bold mb-8 mt-6 px-3 py-2 text-text-primary'>{t('common.userProfile.settings')}</div>
-          <div className='w-full'>
+      <div className="mx-auto flex h-[100vh] max-w-[1048px]">
+        <div className="flex w-[44px] flex-col border-r border-divider-burn pl-4 pr-6 sm:w-[224px]">
+          <div className="title-2xl-semi-bold mb-8 mt-6 px-3 py-2 text-text-primary">{t('common.userProfile.settings')}</div>
+          <div className="w-full">
             {
               menuItems.map(menuItem => (
-                <div key={menuItem.key} className='mb-2'>
+                <div key={menuItem.key} className="mb-2">
                   {!isCurrentWorkspaceDatasetOperator && (
-                    <div className='system-xs-medium-uppercase mb-0.5 py-2 pb-1 pl-3 text-text-tertiary'>{menuItem.name}</div>
+                    <div className="system-xs-medium-uppercase mb-0.5 py-2 pb-1 pl-3 text-text-tertiary">{menuItem.name}</div>
                   )}
                   <div>
                     {
@@ -165,12 +186,16 @@ export default function AccountSetting({
                           key={item.key}
                           className={cn(
                             'mb-0.5 flex h-[37px] cursor-pointer items-center rounded-lg p-1 pl-3 text-sm',
-                            activeMenu === item.key ? 'system-sm-semibold bg-state-base-active text-components-menu-item-text-active' : 'system-sm-medium text-components-menu-item-text')}
+                            activeMenu === item.key ? 'system-sm-semibold bg-state-base-active text-components-menu-item-text-active' : 'system-sm-medium text-components-menu-item-text',
+                          )}
                           title={item.name}
-                          onClick={() => setActiveMenu(item.key)}
+                          onClick={() => {
+                            setActiveMenu(item.key)
+                            onTabChange?.(item.key)
+                          }}
                         >
                           {activeMenu === item.key ? item.activeIcon : item.icon}
-                          {!isMobile && <div className='truncate'>{item.name}</div>}
+                          {!isMobile && <div className="truncate">{item.name}</div>}
                         </div>
                       ))
                     }
@@ -180,39 +205,39 @@ export default function AccountSetting({
             }
           </div>
         </div>
-        <div className='relative flex w-[824px]'>
-          <div className='fixed right-6 top-6 z-[9999] flex flex-col items-center'>
+        <div className="relative flex w-[824px]">
+          <div className="fixed right-6 top-6 z-[9999] flex flex-col items-center">
             <Button
-              variant='tertiary'
-              size='large'
-              className='px-2'
+              variant="tertiary"
+              size="large"
+              className="px-2"
               onClick={onCancel}
             >
-              <RiCloseLine className='h-5 w-5' />
+              <RiCloseLine className="h-5 w-5" />
             </Button>
-            <div className='system-2xs-medium-uppercase mt-1 text-text-tertiary'>ESC</div>
+            <div className="system-2xs-medium-uppercase mt-1 text-text-tertiary">ESC</div>
           </div>
-          <div ref={scrollRef} className='w-full overflow-y-auto bg-components-panel-bg pb-4'>
+          <div ref={scrollRef} className="w-full overflow-y-auto bg-components-panel-bg pb-4">
             <div className={cn('sticky top-0 z-20 mx-8 mb-[18px] flex items-center bg-components-panel-bg pb-2 pt-[27px]', scrolled && 'border-b border-divider-regular')}>
-              <div className='title-2xl-semi-bold shrink-0 text-text-primary'>
+              <div className="title-2xl-semi-bold shrink-0 text-text-primary">
                 {activeItem?.name}
                 {activeItem?.description && (
-                  <div className='system-sm-regular mt-1 text-text-tertiary'>{activeItem?.description}</div>
+                  <div className="system-sm-regular mt-1 text-text-tertiary">{activeItem?.description}</div>
                 )}
               </div>
               {activeItem?.key === 'provider' && (
-                <div className='flex grow justify-end'>
+                <div className="flex grow justify-end">
                   <Input
                     showLeftIcon
-                    wrapperClassName='!w-[200px]'
-                    className='!h-8 !text-[13px]'
+                    wrapperClassName="!w-[200px]"
+                    className="!h-8 !text-[13px]"
                     onChange={e => setSearchValue(e.target.value)}
                     value={searchValue}
                   />
                 </div>
               )}
             </div>
-            <div className='px-4 pt-2 sm:px-8'>
+            <div className="px-4 pt-2 sm:px-8">
               {activeMenu === 'provider' && <ModelProviderPage searchText={searchValue} />}
               {activeMenu === 'members' && <MembersPage />}
               {activeMenu === 'billing' && <BillingPage />}

@@ -1,14 +1,14 @@
 'use client'
 
-import { SWRConfig } from 'swr'
-import { useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { fetchSetupStatus } from '@/service/common'
+import { useCallback, useEffect, useState } from 'react'
+import { SWRConfig } from 'swr'
 import {
-  EDUCATION_VERIFYING_LOCALSTORAGE_ITEM,
   EDUCATION_VERIFY_URL_SEARCHPARAMS_ACTION,
+  EDUCATION_VERIFYING_LOCALSTORAGE_ITEM,
 } from '@/app/education-apply/constants'
+import { fetchSetupStatus } from '@/service/common'
 import { resolvePostLoginRedirect } from '../signin/utils/post-login-redirect'
 
 type SwrInitializerProps = {
@@ -19,10 +19,7 @@ const SwrInitializer = ({
 }: SwrInitializerProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const consoleToken = decodeURIComponent(searchParams.get('access_token') || '')
-  const refreshToken = decodeURIComponent(searchParams.get('refresh_token') || '')
-  const consoleTokenFromLocalStorage = localStorage?.getItem('console_token')
-  const refreshTokenFromLocalStorage = localStorage?.getItem('refresh_token')
+  // Tokens are now stored in cookies, no need to check localStorage
   const pathname = usePathname()
   const [init, setInit] = useState(false)
 
@@ -57,20 +54,11 @@ const SwrInitializer = ({
           router.replace('/install')
           return
         }
-        if (!((consoleToken && refreshToken) || (consoleTokenFromLocalStorage && refreshTokenFromLocalStorage))) {
-          router.replace('/signin')
+
+        const redirectUrl = resolvePostLoginRedirect(searchParams)
+        if (redirectUrl) {
+          location.replace(redirectUrl)
           return
-        }
-        if (searchParams.has('access_token') || searchParams.has('refresh_token')) {
-          if (consoleToken)
-            localStorage.setItem('console_token', consoleToken)
-          if (refreshToken)
-            localStorage.setItem('refresh_token', refreshToken)
-          const redirectUrl = resolvePostLoginRedirect(searchParams)
-          if (redirectUrl)
-            location.replace(redirectUrl)
-          else
-            router.replace(pathname)
         }
 
         setInit(true)
@@ -79,20 +67,21 @@ const SwrInitializer = ({
         router.replace('/signin')
       }
     })()
-  }, [isSetupFinished, router, pathname, searchParams, consoleToken, refreshToken, consoleTokenFromLocalStorage, refreshTokenFromLocalStorage])
+  }, [isSetupFinished, router, pathname, searchParams])
 
   return init
     ? (
-      <SWRConfig value={{
-        shouldRetryOnError: false,
-        revalidateOnFocus: false,
-        dedupingInterval: 60000,
-        focusThrottleInterval: 5000,
-        provider: () => new Map(),
-      }}>
-        {children}
-      </SWRConfig>
-    )
+        <SWRConfig value={{
+          shouldRetryOnError: false,
+          revalidateOnFocus: false,
+          dedupingInterval: 60000,
+          focusThrottleInterval: 5000,
+          provider: () => new Map(),
+        }}
+        >
+          {children}
+        </SWRConfig>
+      )
     : null
 }
 

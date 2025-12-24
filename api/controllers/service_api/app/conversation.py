@@ -48,8 +48,7 @@ conversation_list_parser.add_argument(
 )
 
 conversation_rename_parser = reqparse.RequestParser()
-conversation_rename_parser.add_argument(
-    "name", type=str, required=False, location="json", help="New conversation name")
+conversation_rename_parser.add_argument("name", type=str, required=False, location="json", help="New conversation name")
 conversation_rename_parser.add_argument(
     "auto_generate", type=bool, required=False, default=False, location="json", help="Auto-generate conversation name"
 )

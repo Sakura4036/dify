@@ -1,6 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
+import type { FilterState } from './filter-management'
+import { noop } from 'lodash-es'
 import {
   useMemo,
   useRef,
@@ -10,14 +12,12 @@ import {
   createContext,
   useContextSelector,
 } from 'use-context-selector'
-import type { FilterState } from './filter-management'
-import { useTabSearchParams } from '@/hooks/use-tab-searchparams'
-import { noop } from 'lodash-es'
-import { PLUGIN_PAGE_TABS_MAP, usePluginPageTabs } from '../hooks'
 import { useGlobalPublicStore } from '@/context/global-public-context'
+import { useTabSearchParams } from '@/hooks/use-tab-searchparams'
+import { PLUGIN_PAGE_TABS_MAP, usePluginPageTabs } from '../hooks'
 
 export type PluginPageContextValue = {
-  containerRef: React.RefObject<HTMLDivElement>
+  containerRef: RefObject<HTMLDivElement | null>
   currentPluginID: string | undefined
   setCurrentPluginID: (pluginID?: string) => void
   filters: FilterState
@@ -27,8 +27,10 @@ export type PluginPageContextValue = {
   options: Array<{ value: string, text: string }>
 }
 
+const emptyContainerRef: RefObject<HTMLDivElement | null> = { current: null }
+
 export const PluginPageContext = createContext<PluginPageContextValue>({
-  containerRef: { current: null },
+  containerRef: emptyContainerRef,
   currentPluginID: undefined,
   setCurrentPluginID: noop,
   filters: {
@@ -53,7 +55,7 @@ export function usePluginPageContext(selector: (value: PluginPageContextValue) =
 export const PluginPageContextProvider = ({
   children,
 }: PluginPageContextProviderProps) => {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     tags: [],

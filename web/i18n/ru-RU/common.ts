@@ -5,6 +5,7 @@ const translation = {
     saved: 'Сохранено',
     create: 'Создано',
     remove: 'Удалено',
+    actionFailed: 'Действие не удалось',
   },
   operation: {
     create: 'Создать',
@@ -65,6 +66,12 @@ const translation = {
     no: 'Нет',
     deleteConfirmTitle: 'Удалить?',
     confirmAction: 'Пожалуйста, подтвердите ваше действие.',
+    noSearchResults: 'Ничего {{content}} не найдено',
+    resetKeywords: 'Сбросить ключевые слова',
+    selectCount: '{{count}} Выбран',
+    searchCount: 'Найти {{count}} {{content}}',
+    noSearchCount: '0 {{content}}',
+    now: 'Сейчас',
   },
   errorMsg: {
     fieldRequired: '{{field}} обязательно',
@@ -73,6 +80,7 @@ const translation = {
   placeholder: {
     input: 'Пожалуйста, введите',
     select: 'Пожалуйста, выберите',
+    search: 'Поиск...',
   },
   voice: {
     language: {
@@ -96,6 +104,8 @@ const translation = {
       hiIN: 'Хинди',
       trTR: 'Турецкий',
       faIR: 'Персидский',
+      slSI: 'Словенский',
+      arTN: 'Тунисский арабский',
     },
   },
   unit: {
@@ -165,7 +175,6 @@ const translation = {
     workspace: 'Рабочее пространство',
     createWorkspace: 'Создать рабочее пространство',
     helpCenter: 'Помощь',
-    communityFeedback: 'Обратная связь',
     roadmap: 'План развития',
     community: 'Сообщество',
     about: 'О нас',
@@ -173,6 +182,8 @@ const translation = {
     github: 'ГитХаб',
     compliance: 'Соблюдение',
     support: 'Поддержка',
+    contactUs: 'Свяжитесь с нами',
+    forum: 'Форум',
   },
   settings: {
     accountGroup: 'АККАУНТ',
@@ -725,6 +736,8 @@ const translation = {
     pasteFileLinkInvalid: 'Неверная ссылка на файл',
     uploadFromComputerLimit: 'Файл загрузки не может превышать {{size}}',
     uploadFromComputerUploadError: 'Загрузка файла не удалась, пожалуйста, загрузите еще раз.',
+    fileExtensionBlocked: 'Этот тип файла заблокирован по соображениям безопасности',
+    uploadDisabled: 'Загрузка файлов отключена',
   },
   license: {
     expiring: 'Срок действия истекает за один день',
@@ -766,6 +779,13 @@ const translation = {
   },
   label: {
     optional: '(необязательно)',
+  },
+  noData: 'Нет данных',
+  dynamicSelect: {
+    error: 'Не удалось загрузить параметры',
+    noData: 'Нет доступных вариантов',
+    loading: 'Загрузка параметров...',
+    selected: '{{count}} выбрано',
   },
 }
 

@@ -32,8 +32,8 @@ export const preprocessLaTeX = (content: string) => {
 }
 
 export const preprocessThinkTag = (content: string) => {
-  const thinkOpenTagRegex = /(<think>\n)+/g
-  const thinkCloseTagRegex = /\n<\/think>/g
+  const thinkOpenTagRegex = /(<think>\s*)+/g
+  const thinkCloseTagRegex = /(\s*<\/think>)+/g
   return flow([
     (str: string) => str.replace(thinkOpenTagRegex, '<details data-think=true>\n'),
     (str: string) => str.replace(thinkCloseTagRegex, '\n[ENDTHINKFLAG]</details>'),
@@ -80,8 +80,9 @@ export const customUrlTransform = (uri: string): string | undefined => {
     (slashIndex !== -1 && colonIndex > slashIndex)
     || (questionMarkIndex !== -1 && colonIndex > questionMarkIndex)
     || (hashIndex !== -1 && colonIndex > hashIndex)
-  )
+  ) {
     return uri
+  }
 
   const scheme = uri.substring(0, colonIndex + 1).toLowerCase()
   if (PERMITTED_SCHEME_REGEX.test(scheme))

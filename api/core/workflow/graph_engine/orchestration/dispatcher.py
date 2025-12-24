@@ -33,11 +33,16 @@ class Dispatcher:
     with timeout and completion detection.
     """
 
+    _COMMAND_TRIGGER_EVENTS = (
+        NodeRunSucceededEvent,
+        NodeRunFailedEvent,
+        NodeRunExceptionEvent,
+    )
+
     def __init__(
         self,
         event_queue: queue.Queue[GraphNodeEventBase],
         event_handler: "EventHandler",
-        event_collector: EventManager,
         execution_coordinator: ExecutionCoordinator,
         event_emitter: EventManager | None = None,
     ) -> None:
@@ -47,13 +52,11 @@ class Dispatcher:
         Args:
             event_queue: Queue of events from workers
             event_handler: Event handler registry for processing events
-            event_collector: Event manager for collecting unhandled events
             execution_coordinator: Coordinator for execution flow
             event_emitter: Optional event manager to signal completion
         """
         self._event_queue = event_queue
         self._event_handler = event_handler
-        self._event_collector = event_collector
         self._execution_coordinator = execution_coordinator
         self._event_emitter = event_emitter
 
@@ -77,31 +80,35 @@ class Dispatcher:
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=10.0)
 
-    _COMMAND_TRIGGER_EVENTS = (
-        NodeRunSucceededEvent,
-        NodeRunFailedEvent,
-        NodeRunExceptionEvent,
-    )
-
     def _dispatcher_loop(self) -> None:
         """Main dispatcher loop."""
         try:
+            self._process_commands()
             while not self._stop_event.is_set():
-                # Check for scaling
-                self._execution_coordinator.check_scaling()
+                if (
+                    self._execution_coordinator.aborted
+                    or self._execution_coordinator.paused
+                    or self._execution_coordinator.execution_complete
+                ):
+                    break
 
-                # Process events
+                self._execution_coordinator.check_scaling()
                 try:
                     event = self._event_queue.get(timeout=0.1)
-                    # Route to the event handler
                     self._event_handler.dispatch(event)
-                    if self._should_check_commands(event):
-                        self._execution_coordinator.check_commands()
+                    self._event_queue.task_done()
+                    self._process_commands(event)
+                except queue.Empty:
+                    time.sleep(0.1)
+
+            self._process_commands()
+            while True:
+                try:
+                    event = self._event_queue.get(block=False)
+                    self._event_handler.dispatch(event)
                     self._event_queue.task_done()
                 except queue.Empty:
-                    # Check if execution is complete
-                    if self._execution_coordinator.is_execution_complete():
-                        break
+                    break
 
         except Exception as e:
             logger.exception("Dispatcher error")
@@ -113,6 +120,6 @@ class Dispatcher:
             if self._event_emitter:
                 self._event_emitter.mark_complete()
 
-    def _should_check_commands(self, event: GraphNodeEventBase) -> bool:
-        """Return True if the event represents a node completion."""
-        return isinstance(event, self._COMMAND_TRIGGER_EVENTS)
+    def _process_commands(self, event: GraphNodeEventBase | None = None):
+        if event is None or isinstance(event, self._COMMAND_TRIGGER_EVENTS):
+            self._execution_coordinator.process_commands()

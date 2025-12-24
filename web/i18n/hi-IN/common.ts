@@ -5,6 +5,7 @@ const translation = {
     saved: 'सहेजा गया',
     create: 'बनाया गया',
     remove: 'हटाया गया',
+    actionFailed: 'क्रिया विफल',
   },
   operation: {
     create: 'बनाएं',
@@ -65,6 +66,12 @@ const translation = {
     yes: 'हाँ',
     deleteConfirmTitle: 'हटाएं?',
     confirmAction: 'कृपया अपनी क्रिया की पुष्टि करें।',
+    noSearchResults: 'कोई {{content}} नहीं मिला',
+    resetKeywords: 'कीवर्ड रीसेट करें',
+    selectCount: '{{count}} चयनित',
+    searchCount: '{{count}} {{content}} खोजें',
+    noSearchCount: '0 {{content}}',
+    now: 'अब',
   },
   errorMsg: {
     fieldRequired: '{{field}} आवश्यक है',
@@ -73,6 +80,7 @@ const translation = {
   placeholder: {
     input: 'कृपया दर्ज करें',
     select: 'कृपया चयन करें',
+    search: 'खोजें...',
   },
   voice: {
     language: {
@@ -96,6 +104,8 @@ const translation = {
       hiIN: 'हिन्दी',
       trTR: 'तुर्की',
       faIR: 'फ़ारसी',
+      slSI: 'स्लोवेनियाई',
+      arTN: 'ट्यूनीशियाई अरबी',
     },
   },
   unit: {
@@ -170,7 +180,6 @@ const translation = {
     workspace: 'वर्कस्पेस',
     createWorkspace: 'वर्कस्पेस बनाएं',
     helpCenter: 'सहायता',
-    communityFeedback: 'प्रतिक्रिया',
     roadmap: 'रोडमैप',
     community: 'समुदाय',
     about: 'के बारे में',
@@ -178,6 +187,8 @@ const translation = {
     compliance: 'अनुपालन',
     github: 'गिटहब',
     support: 'समर्थन',
+    contactUs: 'संपर्क करें',
+    forum: 'फोरम',
   },
   settings: {
     accountGroup: 'खाता',
@@ -747,6 +758,8 @@ const translation = {
     pasteFileLink: 'फ़ाइल लिंक पेस्ट करें',
     fileExtensionNotSupport: 'फ़ाइल एक्सटेंशन समर्थित नहीं है',
     uploadFromComputer: 'स्थानीय अपलोड',
+    fileExtensionBlocked: 'सुरक्षा कारणों से इस फ़ाइल प्रकार को अवरुद्ध कर दिया गया है',
+    uploadDisabled: 'फ़ाइल अपलोड अक्षम है',
   },
   license: {
     expiring: 'एक दिन में समाप्त हो रहा है',
@@ -788,6 +801,13 @@ const translation = {
   },
   label: {
     optional: '(अनिवार्य नहीं)',
+  },
+  noData: 'कोई डेटा नहीं',
+  dynamicSelect: {
+    error: 'विकल्प लोड करने में विफल',
+    noData: 'कोई विकल्प उपलब्ध नहीं है',
+    loading: 'विकल्प लोड हो रहे हैं...',
+    selected: '{{count}} चयनित',
   },
 }
 

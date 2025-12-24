@@ -1,8 +1,8 @@
-import { memo } from 'react'
+import { memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import Tooltip from '@/app/components/base/tooltip'
-import Input from '@/app/components/base/input'
+import { InputNumber } from '@/app/components/base/input-number'
 import Switch from '@/app/components/base/switch'
+import Tooltip from '@/app/components/base/tooltip'
 
 export type TopKAndScoreThresholdProps = {
   topK: number
@@ -14,6 +14,24 @@ export type TopKAndScoreThresholdProps = {
   readonly?: boolean
   hiddenScoreThreshold?: boolean
 }
+
+const maxTopK = (() => {
+  const configValue = Number.parseInt(globalThis.document?.body?.getAttribute('data-public-top-k-max-value') || '', 10)
+  if (configValue && !isNaN(configValue))
+    return configValue
+  return 10
+})()
+const TOP_K_VALUE_LIMIT = {
+  amount: 1,
+  min: 1,
+  max: maxTopK,
+}
+const SCORE_THRESHOLD_VALUE_LIMIT = {
+  step: 0.01,
+  min: 0,
+  max: 1,
+}
+
 const TopKAndScoreThreshold = ({
   topK,
   onTopKChange,
@@ -25,60 +43,64 @@ const TopKAndScoreThreshold = ({
   hiddenScoreThreshold,
 }: TopKAndScoreThresholdProps) => {
   const { t } = useTranslation()
-  const handleTopKChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value)
-    if (Number.isNaN(value))
-      return
-    onTopKChange?.(value)
-  }
+  const handleTopKChange = useCallback((value: number) => {
+    let notOutRangeValue = Number.parseInt(value.toFixed(0))
+    notOutRangeValue = Math.max(TOP_K_VALUE_LIMIT.min, notOutRangeValue)
+    notOutRangeValue = Math.min(TOP_K_VALUE_LIMIT.max, notOutRangeValue)
+    onTopKChange?.(notOutRangeValue)
+  }, [onTopKChange])
 
-  const handleScoreThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value)
-    if (Number.isNaN(value))
-      return
-    onScoreThresholdChange?.(value)
+  const handleScoreThresholdChange = (value: number) => {
+    let notOutRangeValue = Number.parseFloat(value.toFixed(2))
+    notOutRangeValue = Math.max(SCORE_THRESHOLD_VALUE_LIMIT.min, notOutRangeValue)
+    notOutRangeValue = Math.min(SCORE_THRESHOLD_VALUE_LIMIT.max, notOutRangeValue)
+    onScoreThresholdChange?.(notOutRangeValue)
   }
 
   return (
-    <div className='grid grid-cols-2 gap-4'>
+    <div className="grid grid-cols-2 gap-4">
       <div>
-        <div className='system-xs-medium mb-0.5 flex h-6 items-center text-text-secondary'>
+        <div className="system-xs-medium mb-0.5 flex h-6 items-center text-text-secondary">
           {t('appDebug.datasetConfig.top_k')}
           <Tooltip
-            triggerClassName='ml-0.5 shrink-0 w-3.5 h-3.5'
+            triggerClassName="ml-0.5 shrink-0 w-3.5 h-3.5"
             popupContent={t('appDebug.datasetConfig.top_kTip')}
           />
         </div>
-        <Input
-          type='number'
+        <InputNumber
+          disabled={readonly}
+          type="number"
+          {...TOP_K_VALUE_LIMIT}
+          size="regular"
           value={topK}
           onChange={handleTopKChange}
-          disabled={readonly}
         />
       </div>
       {
         !hiddenScoreThreshold && (
           <div>
-            <div className='mb-0.5 flex h-6 items-center'>
+            <div className="mb-0.5 flex h-6 items-center">
               <Switch
-                className='mr-2'
+                className="mr-2"
                 defaultValue={isScoreThresholdEnabled}
                 onChange={onScoreThresholdEnabledChange}
                 disabled={readonly}
               />
-              <div className='system-sm-medium grow truncate text-text-secondary'>
+              <div className="system-sm-medium grow truncate text-text-secondary">
                 {t('appDebug.datasetConfig.score_threshold')}
               </div>
               <Tooltip
-                triggerClassName='shrink-0 ml-0.5 w-3.5 h-3.5'
+                triggerClassName="shrink-0 ml-0.5 w-3.5 h-3.5"
                 popupContent={t('appDebug.datasetConfig.score_thresholdTip')}
               />
             </div>
-            <Input
-              type='number'
+            <InputNumber
+              disabled={readonly || !isScoreThresholdEnabled}
+              type="number"
+              {...SCORE_THRESHOLD_VALUE_LIMIT}
+              size="regular"
               value={scoreThreshold}
               onChange={handleScoreThresholdChange}
-              disabled={readonly || !isScoreThresholdEnabled}
             />
           </div>
         )

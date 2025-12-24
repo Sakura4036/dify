@@ -1,5 +1,5 @@
-import { BlockEnum } from '@/app/components/workflow/types'
 import type { NodeTracing } from '@/types/workflow'
+import { BlockEnum } from '@/app/components/workflow/types'
 
 function printNodeStructure(node: NodeTracing, depth: number) {
   const indent = '  '.repeat(depth)
@@ -12,11 +12,13 @@ function printNodeStructure(node: NodeTracing, depth: number) {
 }
 
 function addTitle({
-  list, depth, belongParallelIndexInfo,
+  list,
+  depth,
+  belongParallelIndexInfo,
 }: {
-  list: NodeTracing[],
-  depth: number,
-  belongParallelIndexInfo?: string,
+  list: NodeTracing[]
+  depth: number
+  belongParallelIndexInfo?: string
 }, t: any) {
   let branchIndex = 0
   const hasMoreThanOneParallel = list.filter(node => node.parallelDetail?.isParallelStartNode).length > 1
@@ -148,7 +150,7 @@ const format = (list: NodeTracing[], t: any, isPrint?: boolean): NodeTracing[] =
       return false
 
     const isParallelStartNode = node.parallelDetail?.isParallelStartNode
-    // eslint-disable-next-line sonarjs/prefer-single-boolean-return
+
     if (!isParallelStartNode)
       return false
 
