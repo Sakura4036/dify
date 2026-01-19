@@ -49,10 +49,10 @@ pnpm test
 pnpm test:watch
 
 # Run specific file
-pnpm test -- path/to/file.spec.tsx
+pnpm test path/to/file.spec.tsx
 
 # Generate coverage report
-pnpm test -- --coverage
+pnpm test:coverage
 
 # Analyze component complexity
 pnpm analyze-component <path>
@@ -82,6 +82,9 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn() }),
   usePathname: () => '/test',
 }))
+
+// ✅ Zustand stores: Use real stores (auto-mocked globally)
+// Set test state with: useAppStore.setState({ ... })
 
 // Shared state for mocks (if needed)
 let mockSharedState = false
@@ -155,7 +158,7 @@ describe('ComponentName', () => {
 For each file:
   ┌────────────────────────────────────────┐
   │ 1. Write test                          │
-  │ 2. Run: pnpm test -- <file>.spec.tsx   │
+  │ 2. Run: pnpm test <file>.spec.tsx      │
   │ 3. PASS? → Mark complete, next file    │
   │    FAIL? → Fix first, then continue    │
   └────────────────────────────────────────┘
@@ -296,7 +299,7 @@ For each test file generated, aim for:
 For more detailed information, refer to:
 
 - `references/workflow.md` - **Incremental testing workflow** (MUST READ for multi-file testing)
-- `references/mocking.md` - Mock patterns and best practices
+- `references/mocking.md` - Mock patterns, Zustand store testing, and best practices
 - `references/async-testing.md` - Async operations and API calls
 - `references/domain-components.md` - Workflow, Dataset, Configuration testing
 - `references/common-patterns.md` - Frequently used testing patterns
@@ -318,5 +321,5 @@ For more detailed information, refer to:
 
 - `web/vitest.config.ts` - Vitest configuration
 - `web/vitest.setup.ts` - Test environment setup
-- `web/testing/analyze-component.js` - Component analysis tool
+- `web/scripts/analyze-component.js` - Component analysis tool
 - Modules are not mocked automatically. Global mocks live in `web/vitest.setup.ts` (for example `react-i18next`, `next/image`); mock other modules like `ky` or `mime` locally in test files.

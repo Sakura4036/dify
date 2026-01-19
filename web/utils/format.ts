@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs'
 import type { Locale } from '@/i18n-config'
+import { localeMap } from '@/i18n-config/language'
 import 'dayjs/locale/de'
 import 'dayjs/locale/es'
 import 'dayjs/locale/fa'
@@ -21,39 +22,43 @@ import 'dayjs/locale/vi'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/zh-tw'
 
-const localeMap: Record<Locale, string> = {
-  'en-US': 'en',
-  'zh-Hans': 'zh-cn',
-  'zh-Hant': 'zh-tw',
-  'pt-BR': 'pt-br',
-  'es-ES': 'es',
-  'fr-FR': 'fr',
-  'de-DE': 'de',
-  'ja-JP': 'ja',
-  'ko-KR': 'ko',
-  'ru-RU': 'ru',
-  'it-IT': 'it',
-  'th-TH': 'th',
-  'id-ID': 'id',
-  'uk-UA': 'uk',
-  'vi-VN': 'vi',
-  'ro-RO': 'ro',
-  'pl-PL': 'pl',
-  'hi-IN': 'hi',
-  'tr-TR': 'tr',
-  'fa-IR': 'fa',
-  'sl-SI': 'sl',
-}
-
 /**
  * Formats a number with comma separators.
  * @example formatNumber(1234567) will return '1,234,567'
  * @example formatNumber(1234567.89) will return '1,234,567.89'
+ * @example formatNumber(0.0000008) will return '0.0000008'
  */
 export const formatNumber = (num: number | string) => {
   if (!num)
     return num
-  const parts = num.toString().split('.')
+  const n = typeof num === 'string' ? Number(num) : num
+
+  let numStr: string
+
+  // Force fixed decimal for small numbers to avoid scientific notation
+  if (Math.abs(n) < 0.001 && n !== 0) {
+    const str = n.toString()
+    const match = str.match(/e-(\d+)$/)
+    let precision: number
+    if (match) {
+      // Scientific notation: precision is exponent + decimal digits in mantissa
+      const exponent = Number.parseInt(match[1], 10)
+      const mantissa = str.split('e')[0]
+      const mantissaDecimalPart = mantissa.split('.')[1]
+      precision = exponent + (mantissaDecimalPart?.length || 0)
+    }
+    else {
+      // Decimal notation: count decimal places
+      const decimalPart = str.split('.')[1]
+      precision = decimalPart?.length || 0
+    }
+    numStr = n.toFixed(precision)
+  }
+  else {
+    numStr = n.toString()
+  }
+
+  const parts = numStr.split('.')
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   return parts.join('.')
 }
@@ -149,6 +154,6 @@ export const formatNumberAbbreviated = (num: number) => {
   }
 }
 
-export const formatToLocalTime = (time: Dayjs, local: string, format: string) => {
+export const formatToLocalTime = (time: Dayjs, local: Locale, format: string) => {
   return time.locale(localeMap[local] ?? 'en').format(format)
 }

@@ -85,24 +85,17 @@ afterEach(() => {
 // mock next/image to avoid width/height requirements for data URLs
 vi.mock('next/image')
 
+// mock zustand - auto-resets all stores after each test
+// Based on official Zustand testing guide: https://zustand.docs.pmnd.rs/guides/testing
+vi.mock('zustand')
+
 // mock react-i18next
 vi.mock('react-i18next', async () => {
   const actual = await vi.importActual<typeof import('react-i18next')>('react-i18next')
+  const { createReactI18nextMock } = await import('./test/i18n-mock')
   return {
     ...actual,
-    useTranslation: () => ({
-      t: (key: string, options?: Record<string, unknown>) => {
-        if (options?.returnObjects)
-          return [`${key}-feature-1`, `${key}-feature-2`]
-        if (options)
-          return `${key}:${JSON.stringify(options)}`
-        return key
-      },
-      i18n: {
-        language: 'en',
-        changeLanguage: vi.fn(),
-      },
-    }),
+    ...createReactI18nextMock(),
   }
 })
 

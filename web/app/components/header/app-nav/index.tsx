@@ -5,8 +5,8 @@ import {
   RiRobot2Fill,
   RiRobot2Line,
 } from '@remixicon/react'
+import { flatten } from 'es-toolkit/compat'
 import { produce } from 'immer'
-import { flatten } from 'lodash-es'
 import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -33,6 +33,7 @@ const AppNav = () => {
     data: appsData,
     fetchNextPage,
     hasNextPage,
+    isFetchingNextPage,
     refetch,
   } = useInfiniteAppList({
     page: 1,
@@ -103,14 +104,15 @@ const AppNav = () => {
         isApp
         icon={<RiRobot2Line className="h-4 w-4" />}
         activeIcon={<RiRobot2Fill className="h-4 w-4" />}
-        text={t('common.menus.apps')}
+        text={t('menus.apps', { ns: 'common' })}
         activeSegment={['apps', 'app']}
         link="/apps"
         curNav={appDetail}
         navigationItems={navItems}
-        createText={t('common.menus.newApp')}
+        createText={t('menus.newApp', { ns: 'common' })}
         onCreate={openModal}
         onLoadMore={handleLoadMore}
+        isLoadingMore={isFetchingNextPage}
       />
       <CreateAppModal
         show={showNewAppDialog}
