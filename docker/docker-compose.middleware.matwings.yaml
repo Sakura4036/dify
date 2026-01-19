@@ -8,6 +8,9 @@ services:
   # The postgres database.
   db:
     image: postgres:15-alpine
+    profiles:
+      - ""
+      - postgresql
     restart: always
     env_file:
       - ./middleware.env
@@ -21,13 +24,25 @@ services:
                -c 'work_mem=${POSTGRES_WORK_MEM:-4MB}'
                -c 'maintenance_work_mem=${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}'
                -c 'effective_cache_size=${POSTGRES_EFFECTIVE_CACHE_SIZE:-4096MB}'
+               -c 'statement_timeout=${POSTGRES_STATEMENT_TIMEOUT:-0}'
+               -c 'idle_in_transaction_session_timeout=${POSTGRES_IDLE_IN_TRANSACTION_SESSION_TIMEOUT:-0}'
     user: "${UID:-}:${GID:-}"
     volumes:
       - ${PGDATA_HOST_VOLUME:-./volumes/db/data}:/var/lib/postgresql/data
     ports:
       - "${EXPOSE_POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-h",
+          "db_postgres",
+          "-U",
+          "${DB_USERNAME:-postgres}",
+          "-d",
+          "${DB_DATABASE:-dify}",
+        ]
       interval: 1s
       timeout: 3s
       retries: 30
@@ -55,7 +70,11 @@ services:
       llm:
         ipv4_address: ${REDIS_IP_ADDRESS:-172.23.0.22}
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a ${REDIS_PASSWORD:-difyai123456} ping | grep -q PONG",
+        ]
 
   # The DifySandbox
   sandbox:
@@ -94,11 +113,7 @@ services:
       - ./middleware.env
     environment:
       # Use the shared environment variables.
-      <<: *proxy-env
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_USERNAME: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-difyai123456}
+      LOG_OUTPUT_FORMAT: ${LOG_OUTPUT_FORMAT:-text}
       DB_DATABASE: ${DB_PLUGIN_DATABASE:-dify_plugin}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
@@ -121,6 +136,7 @@ services:
       PLUGIN_PACKAGE_CACHE_PATH: ${PLUGIN_PACKAGE_CACHE_PATH:-plugin_packages}
       PLUGIN_MEDIA_CACHE_PATH: ${PLUGIN_MEDIA_CACHE_PATH:-assets}
       PLUGIN_STORAGE_OSS_BUCKET: ${PLUGIN_STORAGE_OSS_BUCKET:-}
+      S3_USE_AWS: ${PLUGIN_S3_USE_AWS:-false}
       S3_USE_AWS_MANAGED_IAM: ${PLUGIN_S3_USE_AWS_MANAGED_IAM:-false}
       S3_ENDPOINT: ${PLUGIN_S3_ENDPOINT:-}
       S3_USE_PATH_STYLE: ${PLUGIN_S3_USE_PATH_STYLE:-false}
@@ -165,7 +181,12 @@ services:
     volumes:
       - ./ssrf_proxy/squid.conf.template:/etc/squid/squid.conf.template
       - ./ssrf_proxy/docker-entrypoint.sh:/docker-entrypoint-mount.sh
-    entrypoint: [ "sh", "-c", "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh" ]
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "cp /docker-entrypoint-mount.sh /docker-entrypoint.sh && sed -i 's/\r$$//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh && /docker-entrypoint.sh",
+      ]
     env_file:
       - ./middleware.env
     environment:
